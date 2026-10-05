@@ -1,60 +1,44 @@
 # Demo photo credits
 
-The demo wall is built from 36 photographs, and every one is free to
-use: **CC0 1.0** (public domain dedication) or **public domain**. None of them
-require attribution; the credits are recorded because the provenance should be
-visible, not because it is owed.
+The demo wall is built from 21 photographs, every one of them a
+[Wikimedia Commons](https://commons.wikimedia.org/) original that is **CC0 1.0**
+(public domain dedication) or **public domain**. None of them require
+attribution; the credits are recorded because the provenance should be visible,
+not because it is owed.
+
+They are committed here as originals that still carry their camera EXIF, only
+resized, so the wall can show the date, exposure and camera it read from the
+file. What the build publishes never carries that metadata: the served copies
+are re-encoded without it.
 
 No photograph shows an identifiable person. Each one was checked by eye before
 it was added.
 
-Twelve of them come from Wikimedia Commons as original files, so they still
-carry the camera EXIF - that is what the wall shows on their frames. The rest
-come from stock libraries that strip metadata; their frames show the caption
-written in `photos/captions.json` instead.
-
 | # | File | Photograph | Author | License | Source |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `pine-over-valley.jpg` | A pine leaning over a misty valley | Kristoffer Fredriksson | CC0 1.0 | [stocksnap](https://stocksnap.io/photo/mountain-landscape-S2JLQ3IWFS) |
-| 2 | `waterfall-rainbow.jpg` | A waterfall, and a rainbow in its spray | Robert Lukeman | CC0 1.0 | [stocksnap](https://stocksnap.io/photo/mountain-landscape-978C9IB8S8) |
-| 3 | `cloud-capped-peaks.jpg` | Clouds breaking over the peaks | Zachary Domes | CC0 1.0 | [stocksnap](https://stocksnap.io/photo/mountains-landscape-7Q21B2IB4R) |
-| 4 | `meadow-path.jpg` | A path through a mountain meadow | Lili Popper | CC0 1.0 | [stocksnap](https://stocksnap.io/photo/green-grass-T1VA15FJXL) |
-| 5 | `still-lake.jpg` | Still water, mirrored hills | Snapwire | CC0 1.0 | [stocksnap](https://stocksnap.io/photo/widescreeen-beautiful-KDDWW6SNFE) |
-| 6 | `backlit-wave.jpg` | Sunlight through a breaking wave | Altered Reality | CC0 1.0 | [stocksnap](https://stocksnap.io/photo/ocean-wave-VFAMQON3ZP) |
-| 7 | `night-sky-lake.webp` | The Milky Way over a lake | not credited | CC0 1.0 | [rawpixel](https://www.rawpixel.com/image/5968986/aurora-lake-reflection) |
-| 8 | `violet-dusk.webp` | A violet dusk over the water | not credited | CC0 1.0 | [rawpixel](https://www.rawpixel.com/image/3338455/free-photo-image-storm-lightning) |
-| 9 | `alpine-tarn.webp` | An alpine lake under the peaks | not credited | CC0 1.0 | [rawpixel](https://www.rawpixel.com/image/3305359/free-photo-image-landscape-river-lake-nature) |
-| 10 | `rapeseed-field.webp` | Rapeseed in flower | not credited | CC0 1.0 | [rawpixel](https://www.rawpixel.com/image/3301449/free-photo-image-cc0-countryside-creative-commons) |
-| 11 | `lavender-rows.webp` | Rows of lavender | not credited | CC0 1.0 | [rawpixel](https://www.rawpixel.com/image/6076418/img_9096) |
-| 12 | `autumn-road.jpg` | A mountain road in October | JJ Skys the Limit | CC0 1.0 | [stocksnap](https://stocksnap.io/photo/autumn-aerial-R7NBNFPB5X) |
-| 13 | `forest-railway.jpg` | Tracks through an autumn forest | Matt Moloney | CC0 1.0 | [stocksnap](https://stocksnap.io/photo/autumn-forest-L3G8OQESTP) |
-| 14 | `snowbound-spruce.webp` | A spruce under snow | not credited | CC0 1.0 | [rawpixel](https://www.rawpixel.com/image/6024622/photo-image-public-domain-tree-forest) |
-| 15 | `winter-lane.webp` | A lane after snowfall | not credited | CC0 1.0 | [rawpixel](https://www.rawpixel.com/image/6015772/photo-image-public-domain-tree-forest) |
-| 16 | `winter-pines.webp` | Pines on a winter ridge | not credited | CC0 1.0 | [rawpixel](https://www.rawpixel.com/image/6024617/photo-image-public-domain-tree-forest) |
-| 17 | `slot-canyon.webp` | Sandstone, sculpted by water | not credited | CC0 1.0 | [rawpixel](https://www.rawpixel.com/image/3298937/free-photo-image-landscape-best-stone-pictures-images-bizarre) |
-| 18 | `icefall-mono.webp` | Icefall, in black and white | museumofnewzealand | CC0 1.0 | [rawpixel](https://www.rawpixel.com/image/13029746/long-narrow-waterfall) |
-| 19 | `long-waterfall.webp` | A waterfall at a long exposure | not credited | CC0 1.0 | [rawpixel](https://www.rawpixel.com/image/3288614/free-photo-image-blur-background-cc0-cliff) |
-| 20 | `sunlit-facade.webp` | Sun on an old facade | not credited | CC0 1.0 | [rawpixel](https://www.rawpixel.com/image/6037706/photo-image-public-domain-sunlight-free) |
-| 21 | `cathedral-towers.webp` | Twin towers of a cathedral | not credited | CC0 1.0 | [rawpixel](https://www.rawpixel.com/image/6026866/photo-image-public-domain-free-history) |
-| 22 | `tower-bridge.webp` | Tower Bridge at night | not credited | CC0 1.0 | [rawpixel](https://www.rawpixel.com/image/5906990/photo-image-public-domain-free-night) |
-| 23 | `skyline-blue-hour.jpg` | A skyline at blue hour | Matt Bango | CC0 1.0 | [stocksnap](https://stocksnap.io/photo/city-skyline-VXO9P3MDVP) |
-| 24 | `harbour-sunset.jpg` | The harbour bridge at sunset | Wyncliffe | CC0 1.0 | [stocksnap](https://stocksnap.io/photo/city-bridge-FRWSEDYSC4) |
-| 25 | `fog-creek.jpg` | Fog on a forest creek | Roc0ast3r | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AFog_in_forest_and_creek_at_Kent%2C_Washington.jpg) |
-| 26 | `shore-waves.jpg` | Waves on a rocky shore | Jebulon | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ANorthern_coast_Crete_rocks_waves_detail.jpg) |
-| 27 | `blanket-flowers.jpg` | Blanket flowers | Peter Cooper Jr. | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ABlanket_flowers%2C_Cathleen_Kuehl_Memorial_Wildflower_Meadow_2026-08-01.jpg) |
-| 28 | `lost-creek-canyon.jpg` | Rock formations, Lost Creek Canyon | blmcalifornia | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ARock_formations_in_Lost_Creek_Canyon_(51581784904).jpg) |
-| 29 | `canyon-sunburst.jpg` | Sunburst in the canyon | blmcalifornia | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ARock_formations_in_Lost_Creek_Canyon_(51580275887).jpg) |
-| 30 | `island-facade.jpg` | A house facade on Ile d Orleans | Wilfredor | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AHouse_facade_in_%C3%8Ele_d'Orl%C3%A9ans%2C_Quebec_city%2C_Quebec%2C_Canada202204-23.jpg) |
-| 31 | `rome-night.jpg` | St Peter and the Tiber at night | Jebulon | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ASaint_Peter's_Basilica%2C_Sant'Angelo_bridge%2C_by_night%2C_Rome%2C_Italy.jpg) |
-| 32 | `tiber-dusk.jpg` | The Tiber at dusk | Jebulon | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ASant'Angelo_bridge%2C_dusk%2C_Rome%2C_Italy.jpg) |
-| 33 | `dordogne-wall.jpg` | A dry stone wall in the Dordogne | Jebulon | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AStone_wall_old_farm_Dordogne.jpg) |
-| 34 | `logan-creek.jpg` | Mossy rocks on Logan Creek | Unknown authorUnknown author or not provided | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ALogan_Canyon_Scenic_Byway_-_Mossy_Rocks_of_Spring_Creek_in_Logan_Canyon_-_NARA_-_7720240.jpg) |
-| 35 | `alpine-lake-cloud.jpg` | An alpine lake under cloud | GlacierNPS | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AAlpine_Lake_(48920694036).jpg) |
-| 36 | `snow-path-dawn.jpg` | A snow path at dawn | DimiTalen | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ASnow-covered_forest_path_at_dawn%2C_near_Villard-Reculas%2C_2026.jpg) |
+| 1 | `fog-creek.jpg` | Fog on a forest creek | Roc0ast3r | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AFog_in_forest_and_creek_at_Kent%2C_Washington.jpg) |
+| 2 | `shore-waves.jpg` | Waves on a rocky shore | Jebulon | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ANorthern_coast_Crete_rocks_waves_detail.jpg) |
+| 3 | `blanket-flowers.jpg` | Blanket flowers | Peter Cooper Jr. | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ABlanket_flowers%2C_Cathleen_Kuehl_Memorial_Wildflower_Meadow_2026-08-01.jpg) |
+| 4 | `lost-creek-canyon.jpg` | Rock formations, Lost Creek Canyon | blmcalifornia | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ARock_formations_in_Lost_Creek_Canyon_(51581784904).jpg) |
+| 5 | `canyon-sunburst.jpg` | Sunburst in the canyon | blmcalifornia | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ARock_formations_in_Lost_Creek_Canyon_(51580275887).jpg) |
+| 6 | `island-facade.jpg` | A house facade on Ile d Orleans | Wilfredor | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AHouse_facade_in_%C3%8Ele_d'Orl%C3%A9ans%2C_Quebec_city%2C_Quebec%2C_Canada202204-23.jpg) |
+| 7 | `rome-night.jpg` | St Peter and the Tiber at night | Jebulon | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ASaint_Peter's_Basilica%2C_Sant'Angelo_bridge%2C_by_night%2C_Rome%2C_Italy.jpg) |
+| 8 | `tiber-dusk.jpg` | The Tiber at dusk | Jebulon | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ASant'Angelo_bridge%2C_dusk%2C_Rome%2C_Italy.jpg) |
+| 9 | `dordogne-wall.jpg` | A dry stone wall in the Dordogne | Jebulon | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AStone_wall_old_farm_Dordogne.jpg) |
+| 10 | `logan-creek.jpg` | Mossy rocks on Logan Creek | Unknown authorUnknown author or not provided | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ALogan_Canyon_Scenic_Byway_-_Mossy_Rocks_of_Spring_Creek_in_Logan_Canyon_-_NARA_-_7720240.jpg) |
+| 11 | `snow-path-dawn.jpg` | A snow path at dawn | DimiTalen | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ASnow-covered_forest_path_at_dawn%2C_near_Villard-Reculas%2C_2026.jpg) |
+| 12 | `village-church.jpg` | A village church | Alexis Doine | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AVillage_Church_Burbank.jpg) |
+| 13 | `starry-lake.jpg` | Stars over a lake | Markus Spiske from Forchheim, Bavaria Upper Franconia | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ANight_Sky_%40_Baiersdorf_-_Flickr_-_markus_spiske.jpg) |
+| 14 | `cloud-sea-cliff.jpg` | A sea of cloud over the coast | Grand Canyon National Park | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AGrand_Canyon_National_Park_Cloud_Inversion_from_Desert_View%2C_November_29%2C_2013_photo_0812_-_Flickr_-_Grand_Canyon_NPS.jpg) |
+| 15 | `moraine-lake.jpg` | A glacial lake below the peaks | Gorgo | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AMoraine_Lake_17092005.jpg) |
+| 16 | `field-sunset.jpg` | Sunset over the fields | Roan Retera | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AGreat_Sand_Dunes_Sunset1.jpg) |
+| 17 | `snowy-red-rocks.jpg` | Red rock under snow | NPS | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3APendleton_Barn_in_snow_(8169df0e-8211-4839-8ccc-2092a004b3fb).JPG) |
+| 18 | `river-flood-bridge.jpg` | A river in flood below an old bridge | Kelly M. Grow/ California Department of Water Resources | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AFlood_under_the_Old_Route_49_bridge_crossing_over_the_South_Yuba_River_in_Nevada_City%2C_California.jpg) |
+| 19 | `flower-macro.jpg` | A flower in macro | Tangopaso | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AParc_Olbius_Riquier_(Greenhouse)_-_Calliandra_haematocephala_(flower).jpg) |
+| 20 | `lake-panorama.jpg` | A mountain lake, panorama | Jacob W. Frank, NPS | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ALake-sherburne-964855.jpg) |
+| 21 | `salt-flats.jpg` | Salt flats under a desert sky | BLMUtah | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ABonneville_Salt_Flats_(27741239210).jpg) |
 
-Stock photographs were retrieved from the [Openverse](https://openverse.org/)
-index, Commons files from [Wikimedia Commons](https://commons.wikimedia.org/),
-both on 2026-10-05.
+Retrieved from Wikimedia Commons on 2026-10-05.
 
 These files are demo content, not part of the generator: delete `demo/photos/`
 and rebuild with your own photographs.

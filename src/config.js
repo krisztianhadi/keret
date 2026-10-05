@@ -33,6 +33,17 @@ const DEFAULTS = {
   // analytics: null disables it completely
   analytics: null,        // { script:'', websiteId:'', domains:'', cache:true }
 
+  // the credit line in the bottom left corner; null hides it
+  credit: {
+    label: 'Powered by',
+    brand: 'Keret',
+    url: 'https://github.com/krisztianhadi/keret',
+  },
+
+  // the photographer card behind the top right button. The file is read from the
+  // project root; no file (or author: null) means no button at all.
+  author: { file: 'author.json' },
+
   favicon: {
     // The inline SVG mark in the page head and the apple-touch icon.
     bg: '#26231e',
@@ -191,11 +202,22 @@ function validate(config, root) {
   if (typeof config.captions.file !== 'string') throw new Error('captions.file must be a string');
   for (const key of ['bg', 'dot']) {
     if (!/^#[0-9a-f]{3}([0-9a-f]{3})?([0-9a-f]{2})?$/i.test(config.favicon[key])) {
-      throw new Error('favicon.' + key + ' must be a hex colour like "#26231e", got "' + config.favicon[key] + '"');
+      throw new Error('favicon.' + key + ' must be a hex color like "#26231e", got "' + config.favicon[key] + '"');
     }
   }
   for (const key of ['source', 'photo']) {
     if (typeof config.og[key] !== 'string') throw new Error('og.' + key + ' must be a string');
+  }
+  if (config.credit !== null) {
+    if (typeof config.credit !== 'object') throw new Error('credit must be an object or null');
+    for (const key of ['label', 'brand', 'url']) {
+      if (typeof config.credit[key] !== 'string') throw new Error('credit.' + key + ' must be a string');
+    }
+    if (!config.credit.url) throw new Error('credit.url is required, or set credit to null');
+  }
+  if (config.author !== null
+    && (typeof config.author !== 'object' || typeof config.author.file !== 'string')) {
+    throw new Error('author must be an object with a "file", or null');
   }
   if (config.analytics) {
     if (typeof config.analytics !== 'object') throw new Error('analytics must be an object or null');

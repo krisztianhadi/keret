@@ -8,6 +8,25 @@ Reverse-chronological. One dated section per work block, entries tagged
 The engine that built a personal photo wall becomes a general tool with its own
 repository, license and demo wall.
 
+`[Fix]` **Three demo photographs were removed.** A closer look at the
+published wall found people in three of them: walkers on the footbridge in
+the flood picture, two figures down the Marbella street, and visitors on the
+path at Portland Head lighthouse. The rest of the wall was re-checked at a
+larger size than the original contact sheets, and the risky subjects (bridges,
+streets, lighthouses, coasts, buildings) were checked again a tile at a time.
+
+`[Feature]` **A credit line and a photographer card.** The page carries a small
+"Powered by Keret" box in the bottom left corner (`credit`, null to hide it) and,
+when `author.json` exists in the working directory, an Author button in the top
+right corner that opens a card with the photographer's name, role, bio, email,
+phone, location and links. The card is written into the page as data and rendered
+with `textContent`, so a bio with markup cannot execute. Unknown keys in the
+card fail the build, and the card is part of the build stamp.
+
+`[Feature]` **The fit control wears Lucide's `locate` mark**, replacing the
+stray copyright glyph (`&copy;`) that had been standing in for it, and the author button
+wears `square-user`. Both are inline SVG, so the page still fetches nothing.
+
 `[Feature]` **Keret is a package, not a site.** `node gen.js` now builds the wall
 in the **current working directory** instead of the directory the script lives
 in, so the tool can be a global `keret` bin (or a checkout anywhere) while each
@@ -28,7 +47,7 @@ line - which is what a wall of stock photos, scans or exports needs.
 captions, the built site and a Pages workflow, all committed. Sources and licenses:
 [demo/CREDITS.md](../demo/CREDITS.md).
 
-`[Feature]` **The demo is EXIF-only.** 108 Wikimedia Commons originals, all CC0 1.0 or
+`[Feature]` **The demo is EXIF-only.** 105 Wikimedia Commons originals, all CC0 1.0 or
 public domain, every one carrying camera EXIF. They are committed at demo size
 (1000px, quality 76, about 12 MB in total) and resized with `keepExif()`, so each
 frame on the wall shows the date, exposure and camera the engine read from the

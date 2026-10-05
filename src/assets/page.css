@@ -146,3 +146,63 @@
   .empty-note code {
     color:var(--note); background:rgba(127,127,127,.2); padding:1px 6px; border-radius:4px;
   }
+
+  /* chrome: the locate mark on the fit button */
+  #controls button svg { width:17px; height:17px; display:block; margin:0 auto; }
+
+  /* bottom left: where the wall came from */
+  #credit {
+    position:fixed; left:14px; bottom:14px;
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:11px; color:var(--ink-dim); text-decoration:none;
+    background:var(--chrome); border:1px solid rgba(255,255,255,.12);
+    padding:7px 11px; border-radius:8px; backdrop-filter:blur(4px);
+  }
+  #credit:hover { color:var(--ink); border-color:rgba(255,255,255,.24); }
+  #credit b { font-weight:600; color:var(--ink); }
+
+  /* top right: the photographer */
+  #authorBtn {
+    position:fixed; right:14px; top:14px; z-index:2;
+    display:inline-flex; align-items:center; gap:7px;
+    font:inherit; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink); cursor:pointer;
+    background:var(--chrome); border:1px solid rgba(255,255,255,.12);
+    padding:7px 11px; border-radius:8px; backdrop-filter:blur(4px);
+  }
+  #authorBtn:hover { background:rgba(255,255,255,.14); }
+  #authorBtn svg { width:15px; height:15px; display:block; }
+  #authorBtn[hidden], #credit[hidden] { display:none; }
+
+  #authorCard {
+    position:fixed; right:14px; top:56px; z-index:3;
+    width:min(300px, calc(100vw - 28px));
+    background:var(--chrome); border:1px solid rgba(255,255,255,.14);
+    border-radius:10px; padding:15px 16px 16px;
+    backdrop-filter:blur(6px);
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+    color:var(--ink); font-size:12px; line-height:1.6;
+  }
+  #authorCard h2 { font-size:13px; letter-spacing:.02em; padding-right:22px; }
+  #authorCard .author-role { color:var(--ink-dim); font-size:11px; margin-top:2px; }
+  #authorCard .author-bio { margin-top:9px; }
+  #authorCard .author-facts {
+    margin-top:10px; display:grid; gap:2px; font-size:11px;
+  }
+  #authorCard .author-facts dt { color:var(--ink-dim); margin-top:7px; }
+  #authorCard .author-facts dd { margin:0; overflow-wrap:anywhere; }
+  #authorCard a { color:var(--ink); text-decoration:none; border-bottom:1px solid rgba(255,255,255,.3); }
+  #authorCard a:hover { border-bottom-color:var(--ink); }
+  #authorCard .author-close {
+    position:absolute; top:7px; right:7px;
+    width:24px; height:24px; border:0; border-radius:6px;
+    background:transparent; color:var(--ink-dim);
+    font:inherit; font-size:15px; line-height:1; cursor:pointer;
+  }
+  #authorCard .author-close:hover { background:rgba(255,255,255,.14); color:var(--ink); }
+
+  /* a phone: the author button keeps its mark, drops its word */
+  @media (max-width: 460px) {
+    #authorBtn { padding:8px; }
+    #authorBtn span { display:none; }
+  }

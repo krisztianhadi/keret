@@ -326,7 +326,7 @@ async function writeCopies(file, srcFull, outDir, cfg) {
 async function writeOgImage(file, srcFull, outFile, cfg) {
   const buf = fs.readFileSync(srcFull);
   await pipeline(buf)
-    .resize({ width: cfg.images.ogWidth, height: cfg.images.ogHeight, fit: 'cover', position: 'centre' })
+    .resize({ width: cfg.images.ogWidth, height: cfg.images.ogHeight, fit: 'cover', position: 'center' })
     .jpeg({ quality: cfg.images.ogQuality, mozjpeg: true })
     .toFile(outFile);
   return fs.statSync(outFile).size;

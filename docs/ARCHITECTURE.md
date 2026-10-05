@@ -17,6 +17,7 @@ gen.js                     CLI: argv, config, guards, orchestration
   src/assets/body.html     the static markup (stage, header, hint, controls)
   src/assets/page.css      the stylesheet, verbatim
   src/assets/engine.js     the browser engine, verbatim, with the wall data substituted
+  src/assets/ui.js         the page chrome: the credit line and the photographer card
 scripts/serve.js           a zero-dependency static server for local preview
 scripts/check-build.js     structural check of a built directory, no browser
 scripts/check-stamp.js     is this build still in sync with the source?
@@ -36,9 +37,9 @@ The build order matters:
 5. **Publish.** Each photo is re-encoded into `<out>/photos/`, and only files that
    were really written stay on the wall. One failure aborts with exit 3 and no
    page is written.
-6. **Page.** The wall data, the assets and the metadata are assembled into
-   `index.html`, plus `og.jpg`, `apple-touch-icon.png`, `robots.txt`,
-   `sitemap.xml`, `.nojekyll` and `CNAME` when applicable.
+6. **Page.** The wall data, the assets, the page chrome and the metadata are
+   assembled into `index.html`, plus `og.jpg`, `apple-touch-icon.png`,
+   `robots.txt`, `sitemap.xml`, `.nojekyll` and `CNAME` when applicable.
 7. **Stamp.** A hash of the generator sources and the instance config is written
    into the page, so CI can tell a stale build from a fresh one.
 
@@ -114,6 +115,16 @@ verbatim and `test/page.test.js` fails if the build starts transforming them.
 - **Publish-then-page.** The layout is computed first, but the page is only
   written after every photo is confirmed on disk, and any failure aborts the whole
   build. A wall referencing a missing file is worse than a failed build.
+- **The chrome rides in the engine's script block.** The credit line and the
+  photographer card are page furniture, so they live in their own asset
+  (`ui.js`) and their own data object, but they are emitted inside the same
+  `<script>` as the engine: one script block means one escaping path for the wall
+  data and the chrome alike, and `test/page.test.js` splits the block at the
+  chrome's opening comment to check each half against its own file.
+- **The author card is strict, and it is stamped.** `author.json` rejects unknown
+  keys like the config does, because a typo would otherwise ship a half-empty
+  card. It is also part of the build stamp, so editing the card marks a committed
+  build stale.
 - **Alt text while the title is still there.** The author's sidecar title is used
   for alt text and for the caption line before the frame title is replaced by the
   filename.
@@ -130,7 +141,7 @@ verbatim and `test/page.test.js` fails if the build starts transforming them.
 | `config.test.js` | defaults, merge order, unknown keys, env typing, range checks, the outDir guards, the configs this repo ships |
 | `images.test.js` | header parsing (JPEG/PNG/GIF), EXIF extraction, metadata stripping on publish, GIF to PNG, scan reporting |
 | `layout.test.js` | determinism, no overlapping frames, symmetric margin, single photo centering, empty wall, `-x`, pairing, column bounds |
-| `page.test.js` | assets emitted byte for byte, escaping, instance metadata, no-JS fallback, the iOS constraints |
+| `page.test.js` | assets emitted byte for byte (engine and chrome separately), escaping, instance metadata, the chrome's icons, no-JS fallback, the iOS constraints |
 | `build.test.js` | end-to-end build, furniture, captions, byte-identical rebuild of the whole tree, publish failure aborts, guards, `--check` |
 
 `scripts/check-build.js` covers what a unit test cannot see cheaply: it reads the

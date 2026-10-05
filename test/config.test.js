@@ -56,10 +56,10 @@ test('out of range values are rejected', () => {
   assert.throws(() => loadConfig({ root: dir, env: {} }), /between 1 and 100/);
 });
 
-test('favicon colours must be hex: they are interpolated into the page', () => {
+test('favicon colors must be hex: they are interpolated into the page', () => {
   const dir = tempDir();
   fs.writeFileSync(path.join(dir, 'wall.config.json'), JSON.stringify({ favicon: { dot: '"><script>alert(1)</script>' } }));
-  assert.throws(() => loadConfig({ root: dir, env: {} }), /favicon.dot must be a hex colour/);
+  assert.throws(() => loadConfig({ root: dir, env: {} }), /favicon.dot must be a hex color/);
 });
 
 test('analytics needs a script and an id when enabled', () => {

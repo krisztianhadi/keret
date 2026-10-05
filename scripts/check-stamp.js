@@ -31,7 +31,21 @@ if (!stamp) {
   process.exit(1);
 }
 
-const expected = sourceHash(root);
+/* the author card is part of what the wall is built from, so it is part of the
+   hash: resolve it the same way the build does */
+const extra = [];
+try {
+  const { loadConfig } = require('../src/config');
+  const { config } = loadConfig({ root, env: {} });
+  if (config.author && config.author.file) {
+    const authorFile = path.resolve(root, config.author.file);
+    if (fs.existsSync(authorFile)) extra.push(authorFile);
+  }
+} catch (err) {
+  // a broken config or author file is a build problem, not a stamp problem
+}
+
+const expected = sourceHash(root, extra);
 if (stamp.source !== expected) {
   console.error('stamp check: ' + file + ' is stale (built from source=' + stamp.source
     + ', current source=' + expected + ')');

@@ -26,12 +26,16 @@ function label(file) {
   return rel.startsWith('..') ? path.basename(file) : rel;
 }
 
-/** Hash of the generator sources plus the instance config when present. */
-function sourceHash(root) {
+/**
+ * Hash of the generator sources plus everything else the wall is built from:
+ * the instance config and any extra files (the author card).
+ */
+function sourceHash(root, extra) {
   const home = root || PACKAGE_ROOT;
   const entries = SOURCES.map((f) => path.join(PACKAGE_ROOT, f));
   const configFile = path.join(home, 'wall.config.json');
   if (fs.existsSync(configFile)) entries.push(configFile);
+  for (const file of extra || []) if (file && fs.existsSync(file)) entries.push(file);
   const hash = crypto.createHash('sha256');
   for (const file of entries) {
     hash.update(label(file));
@@ -40,13 +44,13 @@ function sourceHash(root) {
   return hash.digest('hex').slice(0, 12);
 }
 
-function stampLine(root, photoCount) {
-  return '<!-- built by gen.js source=' + sourceHash(root) + ' photos=' + photoCount + ' -->';
+function stampLine(root, photoCount, extra) {
+  return '<!-- built by gen.js source=' + sourceHash(root, extra) + ' photos=' + photoCount + ' -->';
 }
 
 /** Insert or replace the stamp right after the doctype. */
-function applyStamp(html, root, photoCount) {
-  const line = stampLine(root, photoCount);
+function applyStamp(html, root, photoCount, extra) {
+  const line = stampLine(root, photoCount, extra);
   const existing = STAMP_RE.exec(html);
   if (existing) return html.replace(STAMP_RE, line);
   return html.replace('<!DOCTYPE html>', '<!DOCTYPE html>\n' + line);

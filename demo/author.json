@@ -1,0 +1,9 @@
+{
+  "name": "Keret demo wall",
+  "role": "105 public-domain photographs",
+  "bio": "Every photograph here is a CC0 or public-domain file from Wikimedia Commons, credited in full below. Each frame shows the capture data the engine read out of the image itself.",
+  "links": [
+    { "label": "Credits", "href": "https://github.com/krisztianhadi/keret/blob/main/demo/CREDITS.md" },
+    { "label": "Keret", "href": "https://github.com/krisztianhadi/keret" }
+  ]
+}

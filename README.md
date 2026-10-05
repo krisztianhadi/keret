@@ -16,6 +16,8 @@ personal photo wall and is now a standalone tool anyone can run.
 - **Built to survive a phone.** Pan, pinch, double-tap, fit. The engine is the
   one that was debugged on real iOS hardware after a wall of a few hundred photos
   started killing the tab.
+- **Yours, credited.** A "Powered by Keret" line you can rewrite or remove, and
+  an optional photographer card in the corner for your own contact details.
 - **No JavaScript required to read it.** Without JS you get a plain list of the
   photos; the interactive wall is an enhancement.
 
@@ -102,7 +104,7 @@ ignored.
 
 ## The demo wall
 
-`demo/` is a complete wall: 108 photographs, their captions and the built site,
+`demo/` is a complete wall: 105 photographs, their captions and the built site,
 committed so the demo builds offline and can be served by GitHub Pages.
 
 Every photograph is a Wikimedia Commons original that still carries its camera
@@ -112,7 +114,7 @@ and none of them shows a person. What the build publishes never carries that
 metadata: the served copies are re-encoded without it.
 
 <!-- demo-credits:start -->
-Every photograph is CC0 1.0 or public domain. Photographs by Jebulon (8), GlacierNPS (7), Wilfredor (6), DimiTalen (5), Alex Liivet from Chester, United Kingdom (4), blmcalifornia (4), Mertbiol (4), Roc0ast3r (4), Perituss (2), Peter Cooper Jr. (2), Unknown (not credited) (2), Ypsilon from Finland (2), plus 58 photographers with one frame each.
+Every photograph is CC0 1.0 or public domain. Photographs by Jebulon (8), GlacierNPS (7), Wilfredor (6), DimiTalen (5), Alex Liivet from Chester, United Kingdom (4), blmcalifornia (4), Mertbiol (4), Roc0ast3r (4), Perituss (2), Peter Cooper Jr. (2), Unknown (not credited) (2), plus 57 photographers with one frame each.
 
 The full list, one row per file with its license and a link to the source page,
 is in [demo/CREDITS.md](demo/CREDITS.md).

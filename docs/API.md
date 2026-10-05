@@ -79,10 +79,46 @@ command line. Unknown keys are a hard error, so a typo fails the build.
 | `description` | `"A wall of photographs."` | meta description |
 | `lang` | `"en"` | `<html lang>` |
 | `siteUrl` | `""` | absolute site URL, e.g. `https://photos.example.com/`. When empty there are no social tags, no canonical link and no sitemap. A `CNAME` file in the project root is used as a fallback |
-| `themeColor` | `"#26231e"` | browser chrome colour |
+| `themeColor` | `"#26231e"` | browser chrome color |
 | `favicon.bg` | `"#26231e"` | favicon background (hex only) |
-| `favicon.dot` | `"#e23c30"` | favicon dot (hex only); the same two colours make `apple-touch-icon.png` |
+| `favicon.dot` | `"#e23c30"` | favicon dot (hex only); the same two colors make `apple-touch-icon.png` |
+| `credit` | `{"label":"Powered by","brand":"Keret","url":"https://github.com/krisztianhadi/keret"}` | the small box in the bottom left corner; `brand` is the link and `url` its target. `null` hides the box |
+| `author.file` | `"author.json"` | the photographer card behind the top right button, resolved against the working directory. No file means no button |
 | `analytics` | `null` | `null` disables it. Otherwise `{ "script": "https://...", "websiteId": "...", "domains": "example.com", "cache": true }`; `script` and `websiteId` are required |
+
+### The photographer card
+
+`author.json` in the working directory holds the photographer, and the page grows a
+button in the top right corner that opens it. The file is strict: an unknown key
+fails the build, so a typo cannot ship a half-empty card.
+
+```json
+{
+  "name": "Ada Lovelace",
+  "role": "Photographer",
+  "bio": "One or two lines about the work.",
+  "email": "hello@example.com",
+  "phone": "+66 00 000 000",
+  "location": "Chiang Mai, Thailand",
+  "links": [
+    { "label": "Website", "href": "https://example.com/" },
+    { "label": "Instagram", "href": "https://instagram.com/example" }
+  ]
+}
+```
+
+| Field | Required | Effect |
+| --- | --- | --- |
+| `name` | yes | the heading; without it there is no button |
+| `role` | no | a dim line under the name |
+| `bio` | no | a short paragraph |
+| `email` | no | rendered as a `mailto:` link |
+| `phone` | no | rendered as a `tel:` link |
+| `location` | no | plain text |
+| `links` | no | `[{ label, href }]`; every `href` must start with `http(s)://`, `mailto:` or `tel:` |
+
+The card is written into the page as data and rendered with `textContent`, so a bio
+containing markup is displayed, never executed.
 
 ### Social card
 

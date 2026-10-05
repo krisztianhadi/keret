@@ -10,6 +10,13 @@
   <span class="count">{{count}}</span>
 </header>
 
+<button id="authorBtn" type="button" aria-expanded="false" aria-controls="authorCard" hidden>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 21v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/></svg>
+  <span>Author</span>
+</button>
+<div id="authorCard" role="dialog" aria-label="About the photographer" hidden></div>
+
+<a id="credit" target="_blank" rel="noopener noreferrer" hidden></a>
 
 <div id="hint">drag to move - scroll / pinch / +/- to zoom - arrows pan</div>
 
@@ -18,6 +25,7 @@
   <button id="zoomIn" aria-label="Zoom in">+</button>
   <span id="zoomLbl"></span>
   <span class="sep"></span>
-  <button id="fitBtn" aria-label="Fit whole wall to view">&copy;</button>
+  <button id="fitBtn" aria-label="Fit whole wall to view">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" x2="5" y1="12" y2="12"/><line x1="19" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="5"/><line x1="12" x2="12" y1="19" y2="22"/><circle cx="12" cy="12" r="7"/></svg>
+  </button>
 </div>
-

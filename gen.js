@@ -123,6 +123,56 @@ function altText(photo) {
   return facts ? readable + ' - ' + facts : readable;
 }
 
+/* The author card is a small, strict file: a typo should fail the build rather
+   than quietly ship a half-empty card. */
+const AUTHOR_KEYS = new Set(['name', 'role', 'bio', 'email', 'phone', 'location', 'links']);
+
+/**
+ * Optional photographer card, read from <root>/author.json (config: author.file).
+ * Returns { data, file }: data is null when no card is configured or the file is
+ * absent, and file is the resolved path the stamp has to cover.
+ */
+function readAuthor(root, cfg) {
+  if (!cfg.author || !cfg.author.file) return { data: null, file: null };
+  const file = path.resolve(root, cfg.author.file);
+  if (!fs.existsSync(file)) return { data: null, file: null };
+
+  let parsed;
+  try {
+    parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch (err) {
+    throw new Error('cannot read author file ' + file + ': ' + err.message);
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('author file ' + file + ' must contain a JSON object');
+  }
+  for (const key of Object.keys(parsed)) {
+    if (!AUTHOR_KEYS.has(key)) {
+      throw new Error('unknown key "' + key + '" in ' + file + ' - known keys: '
+        + [...AUTHOR_KEYS].join(', '));
+    }
+  }
+  if (typeof parsed.name !== 'string' || !parsed.name.trim()) {
+    throw new Error('author file ' + file + ' needs a "name"');
+  }
+  for (const key of ['role', 'bio', 'email', 'phone', 'location']) {
+    if (parsed[key] !== undefined && typeof parsed[key] !== 'string') {
+      throw new Error('author "' + key + '" must be a string in ' + file);
+    }
+  }
+  const links = parsed.links || [];
+  if (!Array.isArray(links)) throw new Error('author "links" must be an array in ' + file);
+  for (const link of links) {
+    if (!link || typeof link.href !== 'string' || !/^(https?:|mailto:|tel:)/i.test(link.href)) {
+      throw new Error('every author link needs an href starting with http(s)://, mailto: or tel: in ' + file);
+    }
+    if (link.label !== undefined && typeof link.label !== 'string') {
+      throw new Error('author link "label" must be a string in ' + file);
+    }
+  }
+  return { data: { ...parsed, links }, file };
+}
+
 /** Optional captions sidecar: { "DSC0123.jpg": "Title" | { title, alt, credit } } */
 function readCaptions(photosDir, cfg) {
   const file = cfg.captions.file ? path.resolve(photosDir, cfg.captions.file) : null;
@@ -171,6 +221,7 @@ async function main(argv) {
 
   images.requireSharp(); // hard requirement: see src/images.js
   const captions = readCaptions(photosDir, config);
+  const authorCard = readAuthor(ROOT, config);
   const { photos, skipped } = images.scanPhotos(photosDir, config, captions.file);
 
   for (const p of photos) {
@@ -265,11 +316,14 @@ async function main(argv) {
     canvasH: laid.canvasH,
     capH,
     maxScale,
+    // page chrome: the credit line, and the photographer when one is configured
+    chrome: { credit: config.credit, author: authorCard.data },
   };
 
   /* 2. the page + its furniture */
   const pageCfg = config;
-  const html = stampMod.applyStamp(buildPage(model, pageCfg), ROOT, published.length);
+  const html = stampMod.applyStamp(buildPage(model, pageCfg), ROOT, published.length,
+    authorCard.file ? [authorCard.file] : []);
 
   fs.writeFileSync(path.join(outDir, 'index.html'), html);
   if (cname) fs.writeFileSync(path.join(outDir, 'CNAME'), cname + '\n');
@@ -353,4 +407,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { main, parseArgs, captionPair, altText, BuildError };
+module.exports = { main, parseArgs, captionPair, altText, readAuthor, BuildError };

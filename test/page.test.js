@@ -27,7 +27,20 @@ function model() {
 }
 
 const styleOf = (html) => /<style>([\s\S]*?)<\/style>/.exec(html)[1];
-const scriptOf = (html) => /<script>\n"use strict";\n([\s\S]*?)\n<\/script>/.exec(html)[1];
+const blobOf = (html) => /<script>\n"use strict";\n([\s\S]*?)\n<\/script>/.exec(html)[1];
+/* The engine and the page chrome share one script block. The chrome asset opens
+   with this comment, so each half can still be checked against its own file. */
+const CHROME_MARK = '/* Keret page chrome';
+const scriptOf = (html) => {
+  const blob = blobOf(html);
+  const at = blob.indexOf(CHROME_MARK);
+  return at < 0 ? blob : blob.slice(0, at - 1);   // drop the separator newline
+};
+const chromeOf = (html) => {
+  const blob = blobOf(html);
+  const at = blob.indexOf(CHROME_MARK);
+  return at < 0 ? '' : blob.slice(at);
+};
 
 test('the emitted CSS is the verified stylesheet, byte for byte', () => {
   const html = buildPage(model(), base);
@@ -63,6 +76,48 @@ test('the engine fits the wall the build produced, not a number baked into it', 
   const html = buildPage(m, base);
   assert.match(html, /var wallW = 1000, wallH = 500;/);
   assert.equal(/6792|7088/.test(html), false, 'no wall geometry is hardcoded in the page');
+});
+
+test('the page chrome is the shipped asset, byte for byte', () => {
+  const m = model();
+  m.chrome = {
+    credit: { label: 'Powered by', brand: 'Keret', url: 'https://example.test/keret' },
+    author: { name: 'Ada Lovelace', role: 'Photographer', bio: 'Two lines about the work.' },
+  };
+  const html = buildPage(m, base);
+  assert.equal(chromeOf(html).replace(escJson(m.chrome), '{{CHROME}}'), asset('ui.js'));
+});
+
+test('a wall without a credit or an author ships neither', () => {
+  const html = buildPage(model(), base);
+  assert.equal(/var CHROME = null;/.test(html), true, 'the chrome data is empty');
+  assert.equal(/id="authorBtn" type="button"[^>]*hidden/.test(html), true, 'the author button starts hidden');
+  assert.equal(/<a id="credit"[^>]*hidden/.test(html), true, 'the credit line starts hidden');
+});
+
+test('the author card carries no unescaped markup', () => {
+  const m = model();
+  m.chrome = { author: { name: '</script><script>alert(1)</script>', bio: '"><img onerror=alert(1)>' } };
+  const html = buildPage(m, base);
+  const blob = blobOf(html);
+  assert.equal(blob.includes('</script'), false);
+  assert.equal((html.match(/<script/g) || []).length, 1 + (base.analytics ? 1 : 0));
+});
+
+test('the fit control wears the locate mark', () => {
+  const html = buildPage(model(), base);
+  const fit = /<button id="fitBtn"[\s\S]*?<\/button>/.exec(html)[0];
+  assert.match(fit, /<svg/);
+  assert.match(fit, /<circle cx="12" cy="12" r="7"\/>/);
+  assert.equal(/&copy;/.test(fit), false, 'the old copyright glyph is gone');
+});
+
+test('the author button wears the square user mark', () => {
+  const html = buildPage(model(), base);
+  const button = /<button id="authorBtn"[\s\S]*?<\/button>/.exec(html)[0];
+  assert.match(button, /<rect width="18" height="18"/);
+  assert.match(button, /<circle cx="12" cy="10" r="3"\/>/);
+  assert.match(button, /<span>Author<\/span>/);
 });
 
 test('the wall data cannot break out of the inline script', () => {

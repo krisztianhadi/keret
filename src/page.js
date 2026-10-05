@@ -132,9 +132,14 @@ function buildPage(model, cfg) {
     ? '/* empty wall - nothing to render */'
     : '"use strict";\n' + script;
 
+  // page chrome (the credit line, the photographer card) rides in the same
+  // script block: one inline script, so the wall data and the chrome share one
+  // escaping path and the page keeps a single script tag
+  const chrome = asset('ui.js').replace('{{CHROME}}', escJson(model.chrome || null));
+
   return head
     + '<style>' + css + '</style>' + body + extras.join('') + '\n'
-    + '<script>\n' + engine + '\n</script>\n</body>\n</html>\n';
+    + '<script>\n' + engine + '\n' + chrome + '\n</script>\n</body>\n</html>\n';
 }
 
 module.exports = { buildPage, esc, escJson, faviconUri, ASSETS };

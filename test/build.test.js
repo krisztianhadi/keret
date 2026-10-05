@@ -143,6 +143,34 @@ test('a mistyped output directory is refused and the photos survive', async () =
   assert.deepEqual(fs.readdirSync(fx.photosDir).sort(), before, 'the originals are untouched');
 });
 
+test('the author card reaches the page, and the stamp covers it', async () => {
+  const fx = fixture(2);
+  const authorFile = path.join(fx.dir, 'author.json');
+  const config = JSON.parse(fs.readFileSync(fx.configPath, 'utf8'));
+  config.author = { file: authorFile };
+  fs.writeFileSync(fx.configPath, JSON.stringify(config));
+
+  fs.writeFileSync(authorFile, JSON.stringify({
+    name: 'Ada Lovelace',
+    role: 'Photographer',
+    links: [{ label: 'Site', href: 'https://example.test/' }],
+  }));
+  await main(args(fx));
+  const first = readPage(fx.outDir).html;
+  assert.match(first, /Ada Lovelace/);
+  assert.match(first, /example\.test/);
+  const stamp = readStamp(first).source;
+
+  fs.writeFileSync(authorFile, JSON.stringify({ name: 'Grace Hopper' }));
+  await main(args(fx));
+  const second = readPage(fx.outDir).html;
+  assert.match(second, /Grace Hopper/);
+  assert.notEqual(readStamp(second).source, stamp, 'changing the card must invalidate the stamp');
+
+  fs.writeFileSync(authorFile, JSON.stringify({ name: 'Grace Hopper', nmae: 'typo' }));
+  await assert.rejects(main(args(fx)), /unknown key "nmae"/);
+});
+
 test('the captions sidecar names the photo in the page', async () => {
   const fx = fixture(2);
   const names = fs.readdirSync(fx.photosDir).filter((f) => /\.png$/.test(f)).sort();

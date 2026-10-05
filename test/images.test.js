@@ -39,10 +39,10 @@ test('seeded samples are visible images, not blank ones', async () => {
     const o = (y * info.width + x) * info.channels;
     return [data[o], data[o + 1], data[o + 2]];
   };
-  const centre = at(Math.floor(info.width / 2), Math.floor(info.height / 2));
+  const center = at(Math.floor(info.width / 2), Math.floor(info.height / 2));
   const corner = at(0, 0);
-  assert.notDeepEqual(centre, [0, 0, 0], 'the sample center is not black');
-  assert.notDeepEqual(centre, corner, 'the sample is a gradient, not one flat colour');
+  assert.notDeepEqual(center, [0, 0, 0], 'the sample center is not black');
+  assert.notDeepEqual(center, corner, 'the sample is a gradient, not one flat color');
 });
 
 test('GIF dimensions come from the logical screen descriptor', () => {

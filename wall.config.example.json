@@ -4,11 +4,25 @@
   "lang": "en",
   "siteUrl": "",
   "themeColor": "#26231e",
-  "favicon": { "bg": "#26231e", "dot": "#e23c30" },
-  "og": { "source": "assets/og.jpg", "photo": "" },
+  "favicon": {
+    "bg": "#26231e",
+    "dot": "#e23c30"
+  },
+  "og": {
+    "source": "assets/og.jpg",
+    "photo": ""
+  },
   "photosDir": "photos",
   "outDir": "dist",
   "analytics": null,
+  "credit": {
+    "label": "Powered by",
+    "brand": "Keret",
+    "url": "https://github.com/krisztianhadi/keret"
+  },
+  "author": {
+    "file": "author.json"
+  },
   "captions": {
     "file": "captions.json",
     "maxLines": 2,
@@ -37,6 +51,10 @@
     "ogHeight": 630,
     "ogQuality": 82
   },
-  "zoom": { "max": 4 },
-  "noscript": { "limit": 60 }
+  "zoom": {
+    "max": 4
+  },
+  "noscript": {
+    "limit": 60
+  }
 }

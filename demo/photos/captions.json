@@ -3,37 +3,37 @@
     "title": "A pine leaning over a misty valley",
     "alt": "A windswept pine on a cliff above a misty forested valley",
     "specs": "A pine leaning over a misty valley",
-    "credit": "Photo: Kristoffer Fredriksson / stocksnap"
+    "credit": "Photo: Kristoffer Fredriksson"
   },
   "waterfall-rainbow.jpg": {
     "title": "A waterfall, and a rainbow in its spray",
     "alt": "A tall waterfall with a rainbow in the spray below the cliff",
     "specs": "A waterfall, and a rainbow in its spray",
-    "credit": "Photo: Robert Lukeman / stocksnap"
+    "credit": "Photo: Robert Lukeman"
   },
   "cloud-capped-peaks.jpg": {
     "title": "Clouds breaking over the peaks",
     "alt": "Sunlit mountain peaks with heavy clouds rolling over them",
     "specs": "Clouds breaking over the peaks",
-    "credit": "Photo: Zachary Domes / stocksnap"
+    "credit": "Photo: Zachary Domes"
   },
   "meadow-path.jpg": {
     "title": "A path through a mountain meadow",
     "alt": "A stone path crossing a green meadow toward misty hills",
     "specs": "A path through a mountain meadow",
-    "credit": "Photo: Lili Popper / stocksnap"
+    "credit": "Photo: Lili Popper"
   },
   "still-lake.jpg": {
     "title": "Still water, mirrored hills",
     "alt": "A calm lake mirroring a range of hills at dusk",
     "specs": "Still water, mirrored hills",
-    "credit": "Photo: Snapwire / stocksnap"
+    "credit": "Photo: Snapwire"
   },
   "backlit-wave.jpg": {
     "title": "Sunlight through a breaking wave",
     "alt": "A breaking wave lit from behind, with sun glinting off the water",
     "specs": "Sunlight through a breaking wave",
-    "credit": "Photo: Altered Reality / stocksnap"
+    "credit": "Photo: Altered Reality"
   },
   "night-sky-lake.webp": {
     "title": "The Milky Way over a lake",
@@ -67,15 +67,15 @@
   },
   "autumn-road.jpg": {
     "title": "A mountain road in October",
-    "alt": "A road crossing a mountainside in full autumn colour",
+    "alt": "A road crossing a mountainside in full autumn color",
     "specs": "A mountain road in October",
-    "credit": "Photo: JJ Skys the Limit / stocksnap"
+    "credit": "Photo: JJ Skys the Limit"
   },
   "forest-railway.jpg": {
     "title": "Tracks through an autumn forest",
     "alt": "Railway tracks running through a forest of yellow autumn trees",
     "specs": "Tracks through an autumn forest",
-    "credit": "Photo: Matt Moloney / stocksnap"
+    "credit": "Photo: Matt Moloney"
   },
   "snowbound-spruce.webp": {
     "title": "A spruce under snow",
@@ -105,7 +105,7 @@
     "title": "Icefall, in black and white",
     "alt": "A frozen waterfall in black and white, framed by dark branches",
     "specs": "Icefall, in black and white",
-    "credit": "Photo: museumofnewzealand / rawpixel"
+    "credit": "Photo: museumofnewzealand"
   },
   "long-waterfall.webp": {
     "title": "A waterfall at a long exposure",
@@ -135,12 +135,60 @@
     "title": "A skyline at blue hour",
     "alt": "A city skyline across the water at blue hour, lights reflecting on the surface",
     "specs": "A skyline at blue hour",
-    "credit": "Photo: Matt Bango / stocksnap"
+    "credit": "Photo: Matt Bango"
   },
   "harbour-sunset.jpg": {
     "title": "The harbour bridge at sunset",
     "alt": "A steel arch harbour bridge silhouetted against an orange sunset",
     "specs": "The harbour bridge at sunset",
-    "credit": "Photo: Wyncliffe / stocksnap"
+    "credit": "Photo: Wyncliffe"
+  },
+  "fog-creek.jpg": {
+    "title": "Fog on a forest creek",
+    "alt": "A creek running through a foggy forest of bare trees"
+  },
+  "shore-waves.jpg": {
+    "title": "Waves on a rocky shore",
+    "alt": "Waves breaking over dark rocks on a pebble beach"
+  },
+  "blanket-flowers.jpg": {
+    "title": "Blanket flowers",
+    "alt": "Red and yellow blanket flowers among tall green grass"
+  },
+  "lost-creek-canyon.jpg": {
+    "title": "Rock formations, Lost Creek Canyon",
+    "alt": "Weathered rock formations with yellow flowers in the foreground"
+  },
+  "canyon-sunburst.jpg": {
+    "title": "Sunburst in the canyon",
+    "alt": "The sun flaring through a gap in red rock formations"
+  },
+  "island-facade.jpg": {
+    "title": "A house facade on Ile d Orleans",
+    "alt": "A black and white photograph of an old stone house facade with shuttered windows"
+  },
+  "rome-night.jpg": {
+    "title": "St Peter and the Tiber at night",
+    "alt": "St Peter basilica and the Sant Angelo bridge lit up at night, reflected in the Tiber"
+  },
+  "tiber-dusk.jpg": {
+    "title": "The Tiber at dusk",
+    "alt": "A stone bridge and a domed basilica along a river at dusk"
+  },
+  "dordogne-wall.jpg": {
+    "title": "A dry stone wall in the Dordogne",
+    "alt": "A wall built of irregular flat stones with small square openings"
+  },
+  "logan-creek.jpg": {
+    "title": "Mossy rocks on Logan Creek",
+    "alt": "Green moss covered rocks with water running between them"
+  },
+  "alpine-lake-cloud.jpg": {
+    "title": "An alpine lake under cloud",
+    "alt": "A dark mountain peak above a lake under heavy cloud"
+  },
+  "snow-path-dawn.jpg": {
+    "title": "A snow path at dawn",
+    "alt": "A snow covered path through a conifer forest, with the sunrise on the peaks beyond"
   }
 }

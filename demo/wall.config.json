@@ -9,7 +9,7 @@
   "captions": {
     "file": "captions.json",
     "maxLines": 2,
-    "showYear": false,
+    "showYear": true,
     "showCamera": true,
     "showSpecs": true
   },

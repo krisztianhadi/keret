@@ -28,6 +28,13 @@ line - which is what a wall of stock photos, scans or exports needs.
 captions, the built site and a Pages workflow, all committed. Sources and licenses:
 [demo/CREDITS.md](../demo/CREDITS.md).
 
+`[Feature]` **The demo shows both caption paths.** 36 photographs: 24 CC0 stock
+photos whose library stripped the metadata, so their frames carry the caption from
+`photos/captions.json` and the photographer credit, plus 12 Wikimedia Commons
+originals that still carry camera EXIF, resized with `keepExif()` so the wall can
+read the real date, exposure and camera. Every file, its author, license and
+source is listed in [demo/CREDITS.md](../demo/CREDITS.md) and in the README.
+
 `[Feature]` **MIT license**, replacing the AGPL-3.0-only license of the original
 instance repository. Community files, issue templates and the PR checklist follow
 the new layout.

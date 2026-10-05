@@ -13,6 +13,12 @@ Keret publishes copies of your photographs. Two guarantees matter:
    and the build never writes into it; the output-directory guards refuse to run
    when the output path would contain the photos.
 
+Two things are published on purpose, and both are yours to decide: the credit
+line (`credit`, `null` hides it) and the photographer card, whose contact
+details are read from `author.json` and rendered into every page. The card is
+data, not markup: it is written into the page as JSON and drawn with
+`textContent`, so a bio containing HTML cannot execute.
+
 ## Reporting a problem
 
 If you find a way to make the build publish metadata, escape the page's

@@ -18,9 +18,12 @@ them:
 ```sh
 mkdir -p ~/pictures/wall/photos
 cp ~/photos/*.jpg ~/pictures/wall/photos/
-cd ~/pictures/wall && node /path/to/keret/gen.js
+cd ~/pictures/wall && node /path/to/keret/gen.js   # asks a few questions, once
 npm --prefix /path/to/keret run serve   # or any static server, over dist/
 ```
+
+Add `--yes` when the answers should come from `wall.config.json` instead of a
+prompt; scripts and CI never get asked either way.
 
 `npm run seed` writes sample images (a wall with something on it before you have
 photos of your own).

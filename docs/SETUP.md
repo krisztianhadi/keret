@@ -90,7 +90,7 @@ node ~/Code/keret/gen.js
 ## The bundled demo
 
 ```sh
-npm run demo          # builds demo/ into demo/dist
+npm run demo          # builds demo/ into demo/dist (passes --yes, so it never asks)
 npm run demo:serve    # http://127.0.0.1:3100/
 npm run demo:check    # structural check of the built demo
 ```
@@ -159,6 +159,11 @@ Actions are pinned by commit SHA; the trailing comment is the human-readable
 version, and Dependabot keeps both current.
 
 ## Troubleshooting
+
+**The generator keeps asking questions** - it asks once per run on a terminal
+whenever a config file exists, and reports what it wrote when one does not. Pass
+`--yes` (`-y`) to never ask, `--setup` to ask on purpose, or `--check` for a dry
+run that writes nothing. In a script, a pipe or CI it never asks at all.
 
 **`sharp is required (npm install)`** - `npm install` did not finish or the
 platform binary failed to load. Without `sharp` the build would have to copy

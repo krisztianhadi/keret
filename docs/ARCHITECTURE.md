@@ -150,7 +150,8 @@ verbatim and `test/page.test.js` fails if the build starts transforming them.
 | `images.test.js` | header parsing (JPEG/PNG/GIF), EXIF extraction, metadata stripping on publish, GIF to PNG, scan reporting |
 | `layout.test.js` | determinism, no overlapping frames, symmetric margin, single photo centering, empty wall, `-x`, pairing, column bounds |
 | `page.test.js` | assets emitted byte for byte (engine and chrome separately), escaping, instance metadata, the chrome's icons, no-JS fallback, the iOS constraints |
-| `build.test.js` | end-to-end build, furniture, captions, byte-identical rebuild of the whole tree, publish failure aborts, guards, `--check` |
+| `build.test.js` | end-to-end build, furniture, captions, the author card and its stamp, byte-identical rebuild of the whole tree, publish failure aborts, guards, `--check` |
+| `setup.test.js` | the first-run interview: answers that survive config validation, previous answers offered back as defaults, the rejected-email retry, the silent non-TTY path, a cleared photographer leaving the card alone |
 
 `scripts/check-build.js` covers what a unit test cannot see cheaply: it reads the
 built page, verifies every referenced photo exists, that frames do not overlap,

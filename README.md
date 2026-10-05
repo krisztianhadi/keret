@@ -21,7 +21,7 @@ personal photo wall and is now a standalone tool anyone can run.
 - **No JavaScript required to read it.** Without JS you get a plain list of the
   photos; the interactive wall is an enhancement.
 
-![The demo wall: framed photographs on a dark wall, each frame captioned with the date, exposure and camera it was shot with](docs/assets/demo-wall.jpg)
+![The demo wall at 40% zoom: framed photographs on a dark wall, the credit line in the bottom left corner and the Author button in the top right](docs/assets/demo-wall.jpg)
 
 ## Quick start
 
@@ -97,9 +97,9 @@ also take over a line when a photo has no EXIF of its own:
 ## Configuration
 
 Everything lives in `wall.config.json` in the directory you run the generator
-from: title, description, site URL, caption rules, the geometry of the wall
-(column width, gutters, mats, margins), how large the served copies are, and an
-optional analytics snippet. Every key is documented in
+from: title, description, site URL, caption rules, the credit line, the geometry
+of the wall (column width, gutters, mats, margins), how large the served copies
+are, and an optional analytics snippet. Every key is documented in
 [docs/API.md](docs/API.md#configuration); the defaults live in
 [`src/config.js`](src/config.js).
 
@@ -114,8 +114,8 @@ committed so the demo builds offline and can be served by GitHub Pages.
 Every photograph is a Wikimedia Commons original that still carries its camera
 EXIF, so every frame shows the date, exposure and camera the engine read straight
 out of the file. They are committed at demo size (1000px, about 12 MB in total),
-and none of them shows a person. What the build publishes never carries that
-metadata: the served copies are re-encoded without it.
+and no frame was chosen to show a person. What the build publishes never carries
+that metadata: the served copies are re-encoded without it.
 
 <!-- demo-credits:start -->
 Every photograph is CC0 1.0 or public domain. Photographs by Jebulon (8), GlacierNPS (7), Wilfredor (6), DimiTalen (5), Alex Liivet from Chester, United Kingdom (4), blmcalifornia (4), Mertbiol (4), Roc0ast3r (4), Perituss (2), Peter Cooper Jr. (2), Unknown (not credited) (2), plus 57 photographers with one frame each.

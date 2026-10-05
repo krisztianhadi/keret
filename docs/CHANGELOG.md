@@ -28,9 +28,9 @@ line - which is what a wall of stock photos, scans or exports needs.
 captions, the built site and a Pages workflow, all committed. Sources and licenses:
 [demo/CREDITS.md](../demo/CREDITS.md).
 
-`[Feature]` **The demo is EXIF-only.** 21 Wikimedia Commons originals, all CC0 1.0 or
+`[Feature]` **The demo is EXIF-only.** 108 Wikimedia Commons originals, all CC0 1.0 or
 public domain, every one carrying camera EXIF. They are committed at demo size
-(1440px, quality 80, about 4 MB in total) and resized with `keepExif()`, so each
+(1000px, quality 76, about 12 MB in total) and resized with `keepExif()`, so each
 frame on the wall shows the date, exposure and camera the engine read from the
 file. A photograph whose capture data exists only in XMP or IPTC is skipped: the
 demo has to show what the reader can actually read. Authors, licenses and sources

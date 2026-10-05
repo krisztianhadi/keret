@@ -103,44 +103,20 @@ ignored.
 
 ## The demo wall
 
-`demo/` is a complete wall: 21 photographs, their captions and the built site,
+`demo/` is a complete wall: 108 photographs, their captions and the built site,
 committed so the demo builds offline and can be served by GitHub Pages.
 
 Every photograph is a Wikimedia Commons original that still carries its camera
 EXIF, so every frame shows the date, exposure and camera the engine read straight
-out of the file. They are committed at demo size (1440px, about 4 MB in total),
+out of the file. They are committed at demo size (1000px, about 12 MB in total),
 and none of them shows a person. What the build publishes never carries that
 metadata: the served copies are re-encoded without it.
 
 <!-- demo-credits:start -->
-Every photograph in the demo, and the person who took it. All CC0 1.0 or public
-domain.
+Every photograph is CC0 1.0 or public domain. Photographs by Jebulon (8), GlacierNPS (7), Wilfredor (6), DimiTalen (5), Alex Liivet from Chester, United Kingdom (4), blmcalifornia (4), Mertbiol (4), Roc0ast3r (4), Perituss (2), Peter Cooper Jr. (2), Unknown (not credited) (2), Ypsilon from Finland (2), plus 58 photographers with one frame each.
 
-| Photograph | Author | License | Source |
-| --- | --- | --- | --- |
-| Fog on a forest creek | Roc0ast3r | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AFog_in_forest_and_creek_at_Kent%2C_Washington.jpg) |
-| Waves on a rocky shore | Jebulon | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ANorthern_coast_Crete_rocks_waves_detail.jpg) |
-| Blanket flowers | Peter Cooper Jr. | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ABlanket_flowers%2C_Cathleen_Kuehl_Memorial_Wildflower_Meadow_2026-08-01.jpg) |
-| Rock formations, Lost Creek Canyon | blmcalifornia | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ARock_formations_in_Lost_Creek_Canyon_(51581784904).jpg) |
-| Sunburst in the canyon | blmcalifornia | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ARock_formations_in_Lost_Creek_Canyon_(51580275887).jpg) |
-| A house facade on Ile d Orleans | Wilfredor | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AHouse_facade_in_%C3%8Ele_d'Orl%C3%A9ans%2C_Quebec_city%2C_Quebec%2C_Canada202204-23.jpg) |
-| St Peter and the Tiber at night | Jebulon | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ASaint_Peter's_Basilica%2C_Sant'Angelo_bridge%2C_by_night%2C_Rome%2C_Italy.jpg) |
-| The Tiber at dusk | Jebulon | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ASant'Angelo_bridge%2C_dusk%2C_Rome%2C_Italy.jpg) |
-| A dry stone wall in the Dordogne | Jebulon | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AStone_wall_old_farm_Dordogne.jpg) |
-| Mossy rocks on Logan Creek | Unknown authorUnknown author or not provided | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ALogan_Canyon_Scenic_Byway_-_Mossy_Rocks_of_Spring_Creek_in_Logan_Canyon_-_NARA_-_7720240.jpg) |
-| A snow path at dawn | DimiTalen | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ASnow-covered_forest_path_at_dawn%2C_near_Villard-Reculas%2C_2026.jpg) |
-| A village church | Alexis Doine | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AVillage_Church_Burbank.jpg) |
-| Stars over a lake | Markus Spiske from Forchheim, Bavaria Upper Franconia | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ANight_Sky_%40_Baiersdorf_-_Flickr_-_markus_spiske.jpg) |
-| A sea of cloud over the coast | Grand Canyon National Park | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AGrand_Canyon_National_Park_Cloud_Inversion_from_Desert_View%2C_November_29%2C_2013_photo_0812_-_Flickr_-_Grand_Canyon_NPS.jpg) |
-| A glacial lake below the peaks | Gorgo | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AMoraine_Lake_17092005.jpg) |
-| Sunset over the fields | Roan Retera | CC0 1.0 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AGreat_Sand_Dunes_Sunset1.jpg) |
-| Red rock under snow | NPS | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3APendleton_Barn_in_snow_(8169df0e-8211-4839-8ccc-2092a004b3fb).JPG) |
-| A river in flood below an old bridge | Kelly M. Grow/ California Department of Water Resources | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AFlood_under_the_Old_Route_49_bridge_crossing_over_the_South_Yuba_River_in_Nevada_City%2C_California.jpg) |
-| A flower in macro | Tangopaso | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3AParc_Olbius_Riquier_(Greenhouse)_-_Calliandra_haematocephala_(flower).jpg) |
-| A mountain lake, panorama | Jacob W. Frank, NPS | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ALake-sherburne-964855.jpg) |
-| Salt flats under a desert sky | BLMUtah | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File%3ABonneville_Salt_Flats_(27741239210).jpg) |
-
-Full file list and licenses: [demo/CREDITS.md](demo/CREDITS.md).
+The full list, one row per file with its license and a link to the source page,
+is in [demo/CREDITS.md](demo/CREDITS.md).
 <!-- demo-credits:end -->
 
 ## Privacy and safety

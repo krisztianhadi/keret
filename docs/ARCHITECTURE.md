@@ -9,6 +9,7 @@ files. Nothing runs at request time.
 ```
 gen.js                     CLI: argv, config, guards, orchestration
   src/config.js            defaults, wall.config.json, WALL_* env, validation, outDir guards
+  src/setup.js             the first-run wizard: the questions, and the files it writes
   src/images.js            header parsing (size + EXIF), sharp re-encoding, placeholders
   src/layout.js            bricks, masonry columns, arch silhouette, canvas size
   src/page.js              the HTML document from src/assets/* + the wall data
@@ -26,7 +27,10 @@ scripts/seed-placeholders.js  deterministic sample images (fixtures, and a wall 
 
 The build order matters:
 
-1. **Config** is loaded and validated (unknown keys are fatal).
+1. **Config** is loaded and validated (unknown keys are fatal). With a terminal
+   attached, the first-run wizard may ask a few questions and write
+   `wall.config.json` first; it is skipped entirely without a TTY, with `--yes`,
+   or on `--check`.
 2. **Paths** are resolved against the current working directory and passed through
    `checkPaths`; a refused path aborts with exit 2 before anything is touched.
 3. **Scan.** Each image is described from its own header bytes: dimensions, EXIF
@@ -115,6 +119,10 @@ verbatim and `test/page.test.js` fails if the build starts transforming them.
 - **Publish-then-page.** The layout is computed first, but the page is only
   written after every photo is confirmed on disk, and any failure aborts the whole
   build. A wall referencing a missing file is worse than a failed build.
+- **The wizard never deletes anything.** Clearing the photographer's name
+  leaves `author.json` in place and prints a line saying so: a build run is not
+  the right place to remove someone's contact card. It also writes only the keys
+  it asked about, so improving a default later still reaches existing walls.
 - **The chrome rides in the engine's script block.** The credit line and the
   photographer card are page furniture, so they live in their own asset
   (`ui.js`) and their own data object, but they are emitted inside the same

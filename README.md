@@ -46,9 +46,13 @@ node ~/Code/keret/gen.js         # writes ./dist
 npx --yes serve dist             # or any static file server
 ```
 
-No config file is needed to start: the defaults build a wall from `./photos`
-into `./dist`. Copy [`wall.config.example.json`](wall.config.example.json) to
-`wall.config.json` when you want to change something.
+No config file is needed to start, and on a terminal the first run asks a few
+questions (title, description, site URL, photographer) and writes
+`wall.config.json` for you; every later run offers to keep it. `--yes` turns the
+questions off and `--setup` brings them back. Without a terminal nothing is
+asked, and the defaults build `./photos` into `./dist`. Copy
+[`wall.config.example.json`](wall.config.example.json) to `wall.config.json`
+when you would rather edit it by hand.
 
 ## Requirements
 

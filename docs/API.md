@@ -12,9 +12,15 @@ node gen.js [options]
   --out <dir>       output directory             (config: outDir)
   --config <file>   instance config file         (default: wall.config.json)
   --force           wipe a non-empty output directory that is not a build
+  --yes             never ask anything: use the config, or the defaults
+  --setup           ask the setup questions again
   --check           scan + lay out, write nothing
   --help            the usage text
 ```
+
+The first run in a directory, with a terminal attached, asks a few questions and
+writes `wall.config.json` (and `author.json`). Later runs offer to keep it. See
+[SETUP.md](SETUP.md) for the questions and the non-interactive rules.
 
 Positional arguments are still accepted for convenience:
 `node gen.js [photosDir] [outDir]`.
@@ -72,6 +78,9 @@ command line. Unknown keys are a hard error, so a typo fails the build.
 `wall.config.json`.
 
 ### Identity and sharing
+
+Run `node gen.js --setup` to be asked about these instead of editing the file by
+hand; `--yes` turns the questions off.
 
 | Key | Default | Meaning |
 | --- | --- | --- |

@@ -13,11 +13,22 @@
     "url": "https://github.com/krisztianhadi/keret/issues"
   },
   "keywords": [
-    "photo", "gallery", "photo-wall", "static-site", "self-hosted",
-    "pan", "zoom", "sharp", "exif"
+    "photo",
+    "gallery",
+    "photo-wall",
+    "static-site",
+    "self-hosted",
+    "pan",
+    "zoom",
+    "sharp",
+    "exif"
   ],
-  "engines": { "node": ">=18.17" },
-  "bin": { "keret": "gen.js" },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "bin": {
+    "keret": "gen.js"
+  },
   "files": [
     "gen.js",
     "src/",
@@ -33,7 +44,7 @@
     "serve": "node scripts/serve.js dist 3100",
     "seed": "node scripts/seed-placeholders.js",
     "stamp": "node scripts/check-stamp.js dist/index.html",
-    "demo": "cd demo && node ../gen.js",
+    "demo": "cd demo && node ../gen.js --yes",
     "demo:check": "cd demo && node ../scripts/check-build.js dist",
     "demo:serve": "node scripts/serve.js demo/dist 3100",
     "test": "node --test test/*.test.js"

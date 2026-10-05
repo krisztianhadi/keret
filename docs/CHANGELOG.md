@@ -15,6 +15,15 @@ path at Portland Head lighthouse. The rest of the wall was re-checked at a
 larger size than the original contact sheets, and the risky subjects (bridges,
 streets, lighthouses, coasts, buildings) were checked again a tile at a time.
 
+`[Feature]` **A first-run wizard.** On a terminal, a wall with no
+`wall.config.json` is asked a few questions (title, description, site URL,
+photographer name, email, website) and the answers are written to
+`wall.config.json` and `author.json`. Every later run asks whether to keep the
+current setup and, if not, shows each previous answer as the default. It is
+skipped without a TTY, with `--yes`/`-y`, or on `--check`; `--setup` asks again
+on purpose. The config it writes holds only the answered keys, and clearing the
+name leaves an existing card alone rather than deleting it.
+
 `[Feature]` **A credit line and a photographer card.** The page carries a small
 "Powered by Keret" box in the bottom left corner (`credit`, null to hide it) and,
 when `author.json` exists in the working directory, an Author button in the top

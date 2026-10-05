@@ -22,6 +22,45 @@ npx --yes github:krisztianhadi/keret --help     # runs the generator from the re
 npm install -g github:krisztianhadi/keret       # provides the `keret` command
 ```
 
+## First run
+
+The first time you build a wall in a directory, with a terminal attached, the
+generator asks a few questions and writes the answers next to your photos:
+
+```
+A few questions, once. Enter keeps the [default].
+
+Title [Photo Wall]: Iceland 2026
+Description [A wall of photographs.]: Twelve days on the ring road.
+Site URL, used for social tags and the sitemap (optional): photos.example.com
+Photographer name, for the contact card (optional): Ada Lovelace
+  Email (optional): ada@example.com
+  Website or profile (optional): ada.example.com
+
+wrote /home/you/pictures/wall/wall.config.json
+wrote /home/you/pictures/wall/author.json
+```
+
+Every later run offers to keep what is there, and shows each previous answer as
+the default if you say no:
+
+```
+Keep the current setup ("Iceland 2026")? (y/n) [y]
+```
+
+The config it writes holds only what you answered, so the generator's defaults
+keep improving underneath it.
+
+| Situation | What happens |
+| --- | --- |
+| `--yes` (or `-y`) | never asks: uses `wall.config.json`, or the built-in defaults when there is none |
+| `--setup` | asks again even when a config file exists |
+| no terminal (pipe, CI, cron) | nothing is asked and nothing is written; the build uses the config or the defaults |
+| `--check` | never asks: a dry run does not write files |
+
+Clearing the photographer's name leaves an existing `author.json` alone and says
+so, because deleting a contact card is your call.
+
 ## Your first wall
 
 ```sh

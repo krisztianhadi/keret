@@ -11,6 +11,10 @@
  *     --out <dir>       output directory              (config: outDir)
  *     --config <file>   instance config file          (default: wall.config.json)
  *     --force           wipe a non-empty output directory that is not a build
+  --yes             never ask anything: use the config, or the defaults
+  --setup           ask the setup questions again
+ *     --yes             never ask anything: use the config, or the defaults
+ *     --setup           ask the setup questions again
  *     --check           scan + lay out, write nothing (CI friendly)
  *     --help            this text
  *
@@ -36,6 +40,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const { loadConfig, checkPaths } = require('./src/config');
+const setupModule = require('./src/setup');
 const stampMod = require('./src/stamp');
 const layoutMod = require('./src/layout');
 const images = require('./src/images');
@@ -73,11 +78,13 @@ individual settings (see docs/SETUP.md).\n`;
 
 /** Parse argv: flags win, two positional args stay supported. */
 function parseArgs(argv) {
-  const out = { positional: [], force: false, check: false, help: false };
+  const out = { positional: [], force: false, check: false, help: false, yes: false, setup: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--help' || a === '-h') { out.help = true; continue; }
     if (a === '--force') { out.force = true; continue; }
+    if (a === '--yes' || a === '-y') { out.yes = true; continue; }
+    if (a === '--setup' || a === '--init') { out.setup = true; continue; }
     if (a === '--check' || a === '--dry-run') { out.check = true; continue; }
     if (a === '--photos' || a === '--out' || a === '--config') {
       const value = argv[++i];
@@ -196,10 +203,29 @@ async function main(argv) {
   const args = parseArgs(argv || process.argv.slice(2));
   if (args.help) { process.stdout.write(USAGE); return; }
 
-  const { config, configPath } = loadConfig({
-    root: ROOT,
-    configPath: args.config ? path.resolve(args.config) : undefined,
-  });
+  const loadOptions = { root: ROOT, configPath: args.config ? path.resolve(args.config) : undefined };
+  let loaded = loadConfig(loadOptions);
+  let authorCard = readAuthor(ROOT, loaded.config);
+
+  /* the first-run wizard: a terminal, no --yes, and not a dry run */
+  if (process.stdin.isTTY && process.stdout.isTTY && !args.yes && !args.check) {
+    const configFile = loaded.configPath || path.join(ROOT, 'wall.config.json');
+    const outcome = await setupModule.setup({
+      root: ROOT,
+      configFile,
+      current: fs.existsSync(configFile) ? { ...loaded.config, authorCard: authorCard.data } : null,
+      photosDir: path.resolve(ROOT, args.photos || loaded.config.photosDir),
+      force: args.setup,
+      input: process.stdin,
+      output: process.stdout,
+    });
+    if (outcome.wrote) {
+      loaded = loadConfig(loadOptions);
+      authorCard = readAuthor(ROOT, loaded.config);
+    }
+  }
+
+  const { config, configPath } = loaded;
 
   const photosDir = path.resolve(ROOT, args.photos || config.photosDir);
   const outDir = path.resolve(ROOT, args.out || config.outDir);
@@ -221,7 +247,6 @@ async function main(argv) {
 
   images.requireSharp(); // hard requirement: see src/images.js
   const captions = readCaptions(photosDir, config);
-  const authorCard = readAuthor(ROOT, config);
   const { photos, skipped } = images.scanPhotos(photosDir, config, captions.file);
 
   for (const p of photos) {

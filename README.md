@@ -4,9 +4,8 @@ A self-hosted photo wall. Point it at a folder of photographs and it builds a
 single static page: every photo in its own frame on one big wall you pan and
 zoom, laid out so nothing overlaps and nothing is cropped.
 
-Named after the Hungarian word for *frame*. It is the engine behind
-[jpg.krisztian.wtf](https://jpg.krisztian.wtf/), extracted into a tool anyone can
-run.
+Named after the Hungarian word for *frame*. It began as the engine of a
+personal photo wall and is now a standalone tool anyone can run.
 
 - **Static output.** A folder of HTML, images and crawler files. No database, no
   server-side runtime, no client framework.

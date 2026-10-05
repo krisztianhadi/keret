@@ -5,8 +5,8 @@ Reverse-chronological. One dated section per work block, entries tagged
 
 ## 2026-10-05 - Keret 0.1.0, extracted as a standalone tool
 
-The engine that builds [jpg.krisztian.wtf](https://jpg.krisztian.wtf/) becomes a
-general tool with its own repository, license and demo wall.
+The engine that built a personal photo wall becomes a general tool with its own
+repository, license and demo wall.
 
 `[Feature]` **Keret is a package, not a site.** `node gen.js` now builds the wall
 in the **current working directory** instead of the directory the script lives

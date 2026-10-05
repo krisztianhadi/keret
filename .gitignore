@@ -1,0 +1,38 @@
+# Hidden files are ignored by default (scratch work, local tokens, caches).
+# Anything that belongs in the repo has to be listed here explicitly - the
+# negation list is the allow-list, so a new dotfile cannot land by accident.
+.*
+!/.gitignore
+!/.gitattributes
+!/.editorconfig
+!/.nvmrc
+!/.github/
+!/.github/workflows/
+!/.github/workflows/ci.yml
+!/.github/workflows/pages.yml
+!/.github/ISSUE_TEMPLATE/
+!/.github/PULL_REQUEST_TEMPLATE.md
+!/.github/dependabot.yml
+
+# the demo build is committed so GitHub Pages can serve it
+!/demo/dist/.nojekyll
+
+# a wall's own originals stay local - only the built site is committed
+/photos/
+/dist/
+
+# local GitHub token (never commit)
+/.github-token
+/.git-credentials
+
+node_modules/
+
+# scratch work
+/.tmp/
+/.tmp-review/
+/.tmp-test/
+/.tmp-npm-cache/
+/.ci/
+
+# misc
+.DS_Store

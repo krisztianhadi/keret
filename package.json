@@ -1,0 +1,44 @@
+{
+  "name": "keret",
+  "version": "0.1.0",
+  "description": "A self-hosted photo wall: build a pan-and-zoom wall of photographs from a folder of images into a static site.",
+  "license": "MIT",
+  "author": "Krisztian Hadi",
+  "homepage": "https://github.com/krisztianhadi/keret#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/krisztianhadi/keret.git"
+  },
+  "bugs": {
+    "url": "https://github.com/krisztianhadi/keret/issues"
+  },
+  "keywords": [
+    "photo", "gallery", "photo-wall", "static-site", "self-hosted",
+    "pan", "zoom", "sharp", "exif"
+  ],
+  "engines": { "node": ">=18.17" },
+  "bin": { "keret": "gen.js" },
+  "files": [
+    "gen.js",
+    "src/",
+    "scripts/",
+    "docs/",
+    "wall.config.example.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node gen.js",
+    "check": "node gen.js --check",
+    "serve": "node scripts/serve.js dist 3100",
+    "seed": "node scripts/seed-placeholders.js",
+    "stamp": "node scripts/check-stamp.js dist/index.html",
+    "demo": "cd demo && node ../gen.js",
+    "demo:check": "cd demo && node ../scripts/check-build.js dist",
+    "demo:serve": "node scripts/serve.js demo/dist 3100",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "sharp": "^0.35.4"
+  }
+}

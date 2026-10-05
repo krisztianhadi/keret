@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<!-- built by gen.js source=e5c04d86ff88 photos=24 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Twenty-four public-domain photographs on a wall you can pan and zoom.">
+
+<title>Keret demo wall</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="Keret demo wall">
+<meta property="og:description" content="Twenty-four public-domain photographs on a wall you can pan and zoom.">
+<meta property="og:url" content="https://krisztianhadi.github.io/keret/">
+<meta property="og:image" content="https://krisztianhadi.github.io/keret/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://krisztianhadi.github.io/keret/og.jpg">
+<link rel="canonical" href="https://krisztianhadi.github.io/keret/">
+<meta name="theme-color" content="#26231e">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2064%2064'%3E%3Crect%20width%3D'64'%20height%3D'64'%20rx%3D'14'%20fill%3D'%2326231e'%2F%3E%3Ccircle%20cx%3D'32'%20cy%3D'32'%20r%3D'10'%20fill%3D'%23e23c30'%2F%3E%3C%2Fsvg%3E">
+<style>
+  :root {
+    --wall: #cfc8ba;                   /* one flat color everywhere */
+    --chrome: rgba(25, 22, 18, .62);   /* header/hint/controls glass */
+    --ink: #f2eee4;
+    --ink-dim: rgba(242, 238, 228, .55);
+    --note: #4a443a;                   /* text sitting directly on the wall */
+    --mat: #fbfaf6;                    /* frame mat */
+    --cap: #776f63;                    /* caption text on the mat */
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --wall: #26231e;
+      --chrome: rgba(12, 11, 9, .66);
+      --ink: #e8e4d8;
+      --ink-dim: rgba(232, 228, 216, .5);
+      --note: #d5cfc2;
+      --mat: #c7bfab;                  /* warm off-white, not pure white */
+      --cap: #4c4637;
+    }
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; overflow:hidden; }
+  body {
+    background:var(--wall);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color:var(--ink);
+    -webkit-user-select:none; user-select:none;
+    overscroll-behavior:none;
+  }
+
+  #stage {
+    position:fixed; inset:0;
+    touch-action:none;               /* we handle pan/zoom, not the browser */
+    cursor:grab;
+    /* vignette baked into the stage background: the scene falls off into
+       shadow toward the viewport edges, so it feels like the wall simply
+       ends - nothing continues past it. Viewport-anchored (stage is never
+       transformed). */
+    background-color: var(--wall);
+    background-image: radial-gradient(125% 125% at 50% 50%,
+      rgba(0,0,0,0) 58%, rgba(0,0,0,.32) 100%);
+  }
+  #stage.dragging { cursor:grabbing; }
+
+  #world { position:absolute; left:0; top:0; transform-origin:0 0; }
+
+  #wall {
+    position:relative;
+    width:3976px; height:3646px;
+    /* transparent: the stage background (with its vignette) shows through
+       everywhere, frames float directly on it */
+    background: transparent;
+  }
+
+  .item { position:absolute; left:0; top:0; }
+  .frame {
+    background:var(--mat);
+    padding:20px;
+    border-radius:2px;                  /* soft corners on the mat */
+    box-shadow: 0 2px 3px rgba(0,0,0,.16), 0 9px 20px rgba(0,0,0,.20);
+  }
+  /* photo box: exact image rectangle, clips the placeholder so any blur
+     stays strictly inside the photo and never touches the mat */
+  .pbox {
+    position:relative;
+    overflow:hidden;
+    border-radius:2px;                  /* soft corners on the photo itself */
+    background:#000;
+  }
+  .pbox .pbg {
+    position:absolute; inset:0;
+    background-size:cover; background-position:center;
+    filter:blur(12px);
+    transform:scale(1.08);              /* hide the blurred edge rim */
+    transition:opacity .4s ease;
+  }
+  .pbox.loaded .pbg { opacity:0; }      /* fade out once the photo decodes */
+  .pbox img {
+    display:block;
+    width:100%; height:100%;            /* box ratio == photo aspect, exact */
+    border-radius:2px;
+    -webkit-user-drag:none; user-drag:none;
+  }
+  .frame .cap {
+    width:100%; height:56px;
+    padding-top:22px;   /* air between photo and text */
+    color:var(--cap);
+    overflow:hidden;
+    /* 22px air above + 22px (2px strip + 20px mat) below centers the text */
+  }
+  .frame .cap-line {
+    height:16px; line-height:16px;   /* two 16px lines fit the strip */
+    font-size:11px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .frame .cap-line:empty { display:none; }
+  .item.off { display:none; }
+
+  /* light mats cast a deeper shadow on the dark wall */
+  @media (prefers-color-scheme: dark) {
+    .frame { box-shadow: 0 2px 4px rgba(0,0,0,.45), 0 12px 28px rgba(0,0,0,.5); }
+  }
+
+  /* chrome: header + controls */
+  header {
+    position:fixed; top:0; left:0; right:0;
+    display:flex; align-items:baseline; gap:14px;
+    padding:14px 18px; pointer-events:none;
+    background:linear-gradient(180deg, var(--chrome), rgba(0,0,0,0));
+  }
+  header h1 { font-size:13px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; }
+  header .count { font-size:11px; color:var(--ink-dim); }
+
+  #hint {
+    position:fixed; left:50%; bottom:64px; transform:translateX(-50%);
+    font-size:11px; color:var(--ink-dim); text-align:center; pointer-events:none;
+    background:var(--chrome); padding:8px 14px; border-radius:6px;
+    opacity:1; transition:opacity 1.2s ease 6s;
+  }
+  #hint.gone { opacity:0; }
+  @media (pointer: coarse) { #hint { display:none; } } /* no manual on touch */
+
+  #controls {
+    position:fixed; right:14px; bottom:14px;
+    display:flex; gap:6px; align-items:center;
+    background:var(--chrome); border:1px solid rgba(255,255,255,.12);
+    padding:6px; border-radius:10px;
+    backdrop-filter:blur(4px);
+  }
+  #controls button {
+    width:34px; height:34px; border:0; border-radius:7px;
+    background:transparent; color:var(--ink);
+    font:inherit; font-size:17px; line-height:1; cursor:pointer;
+  }
+  #controls button:hover { background:rgba(255,255,255,.14); }
+  #controls button:active { background:rgba(255,255,255,.24); }
+  #controls .sep { width:1px; height:20px; background:rgba(255,255,255,.18); margin:0 2px; }
+  #zoomLbl { min-width:38px; text-align:center; font-size:11px; color:var(--ink-dim); }
+
+  .empty-note {
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    text-align:center; padding:0 24px;
+  }
+  .empty-note p { max-width:420px; font-size:13px; line-height:1.7; color:var(--note); }
+  .empty-note code {
+    color:var(--note); background:rgba(127,127,127,.2); padding:1px 6px; border-radius:4px;
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="world"><div id="wall"></div></div>
+</div>
+
+<header>
+  <h1>Keret demo wall</h1>
+  <span class="count">24 photos</span>
+</header>
+
+
+<div id="hint">drag to move - scroll / pinch / +/- to zoom - arrows pan</div>
+
+<div id="controls">
+  <button id="zoomOut" aria-label="Zoom out">&minus;</button>
+  <button id="zoomIn" aria-label="Zoom in">+</button>
+  <span id="zoomLbl"></span>
+  <span class="sep"></span>
+  <button id="fitBtn" aria-label="Fit whole wall to view">&copy;</button>
+</div>
+
+<noscript>
+  <div class="nojs">
+    <h1>Keret demo wall</h1>
+    <p>JavaScript is off, so here are all 24 photos on a plain page. The interactive wall needs JavaScript.</p>
+    <div class="nojs-grid">
+    <figure>
+      <img src="photos/forest-railway.jpg" alt="Railway tracks running through a forest of yellow autumn trees" loading="lazy">
+      <figcaption>Tracks through an autumn forest - Photo: Matt Moloney / stocksnap</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/cloud-capped-peaks.jpg" alt="Sunlit mountain peaks with heavy clouds rolling over them" loading="lazy">
+      <figcaption>Clouds breaking over the peaks - Photo: Zachary Domes / stocksnap</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/rapeseed-field.webp" alt="A field of yellow rapeseed under a blue sky" loading="lazy">
+      <figcaption>Rapeseed in flower - Photo: rawpixel</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/backlit-wave.jpg" alt="A breaking wave lit from behind, with sun glinting off the water" loading="lazy">
+      <figcaption>Sunlight through a breaking wave - Photo: Altered Reality / stocksnap</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/long-waterfall.webp" alt="A waterfall photographed at a long exposure so the water reads as mist" loading="lazy">
+      <figcaption>A waterfall at a long exposure - Photo: rawpixel</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/tower-bridge.webp" alt="Tower Bridge in London lit up at night, reflected in the river" loading="lazy">
+      <figcaption>Tower Bridge at night - Photo: rawpixel</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/alpine-tarn.webp" alt="A still mountain lake reflecting snow covered peaks" loading="lazy">
+      <figcaption>An alpine lake under the peaks - Photo: rawpixel</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/icefall-mono.webp" alt="A frozen waterfall in black and white, framed by dark branches" loading="lazy">
+      <figcaption>Icefall, in black and white - Photo: museumofnewzealand / rawpixel</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/pine-over-valley.jpg" alt="A windswept pine on a cliff above a misty forested valley" loading="lazy">
+      <figcaption>A pine leaning over a misty valley - Photo: Kristoffer Fredriksson / stocksnap</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/slot-canyon.webp" alt="Smooth orange sandstone curves of a slot canyon against a strip of sky" loading="lazy">
+      <figcaption>Sandstone, sculpted by water - Photo: rawpixel</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/winter-pines.webp" alt="Snow covered pines on a ridge with a mountain behind them" loading="lazy">
+      <figcaption>Pines on a winter ridge - Photo: rawpixel</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/snowbound-spruce.webp" alt="A single spruce tree heavily covered in snow beside a track" loading="lazy">
+      <figcaption>A spruce under snow - Photo: rawpixel</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/winter-lane.webp" alt="A snow covered lane between two rows of snow laden trees" loading="lazy">
+      <figcaption>A lane after snowfall - Photo: rawpixel</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/skyline-blue-hour.jpg" alt="A city skyline across the water at blue hour, lights reflecting on the surface" loading="lazy">
+      <figcaption>A skyline at blue hour - Photo: Matt Bango / stocksnap</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/autumn-road.jpg" alt="A road crossing a mountainside in full autumn colour" loading="lazy">
+      <figcaption>A mountain road in October - Photo: JJ Skys the Limit / stocksnap</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/violet-dusk.webp" alt="A violet and pink sunset sky above a silhouetted tree and water" loading="lazy">
+      <figcaption>A violet dusk over the water - Photo: rawpixel</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/harbour-sunset.jpg" alt="A steel arch harbour bridge silhouetted against an orange sunset" loading="lazy">
+      <figcaption>The harbour bridge at sunset - Photo: Wyncliffe / stocksnap</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/lavender-rows.webp" alt="Rows of purple lavender running toward a line of trees" loading="lazy">
+      <figcaption>Rows of lavender - Photo: rawpixel</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/meadow-path.jpg" alt="A stone path crossing a green meadow toward misty hills" loading="lazy">
+      <figcaption>A path through a mountain meadow - Photo: Lili Popper / stocksnap</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/night-sky-lake.webp" alt="The Milky Way above a dark lake and a line of trees" loading="lazy">
+      <figcaption>The Milky Way over a lake - Photo: rawpixel</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/cathedral-towers.webp" alt="Two stone towers of a cathedral against a clear blue sky" loading="lazy">
+      <figcaption>Twin towers of a cathedral - Photo: rawpixel</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/waterfall-rainbow.jpg" alt="A tall waterfall with a rainbow in the spray below the cliff" loading="lazy">
+      <figcaption>A waterfall, and a rainbow in its spray - Photo: Robert Lukeman / stocksnap</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/still-lake.jpg" alt="A calm lake mirroring a range of hills at dusk" loading="lazy">
+      <figcaption>Still water, mirrored hills - Photo: Snapwire / stocksnap</figcaption>
+    </figure>
+    <figure>
+      <img src="photos/sunlit-facade.webp" alt="Warm evening light on the carved stone facade of an old building" loading="lazy">
+      <figcaption>Sun on an old facade - Photo: rawpixel</figcaption>
+    </figure>
+    </div>
+  </div>
+</noscript>
+<script>
+"use strict";
+
+/* Photo wall viewport engine: pan by drag, zoom by wheel/pinch/buttons.
+   The layout is baked into POS below, so the browser never has to wait
+   for image dimensions - every frame is placed instantly. */
+
+var POS = [{"x":964,"y":266,"pw":600,"ph":400,"file":"forest-railway.jpg","w":960,"h":640,"base":"forest-railway","title":"FOREST-RAILWAY.JPG","spec":"Tracks through an autumn forest","cam":"Photo: Matt Moloney / stocksnap","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAQABgDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAAUGAgT/xAAjEAABAwQCAQUAAAAAAAAAAAABAAIRAwQSIRMiQQUxUXGx/8QAFgEBAQEAAAAAAAAAAAAAAAAABAAB/8QAFxEBAQEBAAAAAAAAAAAAAAAAAQADUf/aAAwDAQACEQMRAD8AV2GLWNaWe7t7+1Q3NwXenwKnVoAE715UfZUjUI5TiwbhpMpxyU8C0NmBHY7KA5vZBcVxdOrNGG/ktCFm+rksAt3cceI/ULTKlv/Z","alt":"Railway tracks running through a forest of yellow autumn trees"},{"x":1668,"y":260,"pw":600,"ph":400,"file":"cloud-capped-peaks.jpg","w":960,"h":640,"base":"cloud-capped-peaks","title":"CLOUD-CAPPED-PEAKS.JPG","spec":"Clouds breaking over the peaks","cam":"Photo: Zachary Domes / stocksnap","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAQABgDASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAYDBAX/xAAjEAABBAIBAwUAAAAAAAAAAAABAgMEEQAhExIxURRBQnGh/8QAFgEBAQEAAAAAAAAAAAAAAAAAAQID/8QAGBEBAAMBAAAAAAAAAAAAAAAAAAEREjH/2gAMAwEAAhEDEQA/ANCWUymQVSQI9glGh+5YaDDKeNlxCAB8fPk4lJleoZSgXQ3Q1R9qyESnIzxUk2g6IOwcu2eo6cZD8VBQJUlDnSDYToH73vDEZ6VyqPYC77YYjT//2Q==","alt":"Sunlit mountain peaks with heavy clouds rolling over them"},{"x":260,"y":363,"pw":600,"ph":400,"file":"rapeseed-field.webp","w":1024,"h":683,"base":"rapeseed-field","title":"RAPESEED-FIELD.WEBP","spec":"Rapeseed in flower","cam":"Photo: rawpixel","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAQABgDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAABgAD/8QAJhAAAQMCAwkBAAAAAAAAAAAAAQACEQMhBBQxBQYTMkFCcYGRwf/EABYBAQEBAAAAAAAAAAAAAAAAAAIBBf/EABwRAAICAgMAAAAAAAAAAAAAAAABAgQDExEhUf/aAAwDAQACEQMRAD8AWHLOsXX8LF9LCzzgekOfvA6nVDGEGnoHdVpiNqPimWyeIREA2voFmq5bj4PXjYocMMzuHxSOZioa0NNnSBJuYg/qkHfsPt8F1QR//9k=","alt":"A field of yellow rapeseed under a blue sky"},{"x":2372,"y":285,"pw":600,"ph":404,"file":"backlit-wave.jpg","w":960,"h":646,"base":"backlit-wave","title":"BACKLIT-WAVE.JPG","spec":"Sunlight through a breaking wave","cam":"Photo: Altered Reality / stocksnap","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAQABgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAUGB//EACMQAAICAgEEAgMAAAAAAAAAAAECAwQAESEFEhNBUZEVMWH/xAAVAQEBAAAAAAAAAAAAAAAAAAADAf/EABkRAAMBAQEAAAAAAAAAAAAAAAABAhEDIf/aAAwDAQACEQMRAD8AXUbvVbHav5eYj2GYjLTpVyaWmypMZHTglidn7GZrQawH0O1xvkluB95S1+pWoqbwxyAbBYyu3YCPkb/esnRLPAONUqymMus6jhZ7N2UMRrxQyEEt8f3DJG9bhitnzymy/ZtjGxUhj6BI4174wwpVYPS1n//Z","alt":"A breaking wave lit from behind, with sun glinting off the water"},{"x":3076,"y":437,"pw":600,"ph":400,"file":"long-waterfall.webp","w":1024,"h":683,"base":"long-waterfall","title":"LONG-WATERFALL.WEBP","spec":"A waterfall at a long exposure","cam":"Photo: rawpixel","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAQABgDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAYBBAUH/8QAIhAAAQMEAgIDAAAAAAAAAAAAAQIDEQAFEiEEMRNBUbHR/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAEC/8QAGREAAwEBAQAAAAAAAAAAAAAAAAECMRJB/9oADAMBAAIRAxEAPwBKbt5cbyaM7HVarVoJtTz6klTjZOwexr9qOA6yUYsx5ImBTLa3m3LdyWlwCppcT8xr6pFNYKlenP38kKKcIVRVjmrK1mE4D3PdFad09ZOUj//Z","alt":"A waterfall photographed at a long exposure so the water reads as mist"},{"x":964,"y":826,"pw":600,"ph":360,"file":"tower-bridge.webp","w":1024,"h":615,"base":"tower-bridge","title":"TOWER-BRIDGE.WEBP","spec":"Tower Bridge at night","cam":"Photo: rawpixel","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAOABgDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAAAAUEBv/EAB8QAAICAgIDAQAAAAAAAAAAAAEDAhEABBITIUJRcf/EABYBAQEBAAAAAAAAAAAAAAAAAAABAv/EABcRAQEBAQAAAAAAAAAAAAAAABEAAQL/2gAMAwEAAhEDEQA/AOIRoMezhAeavENEymImcAcuq0XR2AtYTHmD7H7+ZmYlutMmHWGRlQNk4dG0Up2nJU6INHyD9xlEOb1XKKzZvibIxlzqF//Z","alt":"Tower Bridge in London lit up at night, reflected in the river"},{"x":1668,"y":820,"pw":600,"ph":800,"file":"alpine-tarn.webp","w":768,"h":1024,"base":"alpine-tarn","title":"ALPINE-TARN.WEBP","spec":"An alpine lake under the peaks","cam":"Photo: rawpixel","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAYABIDASIAAhEBAxEB/8QAGAABAAMBAAAAAAAAAAAAAAAAAAMFBgT/xAAnEAACAQMDAwMFAAAAAAAAAAABAhEAAwQFEjEGIUETFCIjNGFxsf/EABcBAAMBAAAAAAAAAAAAAAAAAAECAwT/xAAYEQEBAQEBAAAAAAAAAAAAAAAAARIRQf/aAAwDAQACEQMRAD8Ap8DTnysFLqfLtBjxUw0W6ZLLAHJPiu3AwM7TX+GZbKLA2P8AGVmYPMc1D1Dcy8cm3byLIOSv1N1wJM+ACePzVdVnxFOzYoYjcxg8gdjSi6Jlsob3WH3E/cClHoZafprQLHtrWXlPcc3Atzax5byTVjqfT2LqVq4rv3VT6Jnuhj+UpSyeq2sI2gXkYo1nJ3KYMWpE/ulKUS9f/9k=","alt":"A still mountain lake reflecting snow covered peaks"},{"x":260,"y":923,"pw":600,"ph":798,"file":"icefall-mono.webp","w":770,"h":1024,"base":"icefall-mono","title":"ICEFALL-MONO.WEBP","spec":"Icefall, in black and white","cam":"Photo: museumofnewzealand / rawpixel","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAYABIDASIAAhEBAxEB/8QAGQABAAMBAQAAAAAAAAAAAAAAAAMEBQIG/8QAIxAAAgEDBAEFAAAAAAAAAAAAAQIAAwQRBRIhMUETFCJRcf/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwDOtHWnURiDjIPc7vs0rmor4A3Y5Mh3A0/iRgDEtazVSpeW7gDBCnA6J29wKuw/cST3dLyhJ/Ygefs7pA7F6uWbxNSrqFJh6bujMo6I64wIiBGNVpUxsIXK8HmIiB//2Q==","alt":"A frozen waterfall in black and white, framed by dark branches"},{"x":3076,"y":997,"pw":600,"ph":450,"file":"pine-over-valley.jpg","w":960,"h":720,"base":"pine-over-valley","title":"PINE-OVER-VALLEY.JPG","spec":"A pine leaning over a misty valley","cam":"Photo: Kristoffer Fredriksson / stocksnap","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAASABgDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAAAAYDBf/EACUQAAICAgIBAgcAAAAAAAAAAAECAAMEEQUSMRRxITIzQVJygv/EABcBAQEBAQAAAAAAAAAAAAAAAAIAAQP/xAAZEQEAAwEBAAAAAAAAAAAAAAAAAQIxERL/2gAMAwEAAhEDEQA/AJ/BqKoj1XXGz5ioUgDR/IS04fmkxq+mfyAsHgL0LEf1JLj8dEAtRrS9bgMFsKnqfb7TtrmcQMYh+OrDq3iwFiT7w25KxZU5mLlq3p767evnqd6iQVvL20o6YZTGr8lalCiIYq325mGzDHXTEb0D8fI2Jn2JubZJ28RDCnGD/Tb9YiJ2qL//2Q==","alt":"A windswept pine on a cliff above a misty forested valley"},{"x":2372,"y":849,"pw":600,"ph":399,"file":"slot-canyon.webp","w":1024,"h":681,"base":"slot-canyon","title":"SLOT-CANYON.WEBP","spec":"Sandstone, sculpted by water","cam":"Photo: rawpixel","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAQABgDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAQBAgUG/8QAIBAAAgIBBAMBAAAAAAAAAAAAAQIDBAAFERIhMUGRMv/EABUBAQEAAAAAAAAAAAAAAAAAAAME/8QAGhEAAgMBAQAAAAAAAAAAAAAAAREAAgMhEv/aAAwDAQACEQMRAD8A5dK7z0zMj7xqQr7jtT62yKOn2bBIihZvW4HX3NCLVUiqQ1K0CTKPAcfon3i93ULcDtW5iNUPaRtuMjqWUuS4sBvstc0ixRjWSZV2Pg8gdvmGLadqHG1xmHOOQ9g9gnDC0uaWSjZ19Buf/9k=","alt":"Smooth orange sandstone curves of a slot canyon against a strip of sky"},{"x":964,"y":1346,"pw":600,"ph":800,"file":"winter-pines.webp","w":768,"h":1024,"base":"winter-pines","title":"WINTER-PINES.WEBP","spec":"Pines on a winter ridge","cam":"Photo: rawpixel","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAYABIDASIAAhEBAxEB/8QAGQABAAMBAQAAAAAAAAAAAAAAAAMEBQEC/8QAJxAAAQMCBAUFAAAAAAAAAAAAAQACAwQRBRQhYRIiQVGhEzFCcZH/xAAYAQACAwAAAAAAAAAAAAAAAAACBAABBf/EABkRAAMBAQEAAAAAAAAAAAAAAAABEQISE//aAAwDAQACEQMRAD8ArmDZROg2WnXDL0r5OoGn2oInxyvLQQOQP1PsCtDvKcElltUoZbY/iLRPADYOuO4sQiH1QfDL+J4XNWxhvrxRm9zyWv5XilwdsMLcwaeR7fl3RElRmHH4XMXuIkgaCTYDp4REULP/2Q==","alt":"Snow covered pines on a ridge with a mountain behind them"},{"x":2372,"y":1408,"pw":600,"ph":800,"file":"snowbound-spruce.webp","w":768,"h":1024,"base":"snowbound-spruce","title":"SNOWBOUND-SPRUCE.WEBP","spec":"A spruce under snow","cam":"Photo: rawpixel","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAYABIDASIAAhEBAxEB/8QAGQABAAMBAQAAAAAAAAAAAAAAAAEDBAUG/8QAJBABAAEEAgEDBQAAAAAAAAAAAQIAAwQRBRIxISJRQVNxkfD/xAAWAQEBAQAAAAAAAAAAAAAAAAADAAH/xAAYEQADAQEAAAAAAAAAAAAAAAAAARECMf/aAAwDAQACEQMRAD8Ay4WR0SMQ96HX5805TPYZduzB10ltT03/ABVPHrPPx9Htis1+NClUclbXki6ekegrvy71TV8Di6aHlpKrHb+KVyo4lxiPWRs8apW3RTJ6KGNat7bcWKmt7qWzbUZxJJ9UpSnWUFSeln7MP1SlK2Iqf//Z","alt":"A single spruce tree heavily covered in snow beside a track"},{"x":3076,"y":1607,"pw":600,"ph":401,"file":"winter-lane.webp","w":1024,"h":685,"base":"winter-lane","title":"WINTER-LANE.WEBP","spec":"A lane after snowfall","cam":"Photo: rawpixel","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAQABgDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAAQFAwb/xAAiEAACAgEDBAMAAAAAAAAAAAABAgADEQUxUQQTIUEUMrH/xAAVAQEBAAAAAAAAAAAAAAAAAAAAAf/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AG66VrVFKkk/YDn1+GXfk2DSlRFycdvM0bTemtcOylWHB3jQoqFArxkDzn3mUcf1VaJaisASTtx4hLt2i02Wix7rCRsBgQgf/9k=","alt":"A snow covered lane between two rows of snow laden trees"},{"x":260,"y":1881,"pw":600,"ph":400,"file":"skyline-blue-hour.jpg","w":960,"h":640,"base":"skyline-blue-hour","title":"SKYLINE-BLUE-HOUR.JPG","spec":"A skyline at blue hour","cam":"Photo: Matt Bango / stocksnap","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAQABgDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAUBAgQG/8QAJBAAAgEDAwMFAAAAAAAAAAAAAQIRAAMEEiExEyJRMkFhodH/xAAWAQEBAQAAAAAAAAAAAAAAAAACAQT/xAAZEQADAAMAAAAAAAAAAAAAAAAAAhMBUWH/2gAMAwEAAhEDEQA/AOcx8Vrlp3UgaCAZPmfyrCy8oAd7il1+V8/VLrOYvTuM5YvIAOo8bzUDKQGxz22yD3HmTWizhkhtfceoGKKWLlFdUMwkexNFWz8DJN5P/9k=","alt":"A city skyline across the water at blue hour, lights reflecting on the surface"},{"x":1668,"y":1780,"pw":600,"ph":450,"file":"autumn-road.jpg","w":960,"h":720,"base":"autumn-road","title":"AUTUMN-ROAD.JPG","spec":"A mountain road in October","cam":"Photo: JJ Skys the Limit / stocksnap","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAASABgDASIAAhEBAxEB/8QAGAABAQEBAQAAAAAAAAAAAAAAAAUGAgP/xAAmEAABBAEBBwUAAAAAAAAAAAABAAIDEQQhBQYSE0FxkSMzYXKx/8QAFgEBAQEAAAAAAAAAAAAAAAAABAMF/8QAIBEAAQQCAQUAAAAAAAAAAAAAAQACAxEEIYEUMTIzQf/aAAwDAQACEQMRAD8AjR5WTE9pL3/IOt+VVh2piPjHMikbJ1aAKURs85cKbxjtS9cmOXkRywxOfqQ8DU1Wh8ocWTKw1as+CN+yFfGfs5rb43duA2iyWXKYaEgMbnUQHDREkZcpF0p9LGNWu4XHlHU9OquYhJwhZv03/qIs/wCnlPf25Wf3h9qP7lERKxvWEOXyX//Z","alt":"A road crossing a mountainside in full autumn colour"},{"x":3076,"y":2168,"pw":600,"ph":387,"file":"violet-dusk.webp","w":1024,"h":661,"base":"violet-dusk","title":"VIOLET-DUSK.WEBP","spec":"A violet dusk over the water","cam":"Photo: rawpixel","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAPABgDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAABgAC/8QAJxAAAgEDAgMJAAAAAAAAAAAAAQIDAAQFEiEREzEGFCJBUWFxscH/xAAWAQEBAQAAAAAAAAAAAAAAAAADAQT/xAAZEQADAQEBAAAAAAAAAAAAAAAAARECITH/2gAMAwEAAhEDEQA/ABeLs2up1TbgT50uueysPdEZYzqA3OrrRbHFhKugqD7rx/aYX7Zg2AaK4teTywCFiZftjvWl6kUFxngNyOMa2lKjoPWqtSLetL4pIy3xVV1G/A4f/9k=","alt":"A violet and pink sunset sky above a silhouetted tree and water"},{"x":964,"y":2306,"pw":600,"ph":300,"file":"harbour-sunset.jpg","w":960,"h":480,"base":"harbour-sunset","title":"HARBOUR-SUNSET.JPG","spec":"The harbour bridge at sunset","cam":"Photo: Wyncliffe / stocksnap","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAMABgDASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAMBBAX/xAAjEAACAQQCAAcAAAAAAAAAAAABAgADERIhBAYTIlFicZHh/8QAFgEBAQEAAAAAAAAAAAAAAAAABAEC/8QAHxEAAgAFBQAAAAAAAAAAAAAAAAECFFGB8AMEEUFC/9oADAMBAAIRAxEAPwCF7PxEIVXzNtYxo7QiLkwUD0y/Jn0KzEjS79olrxWDgeX6EBJpdsXMc+Ry9x4LE3qldX2hhAVDiDYX+ITL2kNXlirXdFlz/9k=","alt":"A steel arch harbour bridge silhouetted against an orange sunset"},{"x":260,"y":2441,"pw":600,"ph":338,"file":"lavender-rows.webp","w":1024,"h":576,"base":"lavender-rows","title":"LAVENDER-ROWS.WEBP","spec":"Rows of lavender","cam":"Photo: rawpixel","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAOABgDASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAQCAwX/xAAlEAABAgMHBQAAAAAAAAAAAAABAAIDBBEFBhITQXHRITFRgZL/xAAXAQADAQAAAAAAAAAAAAAAAAAAAQID/8QAGhEAAgIDAAAAAAAAAAAAAAAAABEBAxMhQf/aAAwDAQACEQMRAD8AGW/NhxrgO7VI3hmx3bB+Tys6LLw2RQAXaVVsKWa8YKmnnVZzdpiQ4bxTreuVAPo8oSj7PLNQRuhRlfQP/9k=","alt":"Rows of purple lavender running toward a line of trees"},{"x":2372,"y":2368,"pw":600,"ph":337,"file":"meadow-path.jpg","w":960,"h":539,"base":"meadow-path","title":"MEADOW-PATH.JPG","spec":"A path through a mountain meadow","cam":"Photo: Lili Popper / stocksnap","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAANABgDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAAQGAgX/xAAmEAACAQMCBAcAAAAAAAAAAAABAgMABBEFMQYSIYEiQVFjcZGh/8QAFgEBAQEAAAAAAAAAAAAAAAAAAwAC/8QAGhEAAwEAAwAAAAAAAAAAAAAAAAECAxExUf/aAAwDAQACEQMRAD8A2NUVJklSS5WTY4cHA++tOzcSXCgLbvGx9WQAntmoE3MrE+LGKZsZ2VOZwHEoIIPkPnvRrTSu+AplndudT165bmS7jiB94D8G1FS080kM5iDE9dzRWXenpOWf/9k=","alt":"A stone path crossing a green meadow toward misty hills"},{"x":1668,"y":2390,"pw":600,"ph":900,"file":"night-sky-lake.webp","w":683,"h":1024,"base":"night-sky-lake","title":"NIGHT-SKY-LAKE.WEBP","spec":"The Milky Way over a lake","cam":"Photo: rawpixel","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAYABADASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAUBAgQG/8QAJRAAAgECAwkBAAAAAAAAAAAAAQIAAwQFE1EREhQhMTJBUoGi/8QAFwEAAwEAAAAAAAAAAAAAAAAAAQIDBP/EABcRAAMBAAAAAAAAAAAAAAAAAAABAhH/2gAMAwEAAhEDEQA/AEFTD90dszNZaCNsPxR7rbxtmlEe+YF/J5y11eUaTgULZaw1zlE0OpApeHFtUdurE/ZAZh5MISejH//Z","alt":"The Milky Way above a dark lake and a line of trees"},{"x":3076,"y":2715,"pw":600,"ph":399,"file":"cathedral-towers.webp","w":1024,"h":681,"base":"cathedral-towers","title":"CATHEDRAL-TOWERS.WEBP","spec":"Twin towers of a cathedral","cam":"Photo: rawpixel","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAQABgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAMEBf/EACIQAAEDAwUAAwAAAAAAAAAAAAECAxEABCEFEhMxQVGBkf/EABUBAQEAAAAAAAAAAAAAAAAAAAID/8QAGhEAAgMBAQAAAAAAAAAAAAAAAQIAAxEiEv/aAAwDAQACEQMRAD8AZfKLFqtacGIGYyaiS88mzARu5Ur9M47yao1/aoW9tMb1bjE9DNSW5YD7luQCTKQr6jvvyjdaQ3MdNYK9TftRz26VRkjI+D7RSNBd4mSwVSSncCfw0VdH9Lsi6hWyf//Z","alt":"Two stone towers of a cathedral against a clear blue sky"},{"x":964,"y":2766,"pw":600,"ph":518,"file":"waterfall-rainbow.jpg","w":960,"h":828,"base":"waterfall-rainbow","title":"WATERFALL-RAINBOW.JPG","spec":"A waterfall, and a rainbow in its spray","cam":"Photo: Robert Lukeman / stocksnap","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAVABgDASIAAhEBAxEB/8QAGgABAAIDAQAAAAAAAAAAAAAAAAQFAQIDBv/EACMQAAICAgEEAgMAAAAAAAAAAAECAAMEEQUSEyExFWEiUnH/xAAYAQACAwAAAAAAAAAAAAAAAAAAAwECBP/EAB0RAAIDAAIDAAAAAAAAAAAAAAABAgMRBBIhkbH/2gAMAwEAAhEDEQA/APP4OVk4wIrsYIfBVh1If6JYVLTythosxVxrtFlsQ7U697H3I1FvHFR2bmqb9XHUpkrDy8Si83uba3UEKoXYO5HHusra6vPgTimvJR8qPj7nxwql11+Xv2N+InPlEuzMx7UUup1o+BE02X2ylu+hcYRSzDC29sAKojulgSfJ+4iIQw3awhtaEREsB//Z","alt":"A tall waterfall with a rainbow in the spray below the cliff"},{"x":260,"y":2939,"pw":600,"ph":248,"file":"still-lake.jpg","w":960,"h":397,"base":"still-lake","title":"STILL-LAKE.JPG","spec":"Still water, mirrored hills","cam":"Photo: Snapwire / stocksnap","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAKABgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAIEBf/EACMQAAEDAwIHAAAAAAAAAAAAAAEAAgMEBREhIgYkMkFRYYH/xAAVAQEBAAAAAAAAAAAAAAAAAAADAv/EABgRAAMBAQAAAAAAAAAAAAAAAAACURIB/9oADAMBAAIRAxEAPwCu38WNm2yUbwfLcgK6S+QPjLjTyj0Wp6RjGRbGtbr2GE0/SnVqC3DCqL9SOzykv0gIVc5JzqhVt6HlYf/Z","alt":"A calm lake mirroring a range of hills at dusk"},{"x":2372,"y":2865,"pw":600,"ph":400,"file":"sunlit-facade.webp","w":1024,"h":683,"base":"sunlit-facade","title":"SUNLIT-FACADE.WEBP","spec":"Sun on an old facade","cam":"Photo: rawpixel","thumb":"data:image/jpeg;base64,/9j/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAQABgDASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAQCBQb/xAAhEAEAAQMEAgMAAAAAAAAAAAABAgADBAURITESIkFxgf/EABcBAAMBAAAAAAAAAAAAAAAAAAECBAX/xAAXEQADAQAAAAAAAAAAAAAAAAABAhEA/9oADAMBAAIRAxEAPwC5NVtWbDCB5TX1U6qeJqF4Wcpsw+JFZieVFuwtx7UVHinoZcSE7a8rsNZju9t1yqsmb1G4SZSl339lFIZGQMNpPJ+UUACcxO//2Q==","alt":"Warm evening light on the carved stone facade of an old building"}];
+var MAX_SCALE = 4;
+// vertical world window shown on load, independent of wall size
+
+var stage = document.getElementById('stage');
+var world = document.getElementById('world');
+var wall = document.getElementById('wall');
+var hint = document.getElementById('hint');
+var zoomLbl = document.getElementById('zoomLbl');
+
+var MAT = 20;
+var CAP_H = 56;
+var items = [];
+for (var i = 0; i < POS.length; i++) {
+  var d = POS[i];
+  var el = document.createElement('div');
+  el.className = 'item';
+  el.style.transform = 'translate(' + d.x + 'px,' + d.y + 'px)';
+
+  var frame = document.createElement('div');
+  frame.className = 'frame';
+  frame.style.width = (d.pw + 2 * MAT) + 'px';
+  // height auto: image (d.ph) + caption strip (CAP_H)
+
+  var img = document.createElement('img');
+  img.src = 'photos/' + d.file;
+  // the alt the build worked out (sidecar text, or the facts about the shot)
+  img.alt = d.alt || d.base.replace(/-/g, ' ');
+  img.width = d.pw;              // sane, layout-accurate numbers
+  img.height = d.ph;
+  img.loading = 'lazy';
+  img.decoding = 'async';
+  img.draggable = false;
+
+  // photo box: exact image rectangle; clips the blurred placeholder so the
+  // blur never bleeds past the photo onto the mat
+  var pbox = document.createElement('div');
+  pbox.className = 'pbox';
+  pbox.style.width = d.pw + 'px';
+  pbox.style.height = d.ph + 'px';
+  if (d.thumb) {
+    var pbg = document.createElement('div');
+    pbg.className = 'pbg';
+    pbg.style.backgroundImage = 'url("' + d.thumb + '")';
+    pbox.appendChild(pbg);
+  }
+  pbox.appendChild(img);
+  frame.appendChild(pbox);
+
+  var cap = document.createElement('div');
+  cap.className = 'cap';
+  var lines = [d.spec, d.cam]; // filename line hidden for now
+  for (var k = 0; k < lines.length; k++) {
+    var cl = document.createElement('div');
+    cl.className = 'cap-line';
+    cl.textContent = lines[k];
+    if (lines[k]) cl.title = lines[k];
+    cap.appendChild(cl);
+  }
+  frame.appendChild(cap);
+  el.appendChild(frame);
+  wall.appendChild(el);
+  items.push({ el: el, x: d.x, y: d.y, w: d.pw + 2 * MAT, h: d.ph + CAP_H + 2 * MAT });
+}
+
+// the wall the build actually produced, not a number baked into this file
+var wallW = 3976, wallH = 3646;
+
+// mark a photo box as loaded the moment its image decodes (capturing phase
+// catches every load, even ones that slip past per-element listeners)
+document.addEventListener('load', function (e) {
+  var t = e.target;
+  if (t && t.tagName === 'IMG' && t.closest && t.closest('.pbox')) {
+    t.closest('.pbox').classList.add('loaded');
+  }
+}, true);
+
+// view state: screen = world * scale + (tx, ty)
+var tx = 0, ty = 0, scale = 1;
+
+function setTransform() {
+  world.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
+  if (zoomLbl) zoomLbl.textContent = Math.round(scale * 100) + '%';
+}
+
+function fitScale() {
+  var vw = stage.clientWidth, vh = stage.clientHeight;
+  return Math.min((vw - 32) / wallW, (vh - 32) / wallH);
+}
+
+function minScale() {
+  return Math.max(fitScale(), 0.03); // smallest zoom = whole wall visible
+}
+
+// pan stops at the wall edges: no empty-space roaming. When the wall is
+// smaller than the viewport on an axis, it is centered and locked there.
+function clamp() {
+  var vw = stage.clientWidth, vh = stage.clientHeight;
+  var w = wallW * scale, h = wallH * scale;
+
+  if (w < vw - 1) { tx = Math.round((vw - w) / 2); }
+  else { tx = Math.min(0, Math.max(vw - w, tx)); }
+  if (h < vh - 1) { ty = Math.round((vh - h) / 2); }
+  else { ty = Math.min(0, Math.max(vh - h, ty)); }
+}
+
+function fit() {
+  scale = Math.min(fitScale(), MAX_SCALE);
+  if (scale < minScale()) scale = minScale();
+  tx = 0; ty = 0;
+  clamp();
+  setTransform();
+}
+
+function zoomAt(cx, cy, factor) {
+  var ns = scale * factor;
+  if (ns > MAX_SCALE) ns = MAX_SCALE;
+  if (ns < minScale()) ns = minScale(); // land exactly on the fit minimum
+  var wx = (cx - tx) / scale, wy = (cy - ty) / scale; // point under cursor in world
+  scale = ns;
+  tx = cx - wx * scale;
+  ty = cy - wy * scale;
+  clamp();
+  setTransform();
+}
+
+function toWorld(cx, cy) { return [(cx - tx) / scale, (cy - ty) / scale]; }
+
+/* ---------- culling: hide frames outside the viewport ---------- */
+var rafPending = false;
+function scheduleCull() {
+  if (rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(function () {
+    rafPending = false;
+    var x0 = -tx / scale - 200, y0 = -ty / scale - 200;
+    var x1 = x0 + stage.clientWidth / scale + 400;
+    var y1 = y0 + stage.clientHeight / scale + 400;
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      var off = it.x + it.w < x0 || it.x > x1 || it.y + it.h < y0 || it.y > y1;
+      if (off && !it.el.classList.contains('off')) it.el.classList.add('off');
+      else if (!off) {
+        if (it.el.classList.contains('off')) it.el.classList.remove('off');
+        var pbi = it.el.querySelector('.pbox');
+        if (pbi && !pbi.classList.contains('loaded')) {
+          var imi = it.el.querySelector('img');
+          if (imi.complete && imi.naturalWidth > 0) pbi.classList.add('loaded');
+        }
+      }
+    }
+  });
+}
+
+/* ---------- drag to pan (pointer events, also pinch) ---------- */
+var pointers = {}; // pointerId -> {x,y}
+var dragStart = null;   // {sx,sy,tx,ty}
+var pinch = null;      // {lastDist, midX, midY} - incremental pinch state
+var moved = false;
+
+stage.addEventListener('pointerdown', function (e) {
+  cancelGlide();                       // grabbing stops any inertia
+  lastMoveT = 0;
+  world.style.transition = ''; // key-move glide must not fight a drag
+  try { stage.setPointerCapture(e.pointerId); } catch (err) { /* synthetic/test events */ }
+  pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+  var ids = Object.keys(pointers);
+  if (ids.length === 2) {
+    dragStart = null;
+    pinch = null; // first two-finger move (re)initializes the pinch state
+  } else {
+    dragStart = { sx: e.clientX, sy: e.clientY, tx: tx, ty: ty };
+    pinch = null;
+  }
+  moved = false;
+});
+
+stage.addEventListener('pointermove', function (e) {
+  if (!pointers[e.pointerId]) return;
+  var p = pointers[e.pointerId];
+  var dx = e.clientX - p.x, dy = e.clientY - p.y;
+  p.x = e.clientX; p.y = e.clientY;
+  if (Math.abs(e.clientX - (dragStart ? dragStart.sx : e.clientX)) > 3 ||
+      Math.abs(e.clientY - (dragStart ? dragStart.sy : e.clientY)) > 3) moved = true;
+
+  var ids = Object.keys(pointers);
+  if (ids.length === 2) {
+    var a = pointers[ids[0]], b = pointers[ids[1]];
+    var dist = Math.hypot(a.x - b.x, a.y - b.y);
+    if (dist < 8) return;
+    var cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
+    if (!pinch) {
+      pinch = { lastDist: dist, midX: cx, midY: cy };
+    }
+    // follow the fingers: first translate by the midpoint delta, then zoom
+    // anchored at the midpoint - no stale-anchor drift
+    tx += cx - pinch.midX;
+    ty += cy - pinch.midY;
+    var ns = scale * (dist / pinch.lastDist);
+    if (ns > MAX_SCALE) ns = MAX_SCALE;
+    if (ns < minScale()) ns = minScale();
+    var wx = (cx - tx) / scale, wy = (cy - ty) / scale;
+    scale = ns;
+    tx = cx - wx * scale;
+    ty = cy - wy * scale;
+    pinch.lastDist = dist; pinch.midX = cx; pinch.midY = cy;
+    clamp(); setTransform(); scheduleCull();
+    return;
+  }
+  if (ids.length === 1) {
+    if (!dragStart) dragStart = { sx: e.clientX, sy: e.clientY, tx: tx, ty: ty };
+    stage.classList.add('dragging');
+    tx = dragStart.tx + (e.clientX - dragStart.sx);
+    ty = dragStart.ty + (e.clientY - dragStart.sy);
+    // velocity estimate (px/ms, exponential smoothing) for the glide
+    var now = performance.now();
+    if (lastMoveT) {
+      var dtm = Math.max(8, now - lastMoveT);
+      var ivx = (e.clientX - prevMoveX) / dtm;
+      var ivy = (e.clientY - prevMoveY) / dtm;
+      velX = velX * 0.65 + ivx * 0.35;
+      velY = velY * 0.65 + ivy * 0.35;
+    }
+    prevMoveX = e.clientX; prevMoveY = e.clientY; lastMoveT = now;
+    clamp(); setTransform(); scheduleCull();
+  }
+});
+
+function endPointer(e) {
+  delete pointers[e.pointerId];
+  var n = Object.keys(pointers).length;
+  if (n < 2) pinch = null;      // pinch needs exactly two fingers
+  if (n === 0) {
+    dragStart = null;
+    stage.classList.remove('dragging');
+  }
+}
+stage.addEventListener('pointerup', endPointer);
+stage.addEventListener('pointercancel', endPointer);
+
+/* ---------- inertia: iOS-like glide after a flick ---------- */
+var glideRaf = 0, velX = 0, velY = 0, lastMoveT = 0, prevMoveX = 0, prevMoveY = 0;
+
+function cancelGlide() {
+  if (glideRaf) { cancelAnimationFrame(glideRaf); glideRaf = 0; }
+  velX = velY = 0; lastMoveT = 0;
+}
+
+function startGlide() {
+  if (glideRaf) { cancelAnimationFrame(glideRaf); glideRaf = 0; }
+  if (Math.abs(velX) < 0.03 && Math.abs(velY) < 0.03) return; // not a flick
+  var last = performance.now();
+  function step(now) {
+    var dt = Math.min(32, now - last);
+    last = now;
+    var damp = Math.pow(0.93, dt / 16);  // exponential friction
+    velX *= damp; velY *= damp;
+    var bx = tx, by = ty;
+    tx += velX * dt;
+    ty += velY * dt;
+    clamp();
+    if (Math.abs(tx - bx) < 0.05) velX = 0; // hit the wall edge on x
+    if (Math.abs(ty - by) < 0.05) velY = 0; // ...or on y
+    setTransform();
+    scheduleCull();
+    if (Math.abs(velX) < 0.02 && Math.abs(velY) < 0.02) { glideRaf = 0; return; }
+    glideRaf = requestAnimationFrame(step);
+  }
+  glideRaf = requestAnimationFrame(step);
+}
+
+/* ---------- double-tap / double-click zooms in ---------- */
+var lastTap = 0, tapX = 0, tapY = 0;
+stage.addEventListener('pointerup', function (e) {
+  if (moved) { startGlide(); moved = false; return; }
+  var now = Date.now();
+  if (now - lastTap < 350 && Math.hypot(e.clientX - tapX, e.clientY - tapY) < 40) {
+    zoomAt(e.clientX, e.clientY, 2.2);
+    scheduleCull();
+    lastTap = 0;
+  } else {
+    lastTap = now; tapX = e.clientX; tapY = e.clientY;
+  }
+});
+
+/* ---------- wheel zoom (to cursor) ---------- */
+stage.addEventListener('wheel', function (e) {
+  cancelGlide();
+  e.preventDefault();
+  var f = Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.03 : 0.0016));
+  zoomAt(e.clientX, e.clientY, f);
+  scheduleCull();
+}, { passive: false });
+
+/* ---------- native gesture suppression (iOS) ---------- */
+// the wall owns all touches: stop Safari's pinch-zoom, double-tap zoom and
+// rubber-band scrolling from fighting our pointer-event pan/zoom
+document.addEventListener('touchmove', function (e) {
+  if (e.target === stage || stage.contains(e.target)) e.preventDefault();
+}, { passive: false });
+['gesturestart', 'gesturechange', 'gestureend'].forEach(function (name) {
+  document.addEventListener(name, function (e) {
+    if (e.target === stage || stage.contains(e.target)) e.preventDefault();
+  });
+});
+
+/* ---------- keyboard panning (arrow keys) ---------- */
+var keyT = null;
+function moveBy(dx, dy) {
+  tx += dx; ty += dy;
+  clamp();
+  world.style.transition = 'transform 0.18s ease'; // soft glide for key moves
+  setTransform();
+  clearTimeout(keyT);
+  keyT = setTimeout(function () { world.style.transition = ''; }, 220);
+}
+window.addEventListener('keydown', function (e) {
+  // + / = zoom in, - zoom out (around the viewport center)
+  if (e.key === '+' || e.key === '=' || e.key === '-') {
+    e.preventDefault();
+    var dir = (e.key === '-') ? (1 / 1.5) : 1.5;
+    zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, dir);
+    scheduleCull();
+    return;
+  }
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' &&
+      e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  e.preventDefault();
+  var vw = stage.clientWidth, vh = stage.clientHeight;
+  // arrow = look in that direction: Right reveals content to the right, so
+  // the wall shifts left (negative tx), Down shifts up (negative ty)
+  var dx = e.key === 'ArrowRight' ? -Math.round(vw * 0.55) : e.key === 'ArrowLeft' ? Math.round(vw * 0.55) : 0;
+  var dy = e.key === 'ArrowDown' ? -Math.round(vh * 0.55) : e.key === 'ArrowUp' ? Math.round(vh * 0.55) : 0;
+  moveBy(dx, dy);
+  scheduleCull();
+});
+
+/* ---------- controls ---------- */
+var zoomIn = document.getElementById('zoomIn');
+var zoomOut = document.getElementById('zoomOut');
+var fitBtn = document.getElementById('fitBtn');
+zoomIn.addEventListener('click', function () {
+  zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, 1.5); scheduleCull();
+});
+zoomOut.addEventListener('click', function () {
+  zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, 1 / 1.5); scheduleCull();
+});
+fitBtn.addEventListener('click', function () { fit(); scheduleCull(); });
+
+// resizing (rotation, mobile toolbars) must not reset the user's zoom -
+// just keep the view inside the wall bounds
+window.addEventListener('resize', function () { clamp(); setTransform(); scheduleCull(); });
+
+/* ---------- go ---------- */
+// open centered on the middle of the wall: 75% on desktop, 35% on
+// touch/phone viewports where the wall is huge relative to the screen
+var openScale = (matchMedia('(pointer: coarse)').matches || stage.clientWidth < 768) ? 0.35 : 0.75;
+scale = openScale;
+tx = Math.round((stage.clientWidth - wallW * scale) / 2);
+ty = Math.round((stage.clientHeight - wallH * scale) / 2);
+clamp(); setTransform(); scheduleCull();
+if (hint) setTimeout(function () { hint.classList.add('gone'); }, 7000);
+</script>
+</body>
+</html>

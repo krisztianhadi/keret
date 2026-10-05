@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://krisztianhadi.github.io/keret/sitemap.xml

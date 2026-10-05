@@ -1,0 +1,18 @@
+{
+  "title": "Keret demo wall",
+  "description": "Twenty-four public-domain photographs on a wall you can pan and zoom.",
+  "lang": "en",
+  "siteUrl": "https://krisztianhadi.github.io/keret/",
+  "themeColor": "#26231e",
+  "photosDir": "photos",
+  "outDir": "dist",
+  "captions": {
+    "file": "captions.json",
+    "maxLines": 2,
+    "showYear": false,
+    "showCamera": true,
+    "showSpecs": true
+  },
+  "images": { "maxEdge": 1600, "quality": 80 },
+  "noscript": { "limit": 60 }
+}

@@ -31,6 +31,14 @@ now shares their line, their pill, their border and their blur, and it steps
 aside under 840px or on a coarse pointer, where there is no room for it beside
 the controls.
 
+`[Feature]` **README images, drawn not screenshotted by hand.**
+`npm run banner` renders two files from one capture of the demo wall: the title
+card (the wall dimmed, the frame and the wordmark over it, the mark the favicon
+and the social card already use) and the wall inside a browser window with a drop
+shadow, on a transparent background so it sits on any theme. 334 kB for both,
+drawn with sharp, so a new capture means one command rather than another session
+in an image editor.
+
 `[Feature]` **A first-run wizard.** On a terminal, a wall with no
 `wall.config.json` is asked a few questions (title, description, site URL,
 photographer name, email, website) and the answers are written to

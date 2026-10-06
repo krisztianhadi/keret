@@ -509,5 +509,5 @@ function scanPhotos(photosDir, cfg, captionsFile) {
 
 module.exports = {
   IMAGE_EXTS, requireSharp, detectImageSize, readExif, formatCaption,
-  scanPhotos, writeCopies, writeOgImage, writeTouchIcon, cardSvg, wrapText, pipeline, ICON,
+  scanPhotos, writeCopies, writeOgImage, writeTouchIcon, cardSvg, wrapText, ensureFontCache, pipeline, ICON,
 };

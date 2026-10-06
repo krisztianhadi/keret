@@ -3,6 +3,8 @@
 [![CI](https://github.com/krisztianhadi/keret/actions/workflows/ci.yml/badge.svg)](https://github.com/krisztianhadi/keret/actions/workflows/ci.yml)
 · MIT · Node 18.17+ · one dependency
 
+![Keret: the wordmark inside a white frame outline, over the demo wall](docs/assets/readme-header.jpg)
+
 A self-hosted photo wall. Point it at a folder of photographs and it builds a
 single static page: every photo in its own frame on one big wall you pan and
 zoom, laid out so nothing overlaps and nothing is cropped.
@@ -27,7 +29,7 @@ personal photo wall and is now a standalone tool anyone can run.
 - **No JavaScript required to read it.** Without JS you get a plain list of the
   photos; the interactive wall is an enhancement.
 
-![The demo wall zoomed out: framed photographs on a dark wall, with the hint, the credit line and the zoom controls along the bottom, and the Author button in the top right](docs/assets/demo-wall.jpg)
+![The demo wall in a browser window: framed photographs on a dark wall, with the hint, the credit line and the zoom controls along the bottom, and the Author button in the top right](docs/assets/demo-window.png)
 
 ## Quick start
 

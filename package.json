@@ -47,6 +47,7 @@
     "demo": "cd demo && node ../gen.js --yes",
     "demo:check": "cd demo && node ../scripts/check-build.js dist",
     "demo:serve": "node scripts/serve.js demo/dist 3100",
+    "banner": "node scripts/make-banner.js",
     "test": "node --test test/*.test.js"
   },
   "dependencies": {

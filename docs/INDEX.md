@@ -8,6 +8,7 @@ photo in a frame, pan and zoom, no framework and no server runtime.
 | [SETUP.md](SETUP.md) | installing, running, serving, deploying to Pages, ports and troubleshooting |
 | [API.md](API.md) | you need the CLI flags, the setup questions, the environment variables, every `wall.config.json` key, the captions sidecar, or the photographer card |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | you are changing the code: the build pipeline, the layout algorithm, the engine's constraints, the guard rails |
+| [HOSTING.md](HOSTING.md) | you want it on the web: GitHub Pages, Cloudflare Pages, Netlify, or your own server |
 | [CHANGELOG.md](CHANGELOG.md) | you want to know what changed, dated and tagged |
 | [../README.md](../README.md) | you want the pitch and the quick start |
 | [../demo/CREDITS.md](../demo/CREDITS.md) | you want the sources and licenses of the demo photographs |

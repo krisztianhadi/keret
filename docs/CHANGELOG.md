@@ -31,6 +31,14 @@ now shares their line, their pill, their border and their blur, and it steps
 aside under 840px or on a coarse pointer, where there is no room for it beside
 the controls.
 
+`[Feature]` **Four hosting tutorials.** `docs/HOSTING.md` covers GitHub Pages
+(including what to set for the bundled workflow), Cloudflare Pages (Git
+integration or Direct Upload with a zip, and the 1,000-file cap a large wall will
+hit), Netlify (Drop or Git), and your own server with nginx or Caddy. Each links
+to the provider's documentation for the parts that move, and the shared steps -
+`siteUrl` before the final build, relative URLs, the stamp - are stated once at
+the top.
+
 `[Fix]` **A wide strip instead of a tall card.** The README header was 1400x735,
 which sat under the badges and took a third of the first screen. It is 1600x640
 now, and `npm run banner` also writes `docs/assets/social-preview.jpg` at

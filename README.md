@@ -153,8 +153,9 @@ Details in [SECURITY.md](SECURITY.md).
 
 Start at [docs/INDEX.md](docs/INDEX.md). The short version:
 [SETUP.md](docs/SETUP.md) to run it, [API.md](docs/API.md) for the CLI and every
-config key, [ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the build and the
-engine fit together.
+config key, [HOSTING.md](docs/HOSTING.md) to put it online,
+[ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the build and the engine fit
+together.
 
 ## Built with AI
 

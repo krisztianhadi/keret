@@ -136,6 +136,23 @@ containing markup is displayed, never executed.
 | `og.source` | `"assets/og.jpg"` | a ready-made 1200x630 card, relative to the project root. Copied as it is when the file exists |
 | `og.photo` | `""` | when no card exists, this photo is cropped into `og.jpg`. Empty means "choose for me": the build scores every photo on the wall for how little of it the 1200x630 crop would throw away and how little it would have to be enlarged, and takes the best fit |
 
+When no designed card exists, the build draws one: the chosen photograph,
+darkened, with the wall's identity in the page's own type - the title in
+uppercase and letterspaced, then `by <photographer>` when `author.json` names
+someone other than the title, then the number of photographs on its own line. It
+uses the same monospace, ink and dim tones as the page chrome, so a shared link
+looks like the wall.
+
+```
+KERET DEMO WALL
+by Ada Lovelace
+105 photos
+```
+
+A long title wraps to two lines and is ellipsised past that. The photograph is
+darkened twice over: a flat overlay, plus a scrim that deepens toward the bottom
+where the text sits.
+
 ### Paths
 
 | Key | Default | Meaning |

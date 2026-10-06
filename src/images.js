@@ -13,6 +13,7 @@
  */
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { naturalSort } = require('./layout');
 
@@ -322,11 +323,119 @@ async function writeCopies(file, srcFull, outDir, cfg) {
   return { before: buf.length, after: out.length, thumb };
 }
 
-/** Social preview image: a 1200x630 cover crop of one photo. */
-async function writeOgImage(file, srcFull, outFile, cfg) {
-  const buf = fs.readFileSync(srcFull);
-  await pipeline(buf)
-    .resize({ width: cfg.images.ogWidth, height: cfg.images.ogHeight, fit: 'cover', position: 'center' })
+/* ---------------- social card ---------------- */
+
+/**
+ * librsvg asks fontconfig for a font cache, and a container or a locked-down
+ * sandbox often has no writable HOME to keep one in - fontconfig then prints a
+ * screenful of errors on every text render. Point it at the temp area unless the
+ * environment already says where its cache belongs.
+ */
+function ensureFontCache() {
+  if (process.env.XDG_CACHE_HOME) return;
+  try {
+    const dir = path.join(os.tmpdir(), 'keret-fontconfig');
+    fs.mkdirSync(dir, { recursive: true });
+    process.env.XDG_CACHE_HOME = dir;
+  } catch (err) {
+    // nowhere writable: fontconfig complains, the card still renders
+  }
+}
+
+/** XML text and attribute safety for the card's SVG. */
+function xmlEscape(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/**
+ * Break a line to fit a monospace card. Monospace makes this exact: one
+ * character is one advance, so the wrap is deterministic rather than a guess.
+ * Returns at most `maxLines` lines, the last one ellipsised if text is left over.
+ */
+function wrapText(text, maxChars, maxLines) {
+  const words = String(text || '').split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = '';
+  for (const word of words) {
+    const candidate = line ? line + ' ' + word : word;
+    if (candidate.length <= maxChars || !line) {
+      line = candidate;
+      continue;
+    }
+    lines.push(line);
+    line = word;
+    if (lines.length === maxLines) break;
+  }
+  if (lines.length < maxLines && line) lines.push(line);
+  const used = lines.join(' ').length;
+  if (used < words.join(' ').length && lines.length) {
+    const last = lines[lines.length - 1];
+    lines[lines.length - 1] = last.length > maxChars - 1
+      ? last.slice(0, maxChars - 1) + '\u2026'
+      : last + ' \u2026';
+  }
+  return lines.slice(0, maxLines)
+    .map((line) => (line.length > maxChars ? line.slice(0, maxChars - 1) + '\u2026' : line));
+}
+
+/**
+ * The card's overlay: the photo darkened, then the wall's identity in the same
+ * type the page uses - uppercase, letterspaced title, dim lines under it.
+ */
+function cardSvg(width, height, cfg, meta) {
+  const info = meta || {};
+  const title = String(info.title || '').trim();
+  const author = String(info.author || '').trim();
+  // "by Keret demo wall" under a title that already says it reads as a stutter
+  const byline = author && author.toLowerCase() !== title.toLowerCase() ? 'by ' + author : '';
+  const count = info.photos === 1 ? '1 photo' : (info.photos || 0) + ' photos';
+
+  const titleLines = wrapText(title.toUpperCase(), 30, 2);
+  const pad = 64;
+  const countY = height - 62;
+  const byY = countY - 44;
+  const titleSize = 46;
+  const step = 56;
+  const lastTitleY = (byline ? byY : countY) - 70;
+  const titleEls = titleLines.map((line, i) => {
+    const y = lastTitleY - (titleLines.length - 1 - i) * step;
+    return '<text x="' + pad + '" y="' + y + '" class="title">' + xmlEscape(line) + '</text>';
+  });
+
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">'
+    + '<defs>'
+    + '<linearGradient id="scrim" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0.3" stop-color="#0c0b09" stop-opacity="0"/>'
+    + '<stop offset="1" stop-color="#0c0b09" stop-opacity="0.9"/>'
+    + '</linearGradient>'
+    + '<style>'
+    + 'text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }'
+    + '.title { font-size: ' + titleSize + 'px; font-weight: 600; letter-spacing: 5.5px; fill: #f2eee4; }'
+    + '.line { font-size: 23px; fill: rgba(242,238,228,.6); }'
+    + '</style>'
+    + '</defs>'
+    + '<rect width="' + width + '" height="' + height + '" fill="#0c0b09" opacity="0.2"/>'
+    + '<rect width="' + width + '" height="' + height + '" fill="url(#scrim)"/>'
+    + titleEls.join('')
+    + (byline ? '<text x="' + pad + '" y="' + byY + '" class="line">' + xmlEscape(byline) + '</text>' : '')
+    + '<text x="' + pad + '" y="' + countY + '" class="line">' + xmlEscape(count) + '</text>'
+    + '</svg>';
+}
+
+/**
+ * Social preview: one photo, cover-cropped to the card, darkened, and captioned
+ * with the wall's title, its photographer when it has one, and the photo count.
+ */
+async function writeOgImage(file, srcFull, outFile, cfg, meta) {
+  ensureFontCache();
+  const width = cfg.images.ogWidth;
+  const height = cfg.images.ogHeight;
+  const overlay = Buffer.from(cardSvg(width, height, cfg, meta));
+  await pipeline(fs.readFileSync(srcFull))
+    .resize({ width, height, fit: 'cover', position: 'center' })
+    .composite([{ input: overlay }])
     .jpeg({ quality: cfg.images.ogQuality, mozjpeg: true })
     .toFile(outFile);
   return fs.statSync(outFile).size;
@@ -400,5 +509,5 @@ function scanPhotos(photosDir, cfg, captionsFile) {
 
 module.exports = {
   IMAGE_EXTS, requireSharp, detectImageSize, readExif, formatCaption,
-  scanPhotos, writeCopies, writeOgImage, writeTouchIcon, pipeline, ICON,
+  scanPhotos, writeCopies, writeOgImage, writeTouchIcon, cardSvg, wrapText, pipeline, ICON,
 };

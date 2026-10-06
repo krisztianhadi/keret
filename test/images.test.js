@@ -9,6 +9,7 @@ const path = require('path');
 const { clearWallEnv, tempDir, fixture } = require('./helpers');
 const { loadConfig } = require('../src/config');
 const images = require('../src/images');
+const sharp = require('sharp');
 const { writeSamples } = require('../scripts/seed-placeholders');
 
 clearWallEnv();
@@ -34,7 +35,7 @@ test('PNG dimensions and EXIF are read from the header bytes', () => {
 test('seeded samples are visible images, not blank ones', async () => {
   const dir = tempDir();
   const [file] = writeSamples(dir, 1);
-  const { data, info } = await require('sharp')(file).raw().toBuffer({ resolveWithObject: true });
+  const { data, info } = await sharp(file).raw().toBuffer({ resolveWithObject: true });
   const at = (x, y) => {
     const o = (y * info.width + x) * info.channels;
     return [data[o], data[o + 1], data[o + 2]];
@@ -73,6 +74,38 @@ test('scanPhotos explains every file it leaves out', () => {
   assert.match(reasons['_scratch.jpg'], /name starts with "_"/);
   assert.equal(reasons['captions.json'], undefined, 'the captions sidecar is consumed silently');
   assert.equal(reasons['subdir.jpg'], 'not a file');
+});
+
+test('the card wraps its title to fit the card width', () => {
+  assert.deepEqual(images.wrapText('Iceland 2026', 30, 2), ['Iceland 2026']);
+  const two = images.wrapText('A wall of photographs from twelve days on the ring road in Iceland', 30, 2);
+  assert.equal(two.length, 2);
+  assert.ok(two.every((line) => line.length <= 30), 'no line overflows the card: ' + JSON.stringify(two));
+  assert.match(two[1], /\u2026$/, 'the text left over is ellipsised');
+  const clipped = images.wrapText('Supercalifragilisticexpialidocious', 10, 1);
+  assert.equal(clipped.length, 1);
+  assert.ok(clipped[0].length <= 10);
+  assert.match(clipped[0], /\u2026$/);
+});
+
+test('the social card is the wall identity over a darkened photo', async () => {
+  const dir = tempDir();
+  const [src] = writeSamples(dir, 1);
+  const out = path.join(dir, 'og.jpg');
+  const config = loadConfig({ root: tempDir(), env: {} }).config;
+  const bytes = await images.writeOgImage('sample.png', src, out, config, { title: 'Test Wall', author: 'Ada', photos: 3 });
+
+  const card = await sharp(out).metadata();
+  assert.equal(card.width, config.images.ogWidth, 'card width');
+  assert.equal(card.height, config.images.ogHeight, 'card height');
+  assert.ok(bytes > 0);
+
+  // the overlay has to darken what sits under the text
+  const band = { left: 0, top: Math.round(config.images.ogHeight * 0.75), width: config.images.ogWidth, height: Math.round(config.images.ogHeight * 0.25) };
+  const plain = await sharp(src).resize({ width: config.images.ogWidth, height: config.images.ogHeight, fit: 'cover' }).extract(band).stats();
+  const carded = await sharp(out).extract(band).stats();
+  const mean = (stats) => stats.channels.slice(0, 3).reduce((total, channel) => total + channel.mean, 0) / 3;
+  assert.ok(mean(carded) < mean(plain) * 0.85, 'the band behind the text is darker: ' + mean(carded).toFixed(1) + ' vs ' + mean(plain).toFixed(1));
 });
 
 test('writeCopies publishes the copy, strips metadata and keeps a placeholder', async () => {

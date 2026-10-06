@@ -369,7 +369,11 @@ async function main(argv) {
       : ogCandidate(published, config);
     if (ogFile) {
       try {
-        ogBytes = await images.writeOgImage(ogFile, path.join(photosDir, ogFile), path.join(outDir, 'og.jpg'), config);
+        ogBytes = await images.writeOgImage(ogFile, path.join(photosDir, ogFile), path.join(outDir, 'og.jpg'), config, {
+          title: config.title,
+          author: authorCard.data ? authorCard.data.name : '',
+          photos: published.length,
+        });
         ogFrom = 'generated from ' + ogFile;
       } catch (err) {
         console.warn('warning: could not build og.jpg from ' + ogFile + ': ' + err.message);

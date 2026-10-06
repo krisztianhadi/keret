@@ -8,6 +8,15 @@ Reverse-chronological. One dated section per work block, entries tagged
 The engine that built a personal photo wall becomes a general tool with its own
 repository, license and demo wall. Newest first.
 
+`[Feature]` **The generated social card carries the wall.** The photograph is
+darkened and captioned in the page's own type: the title in uppercase and
+letterspaced, `by <photographer>` when `author.json` names someone other than
+the title, and the number of photographs on its own line. A shared link now looks
+like the wall rather than an anonymous photograph. Long titles wrap to two lines
+and ellipsise past that. SVG text needs fontconfig, which has no cache to write in
+a container, so the card points it at the temp area first and the build stays
+quiet.
+
 `[Fix]` **The default social card is the photo that fits it.** The picker took
 the widest landscape on the wall, which is the worst choice for a 1200x630
 cover crop: on the demo it chose a 3.97:1 panorama, threw away 52% of it and

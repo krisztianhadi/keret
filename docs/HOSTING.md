@@ -29,8 +29,13 @@ after they move a button.
 4. **A rebuild is byte-identical**, so re-deploying an unchanged wall changes
    nothing. From the Keret checkout, `node scripts/check-stamp.js dist/index.html`
    says whether a built folder still matches the code and config that produced it.
-5. **`CNAME` only means something to GitHub Pages.** Elsewhere it is fetched as a
-   stray file; harmless, and `siteUrl` is the cleaner way to set the address.
+5. **`CNAME` only means something to GitHub Pages.** Elsewhere it just sits in
+   the output as an extra file nobody reads; `siteUrl` is the cleaner way to set
+   the address on every host.
+6. **Watch the file sizes if you raise `maxEdge`.** Served copies are whatever
+   `images.maxEdge` and `images.quality` produce: the demo's are 100-330 kB, the
+   largest 327 kB. At full resolution each photo becomes multi-megabyte, and some
+   hosts cap what a single file may be.
 
 ## GitHub Pages
 
@@ -52,11 +57,18 @@ For your own wall, two shapes:
   step, and keep `dist/` out of git. `sharp` installs from prebuilt binaries on the
   runner, so the build takes seconds.
 
-Custom domain: set it in `Settings > Pages > Custom domain`, keep `CNAME` in the
-project root so the file travels with the artifact, and point DNS at GitHub — an
-`A`/`AAAA` record set for an apex domain, a `CNAME` record for a subdomain. GitHub
-then issues the certificate, which takes a few minutes and needs "Enforce HTTPS"
-switched on once it is ready.
+Custom domain: set it in `Settings > Pages > Custom domain` and keep `CNAME` in
+the project root so the file travels with the artifact. Then point DNS at GitHub:
+
+| Record | Name | Value |
+| --- | --- | --- |
+| `A` | `@` (apex) | `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` |
+| `AAAA` | `@` (apex) | `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153` |
+| `CNAME` | `www`, or any subdomain | `<user>.github.io` |
+
+If the domain's DNS is already on Cloudflare, the records go there like any other.
+GitHub then issues the certificate, which takes a few minutes and needs "Enforce
+HTTPS" switched on once it is ready.
 
 - [Configuring a publishing source](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
 - [Managing a custom domain](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site)
@@ -75,10 +87,10 @@ with. Both are free.
 - Or from the terminal: `npx wrangler pages deploy dist`.
 
 Watch the caps, because a wall is mostly files: **drag and drop stops at 1,000
-files and 25 MiB per file**; Wrangler raises that to 20,000 files. The 105-photo
-demo is 113 files, so drag and drop is fine for a small wall and not for a large
-one — a 1,000-photo wall needs Wrangler or Git integration. Wrangler does not
-accept a zip.
+files and 25 MiB per file**; Wrangler raises that to 20,000. A build is one file
+per photo plus about eight (the demo: 105 photos, 113 files), so drag and drop
+reaches roughly 990 photos and Wrangler far more than a wall will hold. Wrangler
+does not accept a zip.
 
 **Git integration**: connect the repository, build command `node gen.js --yes`,
 output directory `dist`. Every push then deploys, and pull requests get preview
@@ -102,8 +114,9 @@ publish directory `dist`. Pushes then deploy, and pull requests get deploy
 previews.
 
 Custom domain: **Domain management** in the site's configuration, then either
-Netlify DNS or the records it shows for DNS you keep elsewhere. HTTPS is
-provisioned automatically.
+Netlify DNS or the records it shows for DNS you keep elsewhere — including
+Cloudflare, where they go in like any other record. HTTPS is provisioned
+automatically.
 
 - [Netlify Drop](https://docs.netlify.com/start/quickstarts/netlify-drop-quickstart/)
 - [Deploys](https://docs.netlify.com/deploy/deploy-overview/)
@@ -147,3 +160,16 @@ mode until the certificate exists, then turn the proxy on.
 
 - [Caddy: static files](https://caddyserver.com/docs/quick-starts/static-files)
 - [nginx: beginner's guide](https://nginx.org/en/docs/beginners_guide.html)
+
+## If something breaks
+
+- **The page loads, the type does not.** The face travels in `dist/fonts/`; a
+  deploy that copied only the HTML and the photos leaves the wall in the system
+  font. Re-upload the whole output folder, not a selection of it.
+- **404 after adding a custom domain.** DNS has not caught up, or the record is
+  missing. `dig +short your-domain` should answer with the host's address.
+- **The certificate is still pending after 15 minutes.** Check the records
+  against the table above (GitHub) or the panel's own values; a wrong name or a
+  missing one of a set is the usual cause.
+- **A shared link has no preview image.** `siteUrl` was empty when the wall was
+  built, so no social tags were written. Set it and build again.

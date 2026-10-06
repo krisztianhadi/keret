@@ -4,6 +4,7 @@
   "lang": "en",
   "siteUrl": "https://krisztianhadi.github.io/keret/",
   "themeColor": "#26231e",
+  "font": "mono",
   "photosDir": "photos",
   "outDir": "dist",
   "captions": {
@@ -13,6 +14,11 @@
     "showCamera": true,
     "showSpecs": true
   },
-  "images": { "maxEdge": 1000, "quality": 74 },
-  "noscript": { "limit": 60 }
+  "images": {
+    "maxEdge": 1000,
+    "quality": 74
+  },
+  "noscript": {
+    "limit": 60
+  }
 }

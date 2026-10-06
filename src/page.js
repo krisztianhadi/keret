@@ -16,6 +16,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { fontOf } = require('./config');
 
 const ASSETS = path.join(__dirname, 'assets');
 const cache = new Map();
@@ -89,7 +90,14 @@ function buildPage(model, cfg) {
     .replace('{{favicon}}', faviconUri(cfg.favicon))
     .replace('{{extraHead}}', extraHead);
 
+  const face = fontOf(cfg);
   const css = asset('page.css')
+    .replace(/\{\{fontStack\}\}/g, face.stack)
+    // the face is served from the site's own folder: no third-party request, and
+    // the wall still renders with the shipped type offline
+    .replace('{{fontFace}}', '@font-face{font-family:"' + face.family + '";'
+      + 'src:url(fonts/' + face.web + ') format("woff2");'
+      + 'font-weight:100 900;font-style:normal;font-display:swap}')
     .replace(/\{\{canvasW\}\}/g, String(model.canvasW))
     .replace(/\{\{canvasH\}\}/g, String(model.canvasH));
 

@@ -1,4 +1,6 @@
 
+  {{fontFace}}
+
   :root {
     --wall: #cfc8ba;                   /* one flat color everywhere */
     --chrome: rgba(25, 22, 18, .62);   /* header/hint/controls glass */
@@ -23,7 +25,7 @@
   html,body { height:100%; overflow:hidden; }
   body {
     background:var(--wall);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-family: {{fontStack}};
     color:var(--ink);
     -webkit-user-select:none; user-select:none;
     overscroll-behavior:none;

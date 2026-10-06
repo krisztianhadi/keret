@@ -14,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { clearWallEnv, fixture, readPage, tempDir } = require('./helpers');
-const { loadConfig } = require('../src/config');
+const { loadConfig, fontOf } = require('../src/config');
 const { main, BuildError, captionPair, ogCandidate } = require('../gen.js');
 const images = require('../src/images');
 const { readStamp, sourceHash } = require('../src/stamp');
@@ -78,6 +78,18 @@ test('a committed social card is used as it is, and generated only when absent',
 
   await main(args(fx));
   assert.deepEqual(fs.readFileSync(path.join(fx.outDir, 'og.jpg')), card, 'the card is copied, not regenerated');
+});
+
+test('the face in use travels with the build', async () => {
+  const fx = fixture();
+  await main(args(fx));
+  const font = fontOf(loadConfig({ root: fx.root, env: {} }).config);
+  assert.equal(fs.existsSync(path.join(fx.outDir, 'fonts', font.web)), true,
+    'the font file the page names is copied into the output');
+  assert.equal(fs.existsSync(path.join(fx.outDir, 'fonts', 'LICENSE.txt')), true,
+    'the OFL licence travels with it');
+  const html = fs.readFileSync(path.join(fx.outDir, 'index.html'), 'utf8');
+  assert.equal(html.includes('src:url(fonts/' + font.web + ')'), true, 'the page names the copied file');
 });
 
 test('the build is deterministic: a rebuild is byte-identical', async () => {

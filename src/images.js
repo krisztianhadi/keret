@@ -331,6 +331,35 @@ async function writeCopies(file, srcFull, outDir, cfg) {
  * screenful of errors on every text render. Point it at the temp area unless the
  * environment already says where its cache belongs.
  */
+/**
+ * librsvg matches text through fontconfig, and fontconfig cannot read the woff2
+ * the page is served: the faces ship as TrueType next to them. Point fontconfig
+ * at that folder once, so a generated card is set in the same Geist the page is
+ * instead of whatever the machine happens to have installed.
+ */
+function useProjectFonts() {
+  if (projectFonts) return;
+  projectFonts = true;
+  ensureFontCache();
+  const dir = path.join(__dirname, 'assets', 'fonts');
+  if (!fs.existsSync(dir)) return;
+  const system = '/etc/fonts/fonts.conf';
+  const conf = path.join(process.env.XDG_CACHE_HOME || os.tmpdir(), 'keret-fonts.conf');
+  try {
+    fs.writeFileSync(conf, '<?xml version="1.0"?>\n'
+      + '<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">\n'
+      + '<fontconfig>\n'
+      + (fs.existsSync(system) ? '  <include ignore_missing="yes">' + system + '</include>\n' : '')
+      + '  <dir>' + dir + '</dir>\n'
+      + '</fontconfig>\n');
+    process.env.FONTCONFIG_FILE = conf;
+  } catch (err) {
+    // no writable place for the config: the card still renders, in the system face
+  }
+}
+
+let projectFonts = false;
+
 function ensureFontCache() {
   if (process.env.XDG_CACHE_HOME) return;
   try {
@@ -411,7 +440,7 @@ function cardSvg(width, height, cfg, meta) {
     + '<stop offset="1" stop-color="#0c0b09" stop-opacity="0.9"/>'
     + '</linearGradient>'
     + '<style>'
-    + 'text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }'
+    + 'text { font-family: ' + (cfg && cfg.font === 'sans' ? 'Geist' : 'Geist Mono') + '; }'
     + '.title { font-size: ' + titleSize + 'px; font-weight: 600; letter-spacing: 5.5px; fill: #f2eee4; }'
     + '.line { font-size: 23px; fill: rgba(242,238,228,.6); }'
     + '</style>'
@@ -429,7 +458,7 @@ function cardSvg(width, height, cfg, meta) {
  * with the wall's title, its photographer when it has one, and the photo count.
  */
 async function writeOgImage(file, srcFull, outFile, cfg, meta) {
-  ensureFontCache();
+  useProjectFonts();
   const width = cfg.images.ogWidth;
   const height = cfg.images.ogHeight;
   const overlay = Buffer.from(cardSvg(width, height, cfg, meta));
@@ -509,5 +538,5 @@ function scanPhotos(photosDir, cfg, captionsFile) {
 
 module.exports = {
   IMAGE_EXTS, requireSharp, detectImageSize, readExif, formatCaption,
-  scanPhotos, writeCopies, writeOgImage, writeTouchIcon, cardSvg, wrapText, ensureFontCache, pipeline, ICON,
+  scanPhotos, writeCopies, writeOgImage, writeTouchIcon, cardSvg, wrapText, ensureFontCache, useProjectFonts, pipeline, ICON,
 };

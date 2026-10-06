@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { clearWallEnv, tempDir } = require('./helpers');
-const { loadConfig } = require('../src/config');
+const { loadConfig, fontOf } = require('../src/config');
 const { buildPage, escJson } = require('../src/page');
 
 clearWallEnv();
@@ -44,10 +44,26 @@ const chromeOf = (html) => {
 
 test('the emitted CSS is the verified stylesheet, byte for byte', () => {
   const html = buildPage(model(), base);
+  const font = fontOf(base);
   const css = styleOf(html)
+    .replace('@font-face{font-family:"' + font.family + '";src:url(fonts/' + font.web
+      + ') format("woff2");font-weight:100 900;font-style:normal;font-display:swap}', '{{fontFace}}')
+    .replace('font-family: ' + font.stack + ';', 'font-family: {{fontStack}};')
     .replace('width:' + model().canvasW + 'px', 'width:{{canvasW}}px')
     .replace('height:' + model().canvasH + 'px', 'height:{{canvasH}}px');
   assert.equal(css, asset('page.css'));
+});
+
+test('the font setting is the face the page is served in', () => {
+  for (const kind of ['mono', 'sans']) {
+    const cfg = Object.assign({}, base, { font: kind });
+    const html = buildPage(model(), cfg);
+    const font = fontOf(cfg);
+    assert.equal(html.includes('font-family: ' + font.stack + ';'), true,
+      kind + ': the stack the config names is the stack the page uses');
+    assert.equal(html.includes('@font-face{font-family:"' + font.family + '";src:url(fonts/' + font.web + ')'), true,
+      kind + ': the face is served from the site, not a third party');
+  }
 });
 
 test('the emitted engine is the verified engine, byte for byte', () => {

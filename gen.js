@@ -39,7 +39,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const { loadConfig, checkPaths } = require('./src/config');
+const { loadConfig, checkPaths, fontOf } = require('./src/config');
 const setupModule = require('./src/setup');
 const stampMod = require('./src/stamp');
 const layoutMod = require('./src/layout');
@@ -380,6 +380,15 @@ async function main(argv) {
       }
     }
   }
+  /* the face in use travels with the wall: the page names it by file, so a
+     missing copy is a silent fallback to whatever the system has */
+  const face = fontOf(config);
+  const fontSrc = path.join(__dirname, 'src', 'assets', 'fonts');
+  fs.mkdirSync(path.join(outDir, 'fonts'), { recursive: true });
+  for (const file of [face.web, 'LICENSE.txt']) {
+    fs.copyFileSync(path.join(fontSrc, file), path.join(outDir, 'fonts', file));
+  }
+
   try {
     await images.writeTouchIcon(path.join(outDir, 'apple-touch-icon.png'), config);
   } catch (err) {

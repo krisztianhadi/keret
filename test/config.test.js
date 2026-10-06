@@ -62,6 +62,17 @@ test('favicon colors must be hex: they are interpolated into the page', () => {
   assert.throws(() => loadConfig({ root: dir, env: {} }), /favicon.dot must be a hex color/);
 });
 
+test('the font is mono or sans, and defaults to mono', () => {
+  assert.equal(loadConfig({ root: tempDir(), env: {} }).config.font, 'mono');
+  const dir = tempDir();
+  fs.writeFileSync(path.join(dir, 'wall.config.json'), JSON.stringify({ font: 'sans' }));
+  assert.equal(loadConfig({ root: dir, env: {} }).config.font, 'sans');
+
+  const bad = tempDir();
+  fs.writeFileSync(path.join(bad, 'wall.config.json'), JSON.stringify({ font: 'hans' }));
+  assert.throws(() => loadConfig({ root: bad, env: {} }), /font must be "mono" or "sans"/);
+});
+
 test('analytics needs a script and an id when enabled', () => {
   const dir = tempDir();
   fs.writeFileSync(path.join(dir, 'wall.config.json'), JSON.stringify({ analytics: { script: 'https://x/y.js' } }));

@@ -4,6 +4,7 @@
   "lang": "en",
   "siteUrl": "",
   "themeColor": "#26231e",
+  "font": "mono",
   "favicon": {
     "bg": "#26231e",
     "dot": "#e23c30"

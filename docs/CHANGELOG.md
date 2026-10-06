@@ -31,6 +31,15 @@ now shares their line, their pill, their border and their blur, and it steps
 aside under 840px or on a coarse pointer, where there is no room for it beside
 the controls.
 
+`[Feature]` **Geist, and a choice of face.** The wall is set in Geist Mono or
+Geist Sans, and the choice is one config key (`font: "mono"`, the default, or
+`"sans"`). Both faces are variable (weight 100-900, one file each) and are copied
+into `dist/fonts/` with their OFL licence, so the type is served from the wall's
+own domain: no font CDN, no third-party request, and the page still renders with
+the shipped face offline. The generated social card and the README images use the
+same face through fontconfig, pointed at the vendored files, rather than whatever
+the machine happens to have installed.
+
 `[Feature]` **README images, drawn not screenshotted by hand.**
 `npm run banner` renders two files from one capture of the demo wall: the title
 card (the wall dimmed, the frame and the wordmark over it, the mark the favicon

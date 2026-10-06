@@ -10,6 +10,30 @@
 const fs = require('fs');
 const path = require('path');
 
+/* The two Geist faces the build ships: one variable file each (weight 100-900),
+   copied into the output only when it is the one in use. The page, the social
+   card and the README images all read this one table. */
+const FONTS = {
+  mono: {
+    family: 'Geist Mono',
+    stack: '"Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+    web: 'GeistMonoVF.woff2',
+    print: 'GeistMonoVF.ttf',
+  },
+  sans: {
+    family: 'Geist',
+    stack: '"Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+    web: 'GeistSansVF.woff2',
+    print: 'GeistSansVF.ttf',
+  },
+};
+
+/** The face in use. validate() has already rejected anything but mono and sans
+    by the time a build reads it. */
+function fontOf(cfg) {
+  return FONTS[cfg && cfg.font === 'sans' ? 'sans' : 'mono'];
+}
+
 const DEFAULTS = {
   // identity + sharing
   title: 'Photo Wall',
@@ -17,6 +41,7 @@ const DEFAULTS = {
   lang: 'en',
   siteUrl: '',            // absolute site URL, e.g. https://photos.example.com/
   themeColor: '#26231e',
+  font: 'mono',           // 'mono' = Geist Mono, 'sans' = Geist Sans
   og: {
     // A ready-made 1200x630 social card, relative to the project root. When the
     // file exists it is copied as-is (that is how this repository ships its own
@@ -99,6 +124,7 @@ const ENV_MAP = {
   WALL_LANG: 'lang',
   WALL_SITE_URL: 'siteUrl',
   WALL_THEME_COLOR: 'themeColor',
+  WALL_FONT: 'font',
   WALL_OG_PHOTO: 'og.photo',
   WALL_OG_SOURCE: 'og.source',
   WALL_PHOTOS_DIR: 'photosDir',
@@ -198,6 +224,9 @@ function validate(config, root) {
   num(config.noscript.limit, 'noscript.limit', 0, 10000);
   for (const key of ['title', 'description', 'lang', 'siteUrl', 'photosDir', 'outDir']) {
     if (typeof config[key] !== 'string') throw new Error(key + ' must be a string');
+  }
+  if (!FONTS[config.font]) {
+    throw new Error('font must be "mono" or "sans", got "' + config.font + '"');
   }
   if (typeof config.captions.file !== 'string') throw new Error('captions.file must be a string');
   for (const key of ['bg', 'dot']) {
@@ -329,4 +358,4 @@ function setPath(obj, dotted, value) {
 }
 
 
-module.exports = { DEFAULTS, ENV_MAP, loadConfig, checkPaths, isInside };
+module.exports = { DEFAULTS, ENV_MAP, FONTS, fontOf, loadConfig, checkPaths, isInside };

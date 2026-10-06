@@ -22,7 +22,7 @@
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
-const { ensureFontCache } = require('../src/images');
+const { useProjectFonts } = require('../src/images');
 
 const ROOT = path.join(__dirname, '..');
 const ASSETS = path.join(ROOT, 'docs', 'assets');
@@ -35,8 +35,9 @@ const DIM = 'rgba(242,238,228,.55)';
 const ACCENT = '#e23c30';
 const PAGE = 'krisztianhadi.github.io/keret';
 
-/* the window mirror the social card's wordmark: a geometric sans */
-const WORDMARK = 'Montserrat';
+/* the wall's own faces: Geist for the wordmark, Geist Mono for the page pill */
+const WORDMARK = 'Geist';
+const MONO = 'Geist Mono';
 
 const rect = (x, y, w, h, rx, fill) =>
   '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + rx + '" fill="' + fill + '"/>';
@@ -62,17 +63,16 @@ const svg = (w, h, body) =>
  */
 async function buildWindow(source, out) {
   const viewW = 860;
-  const viewH = 528;
   const barH = 34;
   const radius = 12;
   const pad = 40;
+
+  // Width only: the window keeps the capture's own aspect, so the page chrome
+  // along its bottom edge is never sliced by the crop.
+  const view = await sharp(source).resize({ width: viewW }).png().toBuffer();
+  const viewH = (await sharp(view).metadata()).height;
   const winW = viewW;
   const winH = viewH + barH;
-
-  const view = await sharp(source)
-    .resize({ width: viewW, height: viewH, fit: 'cover', position: 'top' })
-    .png()
-    .toBuffer();
 
   // square top corners (the title bar sits there), rounded bottom ones
   const mask = svg(winW, viewH, '<path d="M0,0 H' + winW + ' V' + (viewH - radius)
@@ -89,7 +89,7 @@ async function buildWindow(source, out) {
     + circle(38, barH / 2, 5, 'rgba(242,238,228,.22)')
     + circle(56, barH / 2, 5, 'rgba(242,238,228,.22)')
     + rect((winW - pillW) / 2, 8, pillW, barH - 16, (barH - 16) / 2, 'rgba(255,255,255,.06)')
-    + text(winW / 2, barH / 2 + 4, 12, DIM, PAGE, { family: 'Noto Sans Mono, monospace', anchor: 'middle', spacing: 0.4 }));
+    + text(winW / 2, barH / 2 + 3, 12, DIM, PAGE, { family: MONO, anchor: 'middle', spacing: 0.4 }));
 
   const window = await sharp({
     create: { width: winW, height: winH, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
@@ -138,9 +138,9 @@ async function buildHeader(source, out) {
     .toBuffer();
 
   const card = svg(width, height,
-    rect(0, 0, width, height, 0, WALL).replace('/>', ' opacity="0.46"/>')
+    rect(0, 0, width, height, 0, WALL).replace('/>', ' opacity="0.62"/>')
     + rect(cx - frameW / 2, cy - frameH / 2, frameW, frameH, 0, 'none')
-      .replace('fill="none"', 'fill="none" stroke="' + INK + '" stroke-width="5"')
+      .replace('fill="none"', 'fill="none" stroke="' + INK + '" stroke-width="16"')
     + text(cx, cy + 34, 104, INK, 'keret', { anchor: 'middle', weight: 500, spacing: 2 }));
 
   await sharp(wall)
@@ -152,7 +152,7 @@ async function buildHeader(source, out) {
 }
 
 async function main() {
-  ensureFontCache();
+  useProjectFonts();
   const source = process.argv[2] ? path.resolve(process.argv[2]) : path.join(ASSETS, 'demo-wall.jpg');
   if (!fs.existsSync(source)) {
     console.error('make-banner: no source capture at ' + source);

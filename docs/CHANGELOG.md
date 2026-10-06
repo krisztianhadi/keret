@@ -31,6 +31,13 @@ now shares their line, their pill, their border and their blur, and it steps
 aside under 840px or on a coarse pointer, where there is no room for it beside
 the controls.
 
+`[Fix]` **A wide strip instead of a tall card.** The README header was 1400x735,
+which sat under the badges and took a third of the first screen. It is 1600x640
+now, and `npm run banner` also writes `docs/assets/social-preview.jpg` at
+1200x630 - the size a social card is rendered at - so the repository's social
+preview can use the mark without being cropped. The frame scales with the canvas,
+so both carry it at the same weight.
+
 `[Feature]` **Geist, and a choice of face.** The wall is set in Geist Mono or
 Geist Sans, and the choice is one config key (`font: "mono"`, the default, or
 `"sans"`). Both faces are variable (weight 100-900, one file each) and are copied

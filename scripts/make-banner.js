@@ -1,22 +1,24 @@
 #!/usr/bin/env node
 'use strict';
 /*
- * make-banner.mjs - render the README images from one capture.
+ * make-banner.js - render the repository images from one capture.
  *
  *   node scripts/make-banner.js [source.jpg]
  *
  * Reads docs/assets/demo-wall.jpg (a plain capture of the demo wall at 1400px)
- * and writes two files next to it:
+ * and writes three files next to it:
  *
  *   demo-window.png    the wall inside a browser window, transparent, with a
  *                      drop shadow, so it can sit on any background
- *   readme-header.png  the title card: the same wall, dimmed, with the mark the
- *                      page's favicon and the social card use - a frame outline
- *                      with the wordmark inside it
+ *   readme-header.jpg   the title strip: the same wall, dimmed, with the mark the
+ *                      page's favicon and the generated social card use - a
+ *                      frame outline with the wordmark inside it
+ *   social-preview.jpg  the same mark at 1200x630, the size a social card is
+ *                      rendered at, for the repository's social preview setting
  *
- * Both are drawn with sharp, which is already a dependency: no browser, no
- * ImageMagick. The wordmark is set in Montserrat; a machine without it falls
- * back to the default sans, which is why the rendered files are committed.
+ * All three are drawn with sharp, which is already a dependency: no browser, no
+ * ImageMagick. The wordmark is set in the Geist Sans this repository ships, so
+ * the mark matches the wall it stands for.
  */
 
 const fs = require('fs');
@@ -121,14 +123,14 @@ async function buildWindow(source, out) {
 }
 
 /**
- * The title card: the wall dimmed almost to a wall, with the mark in the middle
- * - the frame the tool is named after, and the word inside it.
+ * The title card: the wall dimmed to a wall, with the mark in the middle - the
+ * frame the tool is named after, and the word inside it. The frame scales with
+ * the canvas, so the README strip and the social card carry the same mark at
+ * the same weight.
  */
-async function buildHeader(source, out) {
-  const width = 1400;
-  const height = 735;
-  const frameW = 400;
-  const frameH = 190;
+async function buildCard(source, out, width, height) {
+  const frameW = Math.round(width * 0.25);
+  const frameH = Math.round(frameW * 0.475);
   const cx = width / 2;
   const cy = height / 2;
 
@@ -140,8 +142,9 @@ async function buildHeader(source, out) {
   const card = svg(width, height,
     rect(0, 0, width, height, 0, WALL).replace('/>', ' opacity="0.62"/>')
     + rect(cx - frameW / 2, cy - frameH / 2, frameW, frameH, 0, 'none')
-      .replace('fill="none"', 'fill="none" stroke="' + INK + '" stroke-width="16"')
-    + text(cx, cy + 34, 104, INK, 'keret', { anchor: 'middle', weight: 500, spacing: 2 }));
+      .replace('fill="none"', 'fill="none" stroke="' + INK + '" stroke-width="' + Math.round(frameH * 0.084) + '"')
+    + text(cx, cy + Math.round(frameH * 0.18), Math.round(frameH * 0.55), INK, 'keret',
+      { anchor: 'middle', weight: 500, spacing: 2 }));
 
   await sharp(wall)
     .composite([{ input: card }])
@@ -159,8 +162,12 @@ async function main() {
     process.exit(1);
   }
   const window = await buildWindow(source, path.join(ASSETS, 'demo-window.png'));
-  const header = await buildHeader(source, path.join(ASSETS, 'readme-header.jpg'));
-  for (const file of [window, header]) {
+  // the README strip: wide and shallow, so it does not eat the first screen
+  const header = await buildCard(source, path.join(ASSETS, 'readme-header.jpg'), 1600, 640);
+  // 1200x630 is the size a social card is rendered at, so uploading this one to
+  // the repository's social preview crops nothing
+  const social = await buildCard(source, path.join(ASSETS, 'social-preview.jpg'), 1200, 630);
+  for (const file of [window, header, social]) {
     const { width, height } = await sharp(file).metadata();
     console.log(path.relative(ROOT, file) + '  ' + width + 'x' + height + '  ' + Math.round(fs.statSync(file).size / 1024) + ' kB');
   }

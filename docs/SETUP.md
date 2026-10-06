@@ -137,6 +137,19 @@ The output is static: any web server, any static host. It works from a subpath
 For your own wall, commit its `dist/` and point `siteUrl` at the Pages URL; the
 same workflow pattern works with a different artifact path.
 
+### The repository's own images
+
+`docs/assets/` carries the pictures the repository shows: `readme-header.jpg`
+(the wide strip at the top of this README), `demo-window.png` (the wall in a
+browser window, transparent) and `social-preview.jpg`. All three are drawn from
+one capture by `npm run banner`, so a new capture is one command rather than a
+session in an image editor.
+
+For the link preview when someone shares the repository, upload
+`docs/assets/social-preview.jpg` in
+`Settings > General > Social preview`. It is drawn at 1200x630, the size a social
+card is rendered at, so nothing is cropped.
+
 ### Ports used in this repository
 
 | Port | Used by |

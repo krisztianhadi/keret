@@ -23,7 +23,7 @@ scripts/serve.js           a zero-dependency static server for local preview
 scripts/check-build.js     structural check of a built directory, no browser
 scripts/check-stamp.js     is this build still in sync with the source?
 scripts/seed-placeholders.js  deterministic sample images (fixtures, and a wall with something on it)
-scripts/make-banner.js    the README images, drawn from one capture of the demo wall
+scripts/make-banner.js    the README and social images, drawn from one capture of the demo wall
 src/assets/fonts/         Geist Mono and Geist Sans, variable, weight 100-900 (SIL OFL 1.1)
 ```
 

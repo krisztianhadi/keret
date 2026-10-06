@@ -65,6 +65,14 @@ asked, and the defaults build `./photos` into `./dist`. Copy
 [`wall.config.example.json`](wall.config.example.json) to `wall.config.json`
 when you would rather edit it by hand.
 
+## Put it online
+
+`dist/` is a folder of static files, so it goes anywhere: GitHub Pages, Cloudflare
+Pages, Netlify, or your own server behind nginx or Caddy. All four, with the
+custom domain steps, are in [docs/HOSTING.md](docs/HOSTING.md). Setting `siteUrl`
+before the final build is the one step that matters everywhere, because the
+canonical link, the social tags and the sitemap are built from it.
+
 ## Requirements
 
 - Node 18.17 or newer (Node 20+ recommended).

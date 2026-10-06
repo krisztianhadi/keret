@@ -394,11 +394,11 @@ function cardSvg(width, height, cfg, meta) {
 
   const titleLines = wrapText(title.toUpperCase(), 30, 2);
   const pad = 64;
-  const countY = height - 62;
-  const byY = countY - 44;
+  const countY = height - 58;
+  const byY = countY - 34;
   const titleSize = 46;
-  const step = 56;
-  const lastTitleY = (byline ? byY : countY) - 70;
+  const step = 52;
+  const lastTitleY = (byline ? byY : countY) - 52;
   const titleEls = titleLines.map((line, i) => {
     const y = lastTitleY - (titleLines.length - 1 - i) * step;
     return '<text x="' + pad + '" y="' + y + '" class="title">' + xmlEscape(line) + '</text>';

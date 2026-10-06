@@ -1,8 +1,14 @@
 # Keret
 
+[![CI](https://github.com/krisztianhadi/keret/actions/workflows/ci.yml/badge.svg)](https://github.com/krisztianhadi/keret/actions/workflows/ci.yml)
+· MIT · Node 18.17+ · one dependency
+
 A self-hosted photo wall. Point it at a folder of photographs and it builds a
 single static page: every photo in its own frame on one big wall you pan and
 zoom, laid out so nothing overlaps and nothing is cropped.
+
+**[Open the live demo](https://krisztianhadi.github.io/keret/)** — 105
+photographs, every frame captioned with the camera data read out of the file.
 
 Named after the Hungarian word for *frame*. It began as the engine of a
 personal photo wall and is now a standalone tool anyone can run.
@@ -109,7 +115,8 @@ ignored.
 ## The demo wall
 
 `demo/` is a complete wall: 105 photographs, their captions and the built site,
-committed so the demo builds offline and can be served by GitHub Pages.
+committed so the demo builds offline and can be served by GitHub Pages. It is
+live at <https://krisztianhadi.github.io/keret/>.
 
 Every photograph is a Wikimedia Commons original that still carries its camera
 EXIF, so every frame shows the date, exposure and camera the engine read straight
@@ -153,6 +160,12 @@ backed by a command in the repository, the tests are the contract, and the revie
 that drove the extraction from the original site is preserved in the git history
 and [docs/CHANGELOG.md](docs/CHANGELOG.md) - so a reader can see which parts came
 from where.
+
+## Contributing
+
+Issues and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) has the
+ground rules and the checks to run before opening one; the project follows the
+[code of conduct](CODE_OF_CONDUCT.md).
 
 ## License
 

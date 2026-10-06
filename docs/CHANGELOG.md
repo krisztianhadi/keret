@@ -8,6 +8,13 @@ Reverse-chronological. One dated section per work block, entries tagged
 The engine that built a personal photo wall becomes a general tool with its own
 repository, license and demo wall. Newest first.
 
+`[Fix]` **The hint sits in the chrome band.** It floated about 50px above the
+bottom edge while the credit line and the controls sat on it, so the three read as
+unrelated pieces, and on a phone-width window it wrapped onto the controls. It
+now shares their line, their pill, their border and their blur, and it steps
+aside under 840px or on a coarse pointer, where there is no room for it beside
+the controls.
+
 `[Feature]` **A first-run wizard.** On a terminal, a wall with no
 `wall.config.json` is asked a few questions (title, description, site URL,
 photographer name, email, website) and the answers are written to

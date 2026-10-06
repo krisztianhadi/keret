@@ -135,14 +135,19 @@
   header h1 { font-size:13px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; }
   header .count { font-size:11px; color:var(--ink-dim); }
 
+  /* the hint sits on the same line as the credit and the controls and wears the
+     same pill, so the three read as one band */
   #hint {
-    position:fixed; left:50%; bottom:64px; transform:translateX(-50%);
+    position:fixed; left:50%; bottom:14px; transform:translateX(-50%);
     font-size:11px; color:var(--ink-dim); text-align:center; pointer-events:none;
-    background:var(--chrome); padding:8px 14px; border-radius:6px;
+    white-space:nowrap;
+    background:var(--chrome); border:1px solid rgba(255,255,255,.12);
+    padding:7px 11px; border-radius:8px; backdrop-filter:blur(4px);
     opacity:1; transition:opacity 1.2s ease 6s;
   }
   #hint.gone { opacity:0; }
-  @media (pointer: coarse) { #hint { display:none; } } /* no manual on touch */
+  /* no manual on touch, and no room for it beside the controls on a narrow window */
+  @media (pointer: coarse), (max-width: 840px) { #hint { display:none; } }
 
   #controls {
     position:fixed; right:14px; bottom:14px;

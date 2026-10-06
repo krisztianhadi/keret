@@ -21,7 +21,7 @@ personal photo wall and is now a standalone tool anyone can run.
 - **No JavaScript required to read it.** Without JS you get a plain list of the
   photos; the interactive wall is an enhancement.
 
-![The demo wall zoomed out: framed photographs on a dark wall, the credit line in the bottom left corner and the Author button in the top right](docs/assets/demo-wall.jpg)
+![The demo wall zoomed out: framed photographs on a dark wall, with the hint, the credit line and the zoom controls along the bottom, and the Author button in the top right](docs/assets/demo-wall.jpg)
 
 ## Quick start
 

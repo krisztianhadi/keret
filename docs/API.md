@@ -134,7 +134,7 @@ containing markup is displayed, never executed.
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `og.source` | `"assets/og.jpg"` | a ready-made 1200x630 card, relative to the project root. Copied as it is when the file exists |
-| `og.photo` | `""` | when no card exists, this photo is cropped into `og.jpg`. Empty means "the widest landscape photo on the wall" |
+| `og.photo` | `""` | when no card exists, this photo is cropped into `og.jpg`. Empty means "choose for me": the build scores every photo on the wall for how little of it the 1200x630 crop would throw away and how little it would have to be enlarged, and takes the best fit |
 
 ### Paths
 

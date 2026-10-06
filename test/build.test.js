@@ -15,7 +15,7 @@ const path = require('path');
 
 const { clearWallEnv, fixture, readPage, tempDir } = require('./helpers');
 const { loadConfig } = require('../src/config');
-const { main, BuildError, captionPair } = require('../gen.js');
+const { main, BuildError, captionPair, ogCandidate } = require('../gen.js');
 const images = require('../src/images');
 const { readStamp, sourceHash } = require('../src/stamp');
 
@@ -141,6 +141,17 @@ test('a mistyped output directory is refused and the photos survive', async () =
   });
 
   assert.deepEqual(fs.readdirSync(fx.photosDir).sort(), before, 'the originals are untouched');
+});
+
+test('the default social card picks the photo that needs the least work', () => {
+  const cfg = loadConfig({ root: tempDir(), env: {} }).config;   // 1200x630 card
+  const photos = [
+    { file: 'panorama.jpg', w: 4000, h: 1000 },   // 4:1: crop to the middle half, then enlarge
+    { file: 'card.jpg', w: 1400, h: 740 },        // 1.89:1: almost nothing to do
+    { file: 'portrait.jpg', w: 800, h: 1200 },    // crops both axes and enlarges
+  ];
+  assert.equal(ogCandidate(photos, cfg), 'card.jpg');
+  assert.equal(ogCandidate([], cfg), '');
 });
 
 test('the author card reaches the page, and the stamp covers it', async () => {

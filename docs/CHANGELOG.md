@@ -8,6 +8,13 @@ Reverse-chronological. One dated section per work block, entries tagged
 The engine that built a personal photo wall becomes a general tool with its own
 repository, license and demo wall. Newest first.
 
+`[Fix]` **The default social card is the photo that fits it.** The picker took
+the widest landscape on the wall, which is the worst choice for a 1200x630
+cover crop: on the demo it chose a 3.97:1 panorama, threw away 52% of it and
+enlarged the rest 2.5x, so every shared link showed a soft card. It now scores
+every photo for crop loss and enlargement and takes the best fit - the demo
+switches to a 1.79:1 frame at 1.2x with 6% cropped.
+
 `[Fix]` **The hint sits in the chrome band.** It floated about 50px above the
 bottom edge while the credit line and the controls sat on it, so the three read as
 unrelated pieces, and on a phone-width window it wrapped onto the controls. It

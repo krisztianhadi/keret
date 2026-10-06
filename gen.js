@@ -366,7 +366,7 @@ async function main(argv) {
   } else {
     const ogFile = config.og.photo && fs.existsSync(path.join(photosDir, config.og.photo))
       ? config.og.photo
-      : ogCandidate(published);
+      : ogCandidate(published, config);
     if (ogFile) {
       try {
         ogBytes = await images.writeOgImage(ogFile, path.join(photosDir, ogFile), path.join(outDir, 'og.jpg'), config);
@@ -408,12 +408,26 @@ async function main(argv) {
   }
 }
 
-/** default social preview: the widest landscape photo on the wall */
-function ogCandidate(photos) {
+/**
+ * Default social preview: the photo that fits the card best.
+ *
+ * The obvious pick - the widest landscape - is the worst one: an extreme
+ * panorama has to be cropped to its middle half and blown up to fill 1200x630,
+ * so the card ships soft. Score instead for the least cropping and no
+ * enlargement, and a wall with no chosen `og.photo` still gets a sharp card.
+ */
+function ogCandidate(photos, config) {
+  const target = config.images.ogWidth / config.images.ogHeight;
+  const scaleFor = (want, have) => Math.max(1, want / have);
   let best = null;
+  let bestScore = Infinity;
   for (const p of photos) {
     if (!p.w || !p.h) continue;
-    if (!best || p.w / p.h > best.w / best.h) best = p;
+    const aspect = p.w / p.h;
+    const upscale = Math.max(scaleFor(config.images.ogWidth, p.w), scaleFor(config.images.ogHeight, p.h));
+    const cropped = Math.abs(aspect - target) / Math.max(aspect, target);
+    const score = (upscale - 1) * 2 + cropped * 1.5;
+    if (score < bestScore) { bestScore = score; best = p; }
   }
   return best ? best.file : '';
 }
@@ -432,4 +446,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { main, parseArgs, captionPair, altText, readAuthor, BuildError };
+module.exports = { main, parseArgs, captionPair, altText, readAuthor, ogCandidate, BuildError };

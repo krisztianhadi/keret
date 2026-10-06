@@ -23,7 +23,7 @@ const DEFAULTS = {
     // card); when it is missing the build generates one from a photo instead, so
     // a fresh clone still gets a share image.
     source: 'assets/og.jpg',
-    photo: '',            // filename used when generating: '' = widest landscape on the wall
+    photo: '',            // filename used when generating: '' = the photo that fits the card best
   },
 
   // paths

@@ -83,7 +83,11 @@ photo may re-lay the whole wall, because pair and column decisions are global.
 
 - The layout is inlined as `POS`, so frames are placed instantly; there is no
   measure-then-place pass and no layout thrash.
-- Only visible frames are rendered (culling by viewport rectangle).
+- Only visible frames are rendered (culling by viewport rectangle). The cull
+  runs on a `requestAnimationFrame` and is triggered by the engine’s own
+  gestures, so anything that moves the camera by hand (a script, a screenshot
+  harness) has to call `scheduleCull()` afterwards or the frames culled under the
+  previous view stay hidden.
 - Pan is a `translate` on one world element; pinch, wheel, `+`/`-`, double-tap and
   the fit button share one zoom path with a clamp.
 - Each photo gets a 24px blurred placeholder inlined as a data URI, so a frame

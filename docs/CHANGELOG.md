@@ -3,6 +3,33 @@
 Reverse-chronological. One dated section per work block, entries tagged
 `[Feature]`, `[Fix]` or `[Break]`.
 
+## 2026-10-11 - A beacon, without putting it in the repo
+
+The hosted app reports pageviews and completed builds to the studio's own
+analytics instance. The repository carries none of it.
+
+`[Feature]` **Injected at build time, from the host.** The whole tag lives in a
+Cloudflare Pages environment variable (`ANALYTICS_TAG`, production only) and one
+step on the end of the build command writes it into `dist/index.html` and
+`dist/404.html`. It is idempotent, it no-ops without the variable, and
+`CF_PAGES_BRANCH` keeps preview deployments untracked. A self-hoster who clones
+this repository and points a Pages project at it gets the app with no tracking at
+all — there is nothing to strip.
+
+`[Feature]` **A `wall-built` event, not just pageviews.** The same tag watches for
+the done step and reports how many photographs the wall had, so the useful number
+(the people who finished a build) is separable from the people who only looked.
+
+`[Fix]` **Do Not Track is respected.** The tag carries `data-do-not-track="true"`,
+so a visitor who asks not to be tracked makes no request at all. Verified both
+ways on the live site: with `navigator.doNotTrack` set to `1` the page sends
+nothing, without it one pageview.
+
+`[Fix]` **The copy on the page stays true.** Photographs are still never uploaded;
+the beacon reports that the page was opened, from the same site, with no cookie.
+`docs/SETUP.md` says so plainly, in place of the claim that the build command was
+the whole deploy.
+
 ## 2026-10-11 - The app gets an address
 
 `web/` is published at <https://keret.nomorenames.studio>, on a Cloudflare Pages

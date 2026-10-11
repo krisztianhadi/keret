@@ -10,6 +10,9 @@
  *
  *   demo-window.png    the wall inside a browser window, transparent, with a
  *                      drop shadow, so it can sit on any background
+ *   app-window.png     the browser builder's own finished state in the same
+ *                      window, from docs/assets/app-ui.png - so the README shows
+ *                      both ends of the thing: the app, and what it builds
  *   readme-header.jpg   the title strip: the same wall, dimmed, with the mark the
  *                      page's favicon and the generated social card use - a
  *                      frame outline with the wordmark inside it
@@ -63,8 +66,10 @@ const svg = (w, h, body) =>
  * The wall in a browser window: a title bar with a page pill, the capture
  * clipped to the window's rounded corners, and a soft shadow under all of it.
  */
-async function buildWindow(source, out) {
-  const viewW = 860;
+async function buildWindow(source, out, opts) {
+  const o = opts || {};
+  const page = o.page || PAGE;
+  const viewW = o.width || 860;
   const barH = 34;
   const radius = 12;
   const pad = 40;
@@ -91,7 +96,7 @@ async function buildWindow(source, out) {
     + circle(38, barH / 2, 5, 'rgba(242,238,228,.22)')
     + circle(56, barH / 2, 5, 'rgba(242,238,228,.22)')
     + rect((winW - pillW) / 2, 8, pillW, barH - 16, (barH - 16) / 2, 'rgba(255,255,255,.06)')
-    + text(winW / 2, barH / 2 + 3, 12, DIM, PAGE, { family: MONO, anchor: 'middle', spacing: 0.4 }));
+    + text(winW / 2, barH / 2 + 3, 12, DIM, page, { family: MONO, anchor: 'middle', spacing: 0.4 }));
 
   const window = await sharp({
     create: { width: winW, height: winH, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
@@ -162,12 +167,20 @@ async function main() {
     process.exit(1);
   }
   const window = await buildWindow(source, path.join(ASSETS, 'demo-window.png'));
+  // the app is captured on its own (scripts/ has no browser in it): open
+  // keret.nomorenames.studio, build the demo wall, and save the finished state
+  // as docs/assets/app-ui.png
+  const APP_PAGE = 'keret.nomorenames.studio';
+  const appCapture = path.join(ASSETS, 'app-ui.png');
+  const app = fs.existsSync(appCapture)
+    ? await buildWindow(appCapture, path.join(ASSETS, 'app-window.png'), { page: APP_PAGE, width: 820 })
+    : null;
   // the README strip: wide and shallow, so it does not eat the first screen
   const header = await buildCard(source, path.join(ASSETS, 'readme-header.jpg'), 1600, 640);
   // 1200x630 is the size a social card is rendered at, so uploading this one to
   // the repository's social preview crops nothing
   const social = await buildCard(source, path.join(ASSETS, 'social-preview.jpg'), 1200, 630);
-  for (const file of [window, header, social]) {
+  for (const file of [window, app, header, social].filter(Boolean)) {
     const { width, height } = await sharp(file).metadata();
     console.log(path.relative(ROOT, file) + '  ' + width + 'x' + height + '  ' + Math.round(fs.statSync(file).size / 1024) + ' kB');
   }

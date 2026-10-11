@@ -55,13 +55,12 @@ node ~/Code/keret/gen.js         # writes ./dist
 npx --yes serve dist             # or any static file server
 ```
 
-No config file is needed to start, and on a terminal the first run asks a few
-questions (title, description, site URL, photographer) and writes
-`wall.config.json` for you; every later run offers to keep it. `--yes` turns the
-questions off and `--setup` brings them back. Without a terminal nothing is
-asked, and the defaults build `./photos` into `./dist`. Copy
-[`wall.config.example.json`](wall.config.example.json) to `wall.config.json`
-when you would rather edit it by hand.
+No config file is needed to start: on a terminal the first run asks a few questions
+(title, description, site URL, photographer) and writes `wall.config.json`; every
+later run offers to keep it. `--yes` turns the questions off, `--setup` brings them
+back, and without a terminal the defaults build `./photos` into `./dist`. Copy
+[`wall.config.example.json`](wall.config.example.json) when you would rather edit
+it by hand.
 
 ## Put it online
 
@@ -79,6 +78,8 @@ build servers. [`web/`](web/) is for everyone else, live at
 the tab - drop a folder of photographs, watch it lay the wall out, preview it,
 download the finished site as a zip. No install, no server, nothing uploaded. It
 is not a fork: `web/vendor/keret-core.js` is generated from `src/`.
+
+![The browser builder, finished: five framed prints on a small wall, "105 photos on the wall", the wall's statistics, and the Download the site (.zip) button](docs/assets/app-window.png)
 
 The zip carries `wall.config.json` and `author.json` back with it - keret's own
 settings files, the ones the command line reads - so unzip it, drop in more
@@ -114,8 +115,8 @@ anything is written and each frame matches exactly how a browser renders the
 photo.
 
 Captions are the exposure line and the camera. Both can be switched off, and a
-sidecar file (`photos/captions.json`) can supply your own words per photo, which
-also take over a line when a photo has no EXIF of its own:
+sidecar (`photos/captions.json`) supplies your own words per photo, taking over a
+line when a photo has no EXIF:
 
 ```json
 {
@@ -135,8 +136,7 @@ are, and an optional analytics snippet. Every key is documented in
 [docs/API.md](docs/API.md#configuration); the defaults live in
 [`src/config.js`](src/config.js).
 
-Unknown keys are a hard error, so a typo fails the build instead of being
-ignored.
+Unknown keys are a hard error: a typo fails the build instead of being ignored.
 
 ## The demo wall
 

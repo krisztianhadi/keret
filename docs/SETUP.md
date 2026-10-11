@@ -156,6 +156,15 @@ no local deploy step or secret to keep.
 | Build command | `node build.mjs && mkdir -p dist && cp index.html app.css app.js keret-runtime.js canvas-sharp.js zip.js 404.html robots.txt sitemap.xml og.png apple-touch-icon.png dist/ && cp -r vendor dist/` |
 | Output directory | `dist` |
 
+The studio's own deploy appends one more step to that command: if an
+`ANALYTICS_TAG` environment variable is set on the project, it is written into
+`dist/index.html` and `dist/404.html` before `</head>`, and preview branches skip
+it. The tag counts pageviews and finished builds, is served from the studio's own
+domain, and carries `data-do-not-track="true"` — a visitor who sends that signal
+is not counted at all. The tag (a self-hosted analytics beacon) lives in the Pages project's
+environment, deliberately not in this repo — cloning this repository and pointing
+your own Pages project at it deploys the app with no tracking at all.
+
 The root directory is the point: pointed at the repository root, Pages installs
 the CLI's `sharp` on every build for an app that has no dependencies at all. The
 build command runs `web/build.mjs --check`'s generator for real, so what ships is

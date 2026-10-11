@@ -537,6 +537,6 @@ function scanPhotos(photosDir, cfg, captionsFile) {
 }
 
 module.exports = {
-  IMAGE_EXTS, requireSharp, detectImageSize, readExif, formatCaption,
+  IMAGE_EXTS, SKIP_PREFIXES, requireSharp, detectImageSize, readExif, formatCaption,
   scanPhotos, writeCopies, writeOgImage, writeTouchIcon, cardSvg, wrapText, ensureFontCache, useProjectFonts, pipeline, ICON,
 };

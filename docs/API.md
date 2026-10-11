@@ -97,11 +97,29 @@ hand; `--yes` turns the questions off.
 | `author.file` | `"author.json"` | the photographer card behind the top right button, resolved against the working directory. No file means no button |
 | `analytics` | `null` | `null` disables it. Otherwise `{ "script": "https://...", "websiteId": "...", "domains": "example.com", "cache": true }`; `script` and `websiteId` are required |
 
+### Settings that travel with a wall
+
+A wall built in the browser (`web/`) downloads with `wall.config.json` and, when a
+creator was named, `author.json` beside `index.html` - this project's own two
+files, not an app-specific format. Unzip it, add more photographs to `photos/`,
+and rebuild either with the app or with `node gen.js` from that folder: the
+settings come back either way.
+
+Dropping a wall's folder back into the app reads both files and fills the form.
+The whole config is applied, not only the keys the form shows, so a hand-edited
+`layout`, `captions` or `credit` block takes effect in the browser too, and a typo
+fails the build the same way it does on the command line (`unknown key "..."`).
+
 ### The photographer card
 
 `author.json` in the working directory holds the photographer, and the page grows a
 button in the top right corner that opens it. The file is strict: an unknown key
 fails the build, so a typo cannot ship a half-empty card.
+
+The card is the wall's own corner, so it also carries `description` from
+`wall.config.json`: the one line about the wall that would otherwise only ever be
+read by a search engine. A wall with a description and no `author.json` still gets
+the button, showing the description on its own.
 
 ```json
 {
@@ -120,7 +138,7 @@ fails the build, so a typo cannot ship a half-empty card.
 
 | Field | Required | Effect |
 | --- | --- | --- |
-| `name` | yes | the heading; without it there is no button |
+| `name` | yes | the heading; without it there is no button unless the config has a `description` |
 | `role` | no | a dim line under the name |
 | `bio` | no | a short paragraph |
 | `email` | no | rendered as a `mailto:` link |

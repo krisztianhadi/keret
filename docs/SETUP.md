@@ -122,6 +122,72 @@ node gen.js --check
 node gen.js --photos ~/Pictures/iceland --out ~/Sites/iceland
 ```
 
+## The browser build
+
+`web/` is the same generator running in a page, for people who will not install
+Node. It needs no dependencies of its own: the modules, the stylesheet, the engine
+and both typefaces are baked into `web/vendor/keret-core.js`.
+
+```sh
+npm run web:build     # regenerate the bundle after editing src/ (committed)
+npm run web:check     # fail if the bundle no longer matches src/
+npm run web:serve     # http://127.0.0.1:3287/
+```
+
+The bundle is committed, so deploying the app is copying `web/` to any static
+host - GitHub Pages, Cloudflare Pages, a subfolder of your own site. Nothing runs
+server-side, and nothing the user picks is uploaded: the photos are read with the
+File API, re-encoded on a canvas, and the finished site is handed back as a zip.
+
+`test/web.test.js` fails when the bundle is stale, so `npm run web:build` is not
+optional after touching `gen.js` or `src/`. It also fails when `web/app.js` stops
+parsing or reaches for an element the page does not have - the two failure modes
+that make the page load but do nothing.
+
+### The hosted app
+
+<https://keret.nomorenames.studio> is a Cloudflare Pages project, git-connected to
+this repository's `main` branch, so the live site is always a commit and there is
+no local deploy step or secret to keep.
+
+| Setting | Value |
+| --- | --- |
+| Root directory | `web` |
+| Build command | `node build.mjs && mkdir -p dist && cp index.html app.css app.js keret-runtime.js canvas-sharp.js zip.js 404.html robots.txt sitemap.xml og.png apple-touch-icon.png dist/ && cp -r vendor dist/` |
+| Output directory | `dist` |
+
+The root directory is the point: pointed at the repository root, Pages installs
+the CLI's `sharp` on every build for an app that has no dependencies at all. The
+build command runs `web/build.mjs --check`'s generator for real, so what ships is
+built from the commit rather than from a possibly stale committed bundle; `npm
+test` is what catches a stale bundle before it gets there.
+
+A deploy therefore needs a push. Verify one through the API rather than assuming:
+
+```sh
+T=$(cat ~/Code/.config/cloudflare/pages.token); A=d6c73c1ae5be6d50645e7db1723d290e
+curl -s -H "Authorization: Bearer $T" \
+  "https://api.cloudflare.com/client/v4/accounts/$A/pages/projects/keret/deployments?per_page=1" \
+  | jq -c '.result[0] | {commit: .deployment_trigger.metadata.commit_hash[0:7], stage: .latest_stage.name, status: .latest_stage.status}'
+```
+
+The share card and the touch icon are generated, not hand-drawn:
+
+```sh
+node scripts/serve.js . 4330      # the card pages must be served, or the font will not load
+node scripts/gen-og.mjs           # writes web/og.png (1200x630) and web/apple-touch-icon.png
+```
+
+Playwright is not a dependency here; `scripts/gen-og.mjs` looks for an installed
+`playwright`, a `PLAYWRIGHT` environment variable, or this machine's sibling
+checkout that has one.
+
+The app itself has no automated test: it needs a browser. The checks worth
+repeating by hand after changing `web/` are the flow at 390px and 1280px - pick a
+folder, open *More settings*, build, watch the frame resize rather than jump,
+preview the wall, download the zip - and that the zip carries `wall.config.json`
+and `author.json`, which dropping back into the app should restore.
+
 ## Serving and hosting
 
 The output is static: any web server, any static host. It works from a subpath
@@ -155,6 +221,7 @@ card is rendered at, so nothing is cropped.
 | Port | Used by |
 | --- | --- |
 | 3100 | `npm run demo:serve`, `npm run serve` (local preview only) |
+| 3287 | `npm run web:serve` (the browser build's own page) |
 
 Nothing listens on any port at build time.
 

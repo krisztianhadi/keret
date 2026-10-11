@@ -341,8 +341,9 @@ async function main(argv) {
     canvasH: laid.canvasH,
     capH,
     maxScale,
-    // page chrome: the credit line, and the photographer when one is configured
-    chrome: { credit: config.credit, author: authorCard.data },
+    // page chrome: the credit line, the wall's own description, and the
+    // photographer when one is configured
+    chrome: { credit: config.credit, description: config.description, author: authorCard.data },
   };
 
   /* 2. the page + its furniture */

@@ -26,11 +26,13 @@ var CHROME = {{CHROME}};
     credit.hidden = false;
   }
 
-  /* top right: the photographer, when the wall was given one */
-  var author = data.author;
+  /* top right: the wall's own corner - the photographer when there is one, and
+     the wall's description either way */
+  var author = data.author || {};
   var button = document.getElementById('authorBtn');
   var card = document.getElementById('authorCard');
-  if (!author || !author.name || !button || !card) return;
+  if (!button || !card) return;
+  if (!author.name && !data.description) return;
 
   var close = el('button', 'author-close', '\u00d7');
   close.type = 'button';
@@ -61,8 +63,9 @@ var CHROME = {{CHROME}};
   }
 
   card.appendChild(close);
-  card.appendChild(el('h2', null, author.name));
+  if (author.name) card.appendChild(el('h2', null, author.name));
   if (author.role) card.appendChild(el('div', 'author-role', author.role));
+  if (data.description) card.appendChild(el('p', 'author-desc', data.description));
   if (author.bio) card.appendChild(el('p', 'author-bio', author.bio));
   if (facts.childNodes.length) card.appendChild(facts);
 

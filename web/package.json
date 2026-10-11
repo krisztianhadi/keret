@@ -1,0 +1,6 @@
+{
+  "name": "keret-web",
+  "private": true,
+  "type": "module",
+  "description": "The browser build of keret. Its own package.json only marks these files as ES modules, so node can import the runtime in tests; it has no dependencies."
+}

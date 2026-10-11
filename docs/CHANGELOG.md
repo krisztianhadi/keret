@@ -3,6 +3,134 @@
 Reverse-chronological. One dated section per work block, entries tagged
 `[Feature]`, `[Fix]` or `[Break]`.
 
+## 2026-10-11 - The app gets an address
+
+`web/` is published at <https://keret.nomorenames.studio>, on a Cloudflare Pages
+project whose root directory is `web/` so the build installs nothing.
+
+`[Feature]` **Share card and head tags.** `scripts/og-card.html` renders to
+`web/og.png` (1200x630) through `scripts/gen-og.mjs` - the app's own palette and
+face, served from the repo so the two cannot drift, and three of the demo's
+public-domain photographs in cream mats. The page carries canonical, `og:*`
+(with `og:image:alt`) and `twitter:summary_large_image`, plus an 180x180 touch
+icon generated from the same mark.
+
+`[Feature]` **`robots.txt`, `sitemap.xml` and a 404.** The 404 is the app's own
+clothes with one line and one way back; Pages serves it for any unknown path.
+
+`[Fix]` **The title uses an em dash** (`keret.app — build a photo wall in your
+browser`), matching the studio's standing copy rule.
+
+`[Break]` **None. The command line is untouched**; the demo stays at
+`krisztianhadi.github.io/keret/`.
+
+## 2026-10-10 - The browser wall becomes something to hand to a person
+
+The app in `web/` is rebuilt around one screen with one job per row, and the wall
+it produces now carries its own settings so a wall can be kept up to date.
+
+`[Feature]` **One forward action, in one place.** Choose photos -> Build the photo
+wall -> Download the site (.zip) sits in a single slot on the frame's footer; the
+photo box holds only what is happening, plus quiet contextual links (*Change
+photos*, *Cancel build*, *Preview*, *Build again*). The settings live in the box
+with the photographs: title, description and creator first, everything else behind
+*More settings*. They appear when there is something to build or rebuild and are
+gone while a build runs.
+
+`[Feature]` **The wall's settings ride in the zip.** `wall.config.json` and
+`author.json` are written beside `index.html` in the command line's own format, so
+a downloaded wall is rebuildable with `node gen.js`; dropping the unzipped folder
+back into the app restores every setting, including the keys the form does not
+show. Dropping a folder that contains a `photos/` folder now treats that folder as
+the source, so the site's own `og.jpg` and touch icon no longer walk onto the wall
+as photographs.
+
+`[Feature]` **A stack of prints instead of a progress bar.** The photographs the
+wall is about to be built from appear as framed prints on the desk, sampled across
+the set; when it is done, five of the published ones are laid out the way the wall
+lays them out. Both are drawn through a canvas at 480px, so a phone never holds
+full-size bitmaps for a decoration.
+
+`[Feature]` **Motion that can be seen, at a cost that was measured.** The frame
+eases between sizes, the words rise 14px into place, the settings drawer grows open
+and shut. Two findings shaped it: the switch costs one long frame (~64ms on a
+6x-throttled CPU) with no animation at all, so the cost is laying out the new step
+rather than the motion, and the box changing size only after the thumbnails
+decoded shoved everything under it down 146px in a single frame. Transforms are
+kept off anything holding a photograph because Safari re-rasterizes those;
+durations live in one `DUR` block and all of it turns off under
+`prefers-reduced-motion` or `?motion=off`.
+
+`[Fix]` **The browser app is one page, not a form of guesses.** The empty state
+opens with the wording the device can act on (a phone is told to pick photographs,
+not to drop a folder) and that wording is chosen in CSS, because a module script
+runs late enough that the desktop line was visible for a moment on a phone. Icons
+are Lucide v1.55.0 - the set this project's page chrome already uses - instead of
+hand-drawn paths at five different stroke widths. The type scale is rem off a 16px
+base, and form controls are pinned at 16px so iOS does not zoom the page on focus.
+
+`[Fix]` **`hidden` on an SVG is not a thing.** The folder mark stayed visible
+behind the stack because `hidden` is an `HTMLElement` property; it is set as an
+attribute now.
+
+## 2026-10-10 - The wall builds in a browser tab
+
+The generator becomes usable by people who will never open a terminal, without a
+server to pay for: `web/` is a static page that runs the same build and hands back
+the finished site as a zip.
+
+`[Feature]` **`web/` runs `src/`, it does not reimplement it.** `web/build.mjs`
+bakes `gen.js` and `src/*.js` into `web/vendor/keret-core.js` as CommonJS
+factories; `web/keret-runtime.js` gives them an in-memory filesystem, a `Buffer`
+with the encodings the header parser uses, a posix `path` and a module loader, and
+`web/canvas-sharp.js` implements the sharp chain - `rotate`, `resize`, `jpeg`,
+`png`, `webp`, `composite`, `toBuffer`, `toFile` - on a canvas. The app calls
+`scanPhotos`, `layout`, `writeCopies` and `buildPage` exactly as the CLI does. On
+the demo folder the browser build reports the same 105 photos, the same 9 columns
+and the same 6792x6965 canvas as `node gen.js --check`, and 105 of 105 published
+photographs have identical pixel dimensions; the files are about 13% larger,
+because the browser's JPEG encoder is not mozjpeg.
+
+`[Feature]` **Pick a folder, preview the wall, download the site.** Drag a folder
+in or use the picker (subfolders are read), optionally set the title, description,
+site address, photographer and typeface, then watch it publish photo by photo. The
+preview is the real `index.html` rendered in an iframe with its photo requests
+pointed at object URLs, so the wall pans and zooms exactly as it will once hosted.
+The download is a store-only zip with fixed timestamps: building the same folder
+twice produces byte-identical archives (measured), which is the reproducibility
+contract in a place that has no source stamp to check.
+
+`[Feature]` **Nothing is uploaded, and there is no stamp.** The photos are read
+with the File API and never leave the tab; the JSON, the fonts and the engine are
+baked into the bundle, so the app also runs from a `file://` folder. A browser
+build carries no `<!-- built by gen.js -->` stamp - there is no commit for CI to
+compare against - which is the one line `scripts/check-build.js` reports on a
+downloaded zip, and the only structural difference from a CLI build of the same
+photographs.
+
+`[Feature]` **`test/web.test.js`.** The runtime is exercised in node: it scans the
+demo folder field-for-field identically to the CLI (which is what a broken shim
+would break first), the committed bundle is checked against the sources it embeds,
+and the hand-written zip is walked header by header with a known CRC check value.
+
+Known limits, accepted for this first pass: the encoder is the browser's (same
+dimensions, larger files, and Safari cannot encode WebP at all, so webp input is
+reported as a failure rather than written under the wrong name); the wall is held
+in memory, comfortable at a few hundred photographs; and the social card is drawn
+by compositing the CLI's own SVG card over the photo, which renders in the browser
+rather than through librsvg, so its type metrics differ slightly.
+
+`[Feature]` **The wall's own description reaches the page.** `description` was
+written into `<meta name="description">` and `og:description` and nowhere else, so
+the one line explaining a wall was only ever read by a crawler - and a reader who
+filled the field in went looking for it on the page and found nothing. The card
+behind the top right button now opens with it, above the photographer's bio, and a
+wall that has a description but no `author.json` grows the button too: the card is
+the wall's corner, not only the photographer's. `gen.js` passes the description
+into the chrome object, `ui.js` draws it, and the card's stylesheet carries the
+rule; the committed demo is rebuilt for it.
+
+
 ## 2026-10-05 - Keret 0.1.0, extracted as a standalone tool
 
 The engine that built a personal photo wall becomes a general tool with its own

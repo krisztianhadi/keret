@@ -25,6 +25,12 @@ scripts/check-stamp.js     is this build still in sync with the source?
 scripts/seed-placeholders.js  deterministic sample images (fixtures, and a wall with something on it)
 scripts/make-banner.js    the README and social images, drawn from one capture of the demo wall
 src/assets/fonts/         Geist Mono and Geist Sans, variable, weight 100-900 (SIL OFL 1.1)
+web/                      the browser build: the same modules, in a tab (below)
+web/build.mjs             bakes src/*.js + the assets + the fonts into web/vendor/keret-core.js
+web/keret-runtime.js      a vfs, a Buffer, a posix path and a module loader for those modules
+web/canvas-sharp.js       the sharp chain, on a canvas
+web/app.js                the picker, the build orchestration, the preview, the download
+web/zip.js                a store-only zip writer, so the whole site downloads as one file
 ```
 
 The build order matters:
@@ -129,9 +135,9 @@ verbatim and `test/page.test.js` fails if the build starts transforming them.
   leaves `author.json` in place and prints a line saying so: a build run is not
   the right place to remove someone's contact card. It also writes only the keys
   it asked about, so improving a default later still reaches existing walls.
-- **The chrome rides in the engine's script block.** The credit line and the
-  photographer card are page furniture, so they live in their own asset
-  (`ui.js`) and their own data object, but they are emitted inside the same
+- **The chrome rides in the engine's script block.** The credit line, the wall
+  description and the photographer card are page furniture, so they live in their
+  own asset (`ui.js`) and their own data object, but they are emitted inside the same
   `<script>` as the engine: one script block means one escaping path for the wall
   data and the chrome alike, and `test/page.test.js` splits the block at the
   chrome's opening comment to check each half against its own file.
@@ -146,6 +152,86 @@ verbatim and `test/page.test.js` fails if the build starts transforming them.
   so it checks the source hash recorded in the page instead, and the demo is
   additionally rebuilt and diffed.
 
+## The browser build
+
+`web/` turns a folder into a wall without installing anything. It is not a second
+implementation: `web/build.mjs` embeds `gen.js` and `src/*.js` verbatim as
+CommonJS factories, and `web/keret-runtime.js` supplies the surroundings they
+expect - an in-memory filesystem, a `Buffer` with the encodings the header parser
+uses, a posix `path`, and a `sharp` that draws on a canvas. The app then calls the
+same functions the CLI calls, in the same order:
+
+```
+File API ──► vfs /photos/*  ──► images.scanPhotos ──► layout.layout ──► page.buildPage
+                 │                    │                    │                │
+            user's folder      headers, EXIF          geometry        index.html
+                 │                    │
+                 └── images.writeCopies ──► vfs /out/photos/* ──► zip.js ──► download
+```
+
+`test/web.test.js` runs that runtime in node and asserts it scans the demo folder
+identically to the CLI, so a broken shim cannot silently change what the build
+sees. It also parses `web/app.js` and checks that every function it calls exists
+and every id it reaches for is in the page - an edit that eats half a function
+leaves a module that reads fine and a page that is dead, which no other test here
+would catch.
+
+### Repository layout: one implementation, two front doors
+
+The CLI is the package (root, `bin: gen.js`, one dependency) and `web/` is a
+second front door onto the same `src/`. There is no second implementation to keep
+in step, which is why a fix to the layout, the header parser or the page lands for
+both at once, and why the existing tests cover both. The alternatives were worse:
+two repositories would mean vendoring `src/` and fixing everything twice, and npm
+workspaces would trade the flat clone-and-run quick start for a layout nobody
+needs. `web/` has no dependencies and no build step beyond the generated bundle,
+so deploying it is copying the folder to any static host - which, today, is a
+Cloudflare Pages project whose root directory is `web/`. Pointed at the repo root,
+Pages would install the CLI's `sharp` on every build for a bundle that needs none.
+`docs/SETUP.md` carries the exact build command and the post-deploy checks.
+
+### The app's own decisions
+
+- **No stamp.** A browser build carries no source hash: the stamp exists so CI can
+  tell a committed `dist/` from a stale one, and there is no commit here. It is the
+  one line `scripts/check-build.js` reports on a downloaded zip.
+- **Publish before layout.** The CLI lays out first and aborts on the first photo
+  it cannot publish; in a tab that would leave a hole where a photo failed. The
+  browser publishes first and lays out what really made it, then reports the rest
+  as skipped. With nothing failing the two orders produce identical geometry.
+- **Originals are released as they are published.** A few hundred photographs must
+  not have to fit in memory twice.
+- **The zip is deterministic.** Entries are stored, not deflated, and carry a fixed
+  timestamp, so building the same folder twice downloads byte-identical files. That
+  also means the archive is not compressed beyond what the photos already are.
+- **The preview is the real page.** It is `index.html` with `'photos/' + d.file`
+  pointed at object URLs (and the face inlined), so it renders in an iframe without
+  a service worker and without touching the page that goes into the zip.
+- **The settings ride in the zip.** `wall.config.json` and `author.json` are
+  written beside `index.html` in the command line's own format, so a downloaded
+  wall is rebuildable with `node gen.js` and the same settings. Drop the unzipped
+  folder back into the app and it reads them again: the whole config is applied,
+  not only the five keys the form shows, and an unknown key still fails loudly.
+- **A `photos/` folder is the source.** Dropping an unzipped wall brings the site's
+  own furniture with it; og.jpg and the touch icon would walk onto the wall as
+  photographs. When the drop contains a `photos/` folder, that folder is the wall's
+  source and everything beside it is output.
+- **The frame changes size rather than jumping, and the words move, not the
+  pictures.** Two measurements shaped this: the switch costs one long frame
+  (~64ms on a 6x-throttled CPU) with no animation at all, so the cost is laying
+  out the new step and not the motion; and the box changing size only *after* the
+  thumbnails decoded shoved the frame and everything under it down 146px in one
+  step. So the frame is eased between sizes, the content cross-fades over it, and
+  transforms are kept off anything holding a photograph - Safari re-rasterizes
+  those. Durations live in one `DUR` block in `web/app.js`; `?motion=off` and
+  `prefers-reduced-motion` switch all of it off.
+
+Limits accepted for now: the encoder is the browser's, so output is not
+byte-identical to `node gen.js` (dimensions are: 105/105 on the demo); Safari
+cannot encode WebP from a canvas, so webp input fails with a message naming the
+file; the whole wall is held in memory, which is comfortable at a few hundred
+photographs and not at a few thousand.
+
 ## Tests
 
 `npm test` runs node's own runner over `test/`, no framework and no browser:
@@ -158,6 +244,7 @@ verbatim and `test/page.test.js` fails if the build starts transforming them.
 | `page.test.js` | assets emitted byte for byte (engine and chrome separately), escaping, instance metadata, the chrome's icons, no-JS fallback, the iOS constraints |
 | `build.test.js` | end-to-end build, furniture, captions, the author card and its stamp, byte-identical rebuild of the whole tree, publish failure aborts, guards, `--check` |
 | `setup.test.js` | the first-run interview: answers that survive config validation, previous answers offered back as defaults, the rejected-email retry, the silent non-TTY path, a cleared photographer leaving the card alone |
+| `web.test.js` | the browser runtime scans a folder exactly as the CLI does, the generated bundle still matches `src/`, the zip writer's CRCs and headers |
 
 `scripts/check-build.js` covers what a unit test cannot see cheaply: it reads the
 built page, verifies every referenced photo exists, that frames do not overlap,

@@ -7,7 +7,7 @@ photo in a frame, pan and zoom, no framework and no server runtime.
 | --- | --- |
 | [SETUP.md](SETUP.md) | installing, running, serving, deploying to Pages, ports and troubleshooting |
 | [API.md](API.md) | you need the CLI flags, the setup questions, the environment variables, every `wall.config.json` key, the captions sidecar, or the photographer card |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | you are changing the code: the build pipeline, the layout algorithm, the engine's constraints, the guard rails |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | you are changing the code: the build pipeline, the layout algorithm, the browser build, the engine's constraints, the guard rails |
 | [HOSTING.md](HOSTING.md) | you want it on the web: GitHub Pages, Cloudflare Pages, Netlify, or your own server |
 | [CHANGELOG.md](CHANGELOG.md) | you want to know what changed, dated and tagged |
 | [../README.md](../README.md) | you want the pitch and the quick start |
@@ -31,6 +31,10 @@ dist/              index.html, photos/, og.jpg, robots.txt, sitemap.xml, .nojeky
 
 The page is one HTML file with the layout baked in as data and the engine inlined,
 so the browser never waits on image dimensions before placing a frame.
+
+There is a second front door for people who will not install Node: `web/` runs the
+same modules in a tab, on a canvas instead of `sharp`, and hands back the same site
+as a zip. See [ARCHITECTURE.md](ARCHITECTURE.md#the-browser-build).
 
 ## Contracts this repository treats as fixed
 

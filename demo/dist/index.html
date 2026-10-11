@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- built by gen.js source=8685943cf97d photos=105 -->
+<!-- built by gen.js source=e18af1bda158 photos=105 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -215,6 +215,7 @@
   }
   #authorCard h2 { font-size:13px; letter-spacing:.02em; padding-right:22px; }
   #authorCard .author-role { color:var(--ink-dim); font-size:11px; margin-top:2px; }
+  #authorCard .author-desc { margin-top:9px; }
   #authorCard .author-bio { margin-top:9px; }
   #authorCard .author-facts {
     margin-top:10px; display:grid; gap:2px; font-size:11px;
@@ -886,7 +887,7 @@ clamp(); setTransform(); scheduleCull();
 if (hint) setTimeout(function () { hint.classList.add('gone'); }, 7000);
 /* Keret page chrome: the credit line and the photographer card. This is page
    furniture only - it never touches the wall, the camera or the frames. */
-var CHROME = {"credit":{"label":"Powered by","brand":"Keret","url":"https://github.com/krisztianhadi/keret"},"author":{"name":"Keret demo wall","role":"105 public-domain photographs","bio":"Every photograph here is a CC0 or public-domain file from Wikimedia Commons, credited in full below. Each frame shows the capture data the engine read out of the image itself.","links":[{"label":"Credits","href":"https://github.com/krisztianhadi/keret/blob/main/demo/CREDITS.md"},{"label":"Keret","href":"https://github.com/krisztianhadi/keret"}]}};
+var CHROME = {"credit":{"label":"Powered by","brand":"Keret","url":"https://github.com/krisztianhadi/keret"},"description":"A hundred public-domain photographs, each with its camera data, on a wall you can pan and zoom","author":{"name":"Keret demo wall","role":"105 public-domain photographs","bio":"Every photograph here is a CC0 or public-domain file from Wikimedia Commons, credited in full below. Each frame shows the capture data the engine read out of the image itself.","links":[{"label":"Credits","href":"https://github.com/krisztianhadi/keret/blob/main/demo/CREDITS.md"},{"label":"Keret","href":"https://github.com/krisztianhadi/keret"}]}};
 
 (function () {
   'use strict';
@@ -912,11 +913,13 @@ var CHROME = {"credit":{"label":"Powered by","brand":"Keret","url":"https://gith
     credit.hidden = false;
   }
 
-  /* top right: the photographer, when the wall was given one */
-  var author = data.author;
+  /* top right: the wall's own corner - the photographer when there is one, and
+     the wall's description either way */
+  var author = data.author || {};
   var button = document.getElementById('authorBtn');
   var card = document.getElementById('authorCard');
-  if (!author || !author.name || !button || !card) return;
+  if (!button || !card) return;
+  if (!author.name && !data.description) return;
 
   var close = el('button', 'author-close', '\u00d7');
   close.type = 'button';
@@ -947,8 +950,9 @@ var CHROME = {"credit":{"label":"Powered by","brand":"Keret","url":"https://gith
   }
 
   card.appendChild(close);
-  card.appendChild(el('h2', null, author.name));
+  if (author.name) card.appendChild(el('h2', null, author.name));
   if (author.role) card.appendChild(el('div', 'author-role', author.role));
+  if (data.description) card.appendChild(el('p', 'author-desc', data.description));
   if (author.bio) card.appendChild(el('p', 'author-bio', author.bio));
   if (facts.childNodes.length) card.appendChild(facts);
 

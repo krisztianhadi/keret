@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>keret - social card</title>
+<style>
+  /* The card wears the app's own clothes: these five values are copied from
+     web/app.css (its dark theme), and the type is the app's own face, served from
+     this repo rather than a CDN. Rendered to web/og.png by scripts/gen-og.mjs. */
+  @font-face {
+    font-family: "Geist Mono";
+    src: url("/src/assets/fonts/GeistMonoVF.woff2") format("woff2");
+    font-weight: 100 900;
+    font-display: block;
+  }
+
+  :root {
+    --wall: #26231e;
+    --mat: #c7bfab;
+    --ink: #e8e4d8;
+    --dim: rgba(232, 228, 216, .52);
+    --accent: #e23c30;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; }
+  body {
+    background: var(--wall);
+    color: var(--ink);
+    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    overflow: hidden;
+  }
+
+  /* A faint grid of hairlines, like the wall's own seams, so the flat colour has
+     some texture without competing with the photographs. */
+  body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(232, 228, 216, .045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(232, 228, 216, .045) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .card {
+    position: relative;
+    height: 100%;
+    padding: 72px;
+    display: flex;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .type { flex: 1 1 auto; min-width: 0; }
+
+  .who {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    font-size: 25px;
+    letter-spacing: .07em;
+  }
+  .who .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); }
+
+  h1 {
+    margin-top: 40px;
+    font-size: 56px;
+    line-height: 1.08;
+    font-weight: 600;
+    letter-spacing: -.015em;
+  }
+
+  .sub {
+    margin-top: 30px;
+    font-size: 24px;
+    line-height: 1.5;
+    color: var(--dim);
+    max-width: 33ch;
+  }
+
+  .url {
+    margin-top: 46px;
+    font-size: 21px;
+    color: var(--dim);
+    letter-spacing: .02em;
+  }
+
+  /* The app's own motif: cream mats on a dark wall, prints overlapping the way the
+     pick state stacks them. */
+  .stack { position: relative; width: 420px; height: 470px; flex: 0 0 auto; }
+  .print {
+    position: absolute;
+    background: var(--mat);
+    padding: 11px;
+    box-shadow: 0 22px 44px rgba(0, 0, 0, .5);
+  }
+  .print img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .print.a { width: 250px; height: 186px; left: 0; top: 52px; transform: rotate(-5deg); }
+  .print.b { width: 276px; height: 206px; left: 108px; top: 206px; transform: rotate(2.5deg); }
+  .print.c { width: 196px; height: 244px; left: 224px; top: 30px; transform: rotate(6deg); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="type">
+      <div class="who"><span class="dot"></span>keret.app</div>
+      <h1>Drop a folder.<br>Get a photo wall.</h1>
+      <p class="sub">It all happens in this tab.<br>Nothing is uploaded.</p>
+      <div class="url">keret.nomorenames.studio</div>
+    </div>
+    <div class="stack">
+      <div class="print a"><img src="/demo/photos/monument-valley-arizona-panoramic.jpg" alt=""></div>
+      <div class="print c"><img src="/demo/photos/ballycotton-lighthouse-aerial-view.jpg" alt=""></div>
+      <div class="print b"><img src="/demo/photos/a-cabin-among-the-snowy.jpg" alt=""></div>
+    </div>
+  </div>
+</body>
+</html>

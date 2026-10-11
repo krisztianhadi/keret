@@ -17,20 +17,18 @@ personal photo wall and is now a standalone tool anyone can run.
 
 - **Static output.** A folder of HTML, images and crawler files. No database, no
   server-side runtime, no client framework.
-- **Originals are never published.** Every photo is re-encoded on the way out, so
-  EXIF metadata, including GPS, is dropped and orientation is baked in.
+- **Originals are never published.** Every photo is re-encoded on the way out:
+  EXIF, including GPS, is dropped and orientation is baked in.
 - **One photo, one frame.** Frames keep the photo's real aspect ratio: nothing is
   cropped to fit a grid.
-- **Built to survive a phone.** Pan, pinch, double-tap, fit. The engine is the
-  one that was debugged on real iOS hardware after a wall of a few hundred photos
-  started killing the tab.
+- **Built to survive a phone.** Pan, pinch, double-tap, fit - this engine was
+  debugged on real iOS hardware after a few hundred photos started killing the tab.
 - **Your typeface.** Geist Mono by default, Geist Sans with one key (`font` in
-  `wall.config.json`). Both ship with the wall and are copied into the build, so
-  the type is served from your own domain instead of a font CDN.
-- **Yours, credited.** A "Powered by Keret" line you can rewrite or remove, and
-  an optional photographer card in the corner for your own contact details.
+  `wall.config.json`); both are copied into the build and served from your domain.
+- **Yours, credited.** A "Powered by Keret" line you can rewrite or remove, and a
+  photographer card in the corner for your own contact details.
 - **No JavaScript required to read it.** Without JS you get a plain list of the
-  photos; the interactive wall is an enhancement.
+  photos; the wall is an enhancement.
 
 ![The demo wall in a browser window: framed photographs on a dark wall, with the hint, the credit line and the zoom controls along the bottom, and the Author button in the top right](docs/assets/demo-window.png)
 
@@ -72,6 +70,21 @@ Pages, Netlify, or your own server behind nginx or Caddy. All four, with the
 custom domain steps, are in [docs/HOSTING.md](docs/HOSTING.md). Setting `siteUrl`
 before the final build is the one step that matters everywhere, because the
 canonical link, the social tags and the sitemap are built from it.
+
+## Two ways in
+
+`node gen.js` is the tool this project started as, and the one for scripts and
+build servers. [`web/`](web/) is for everyone else, live at
+**<https://keret.nomorenames.studio>**: a static page that runs the same build in
+the tab - drop a folder of photographs, watch it lay the wall out, preview it,
+download the finished site as a zip. No install, no server, nothing uploaded. It
+is not a fork: `web/vendor/keret-core.js` is generated from `src/`.
+
+The zip carries `wall.config.json` and `author.json` back with it - keret's own
+settings files, the ones the command line reads - so unzip it, drop in more
+photographs and build again to get the same wall back. The one trade-off is the
+encoder: the browser's own, so its output is not byte-identical to `node gen.js`.
+`npm run web:serve` serves the app locally on <http://127.0.0.1:3287/>.
 
 ## Requirements
 

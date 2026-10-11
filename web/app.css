@@ -1,0 +1,577 @@
+/*
+ * app.css - the browser builder's own chrome.
+ *
+ * It wears keret's clothes: the same palette, the same mat-and-frame geometry and
+ * the same caption line as the wall it builds. The tokens below are copied from
+ * src/assets/page.css on purpose - the app and the page must not drift apart.
+ *
+ * The screen is one column with one job per row:
+ *
+ *   header    who this is, and the promise that nothing is uploaded
+ *   frame     the photo box: what is happening now (drop / progress / result)
+ *   caption   one line of standing help, never status
+ *   details   the settings, above the action they affect
+ *   actions   exactly one forward button for the current step
+ *
+ * Contextual buttons live inside the frame (change photos, cancel, preview) so
+ * the bottom bar never offers two equal choices.
+ */
+
+:root {
+  --wall: #cfc8ba;
+  --chrome: rgba(25, 22, 18, .62);
+  --ink: #f2eee4;
+  --ink-dim: rgba(242, 238, 228, .55);
+  --note: #4a443a;
+  --mat: #fbfaf6;
+  --cap: #776f63;
+  --accent: #e23c30;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wall: #26231e;
+    --chrome: rgba(12, 11, 9, .66);
+    --ink: #e8e4d8;
+    --ink-dim: rgba(232, 228, 216, .5);
+    --note: #d5cfc2;
+    --mat: #c7bfab;
+    --cap: #4c4637;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* a .btn sets display:inline-flex, which would otherwise beat [hidden] */
+[hidden] { display: none !important; }
+
+body {
+  min-height: 100%;
+  background: var(--wall);
+  color: var(--note);
+  font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1rem;               /* 16px: the app's base, not just the inputs */
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* the wall itself: one flat color with the same vignette the wall page uses */
+#stage {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--wall);
+  background-image: radial-gradient(125% 125% at 50% 50%, rgba(0, 0, 0, 0) 58%, rgba(0, 0, 0, .32) 100%);
+}
+
+header {
+  display: flex;
+  justify-content: center;
+  padding: 30px 18px 14px;
+}
+header h1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--note);
+  font-size: 1.0625rem;          /* 17px */
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+header .mark {
+  width: 14px; height: 14px;
+  border-radius: 4px;
+  background: #26231e;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14);
+  position: relative;
+}
+header .mark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+
+main {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 8px 18px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* --- the frame --------------------------------------------------------- */
+/* Which wording the empty state opens with is a device question, and it has to be
+   answered before the first paint - a module script runs late enough that the
+   desktop line was visible for a moment on a phone. JS owns this text after boot. */
+.only-touch { display: none; }
+@media (hover: none) and (pointer: coarse) {
+  .only-touch { display: inline; }
+  .only-pointer { display: none; }
+}
+
+
+.frame {
+  background: var(--mat);
+  padding: 20px;
+  border-radius: 2px;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, .16), 0 9px 20px rgba(0, 0, 0, .20);
+}
+@media (prefers-color-scheme: dark) {
+  .frame { box-shadow: 0 2px 4px rgba(0, 0, 0, .45), 0 12px 28px rgba(0, 0, 0, .5); }
+}
+
+/* the photo box: an empty frame is a black rectangle until photos land in it */
+.photobox {
+  position: relative;
+  min-height: 268px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 26px 22px;
+  text-align: center;
+  border-radius: 2px;
+  background: #0b0a08;
+  color: #f2eee4;
+  transition: box-shadow .18s ease;
+}
+.photobox.dragging { box-shadow: inset 0 0 0 2px var(--accent); }
+.photobox p { max-width: 44ch; }
+
+.step { width: 100%; display: flex; flex-direction: column; align-items: center; }
+.step[hidden] { display: none; }
+.step .lead { font-size: 1.125rem; letter-spacing: .01em; }
+.step .sub { color: var(--ink-dim); font-size: 0.875rem; margin-top: 6px; }
+.step .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 18px;
+}
+
+/* the one large mark in the box, sized to read as an icon rather than decoration */
+.glyph { width: 34px; height: 34px; color: var(--ink-dim); margin-bottom: 14px; }
+.glyph.ok { color: var(--ink); margin-bottom: 12px; }
+
+/* the selected photos, as a small stack of prints - the wall's own material, and
+   the only honest preview of what is about to be built. Three frames, back ones
+   rotated a little so a pile reads as a pile. */
+.deck {
+  position: relative;
+  width: 168px;
+  height: 124px;
+  margin-bottom: 22px;
+  flex: 0 0 auto;
+}
+.deck img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 6px solid var(--mat);
+  border-radius: 2px;
+  background: #131110;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .5), 0 10px 22px rgba(0, 0, 0, .45);
+}
+.deck img:nth-child(1) {
+  transform: rotate(-5deg) translate(-9px, 4px) scale(.94);
+  opacity: .7;
+}
+.deck img:nth-child(2) {
+  transform: rotate(3.5deg) translate(9px, -2px) scale(.97);
+  opacity: .85;
+}
+.deck img:nth-child(3) { transform: rotate(-1.2deg); }
+/* the prints arrive into space that was already theirs, so they only fade in */
+.deck img { animation: fade .28s ease-out both; }
+
+/* --- buttons ----------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--ink);
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 8px;
+  padding: 9px 14px;
+  cursor: pointer;
+}
+.btn svg { width: 15px; height: 15px; flex: 0 0 auto; }
+.btn:hover { background: rgba(255, 255, 255, .14); }
+.btn:active { background: rgba(255, 255, 255, .22); }
+.btn.primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+.btn.primary:hover { background: #c9332a; }
+.btn.quiet {
+  background: none;
+  border-color: transparent;
+  color: var(--ink-dim);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 8px 6px;
+}
+.btn.quiet:hover { background: none; color: var(--ink); }
+.btn[disabled] { opacity: .45; cursor: default; }
+.btn.wide { width: 100%; padding: 12px 16px; }
+
+/* the forward action: one button, in one place, for the whole flow. The footer
+   sits on the mat, so its buttons wear the mat's ink rather than the box's. */
+.actions { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
+.actions .btn {
+  color: var(--cap);
+  background: rgba(0, 0, 0, .05);
+  border-color: rgba(0, 0, 0, .18);
+}
+.actions .btn:hover { background: rgba(0, 0, 0, .10); }
+.actions .btn:active { background: rgba(0, 0, 0, .16); }
+.actions .btn.primary {
+  color: #fff;
+  background: var(--accent);
+  border-color: transparent;
+}
+.actions .btn.primary:hover { background: #c9332a; }
+.actions .btn.quiet {
+  background: none;
+  border-color: transparent;
+  color: var(--cap);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.actions .btn.quiet:hover { background: none; color: var(--note); }
+.actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+/* the two after-the-build buttons share the width evenly */
+.actions-row .btn { flex: 1 1 0; }
+.done-block { display: grid; gap: 10px; }
+/* where to go next, under the buttons that got you there */
+.note {
+  color: var(--cap);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* --- the finished wall, in miniature ----------------------------------- */
+
+/* Five framed prints laid on the desk the way the wall lays them out: the four
+   photographs around the middle, and the mark in the middle of the pile. */
+.wallmini {
+  position: relative;
+  width: 100%;
+  max-width: 262px;
+  height: 148px;
+  margin-bottom: 20px;
+  flex: 0 0 auto;
+}
+.wallmini .tile {
+  position: absolute;
+  border: 4px solid var(--mat);
+  border-radius: 2px;
+  background: #131110;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .5), 0 8px 18px rgba(0, 0, 0, .4);
+  overflow: hidden;
+}
+.wallmini img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* the middle frame of the pile sits on top of its neighbours */
+.wallmini .tile.center { z-index: 1; }
+/* the prints arrive into space that was already theirs, so they only fade in */
+.wallmini .tile { animation: fade .28s ease-out both; }
+
+/* the check belongs with the headline, not painted on a photograph */
+.lead-ok {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.lead-ok .check { width: 20px; height: 20px; flex: 0 0 auto; color: var(--ink); }
+
+/* the line under the frame, on the wall: what this is and where to go next */
+.foot {
+  color: var(--note);
+  font-size: 0.8125rem;
+  opacity: .8;
+  text-align: center;
+  line-height: 1.9;
+}
+.foot a { color: inherit; }
+.foot b { font-weight: 600; }
+.foot .gh {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+/* the mark needs an explicit size: an SVG with none fills the column */
+.foot .gh svg { width: 15px; height: 15px; fill: currentColor; }
+
+/* --- the caption lines under the frame --------------------------------- */
+
+/* standing help, one line, centred on the mat; empty means gone */
+.cap {
+  margin-top: 14px;
+  color: var(--cap);
+  text-align: center;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+.cap:empty { display: none; }
+
+/* links wear the ink around them, never the browser's blue */
+a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+/* the promise sits under the formats: two quiet lines on the mat */
+.privacy {
+  margin-top: 8px;
+  color: var(--cap);
+  font-size: 0.8125rem;
+  text-align: center;
+  opacity: .85;
+}
+/* inline, not a flex pair: when the line wraps, the lock stays with the first
+   word instead of being stranded at the edge of the frame */
+.privacy svg {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  vertical-align: -1px;
+  margin-right: 5px;
+}
+
+/* --- the form, in the box with the photographs ------------------------- */
+
+/* The mat's job is the frame and its caption; the box holds everything about the
+   wall itself - the photographs, what it is called, and how it is set up. Fields
+   wear the box's ink: light on dark. */
+.form {
+  width: 100%;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, .14);
+  display: grid;
+  gap: 12px;
+  text-align: left;
+}
+.form label { display: block; font-size: 0.8125rem; color: var(--ink-dim); }
+.form-note { font-size: 0.75rem; color: var(--ink-dim); }
+.form .dim { display: block; font-size: 0.75rem; color: var(--ink-dim); }
+.form input[type="text"],
+.form input[type="url"],
+.form select {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 6px 0;
+  font: inherit;
+  /* 16px is not a taste decision: iOS Safari zooms the whole page when a focused
+     control is smaller, and it does it in landscape too. max() keeps that floor
+     even for a reader whose browser default is smaller than 16px. */
+  font-size: max(1rem, 16px);
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 0;
+}
+.form input::placeholder { color: var(--ink-dim); }
+.form input[type="radio"] { accent-color: var(--accent); }
+.form fieldset { border: 0; }
+.form legend { padding: 0 0 6px; }
+.form label.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 16px;
+}
+
+.more summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+  padding: 2px 0;
+  color: var(--ink-dim);
+}
+.more summary::-webkit-details-marker { display: none; }
+.more summary svg { width: 14px; height: 14px; flex: 0 0 auto; transition: transform .22s cubic-bezier(.22, .61, .36, 1); }
+.more[open] summary svg { transform: rotate(90deg); }
+.more[open] summary { color: var(--ink); }
+.more .fields {
+  display: grid;
+  gap: 14px;
+  padding: 16px 0 2px;
+}
+
+/* --- progress ----------------------------------------------------------- */
+
+.bar {
+  position: relative;
+  width: 100%;
+  height: 3px;
+  margin-top: 18px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, .16);
+  overflow: hidden;
+}
+.bar > span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--accent);
+  transition: width .3s cubic-bezier(.22, .61, .36, 1);
+}
+
+/* a photograph that should be on the wall and is not: that one is loud */
+.warn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px 12px;
+  border: 1px solid rgba(226, 60, 48, .5);
+  border-radius: 6px;
+  background: rgba(226, 60, 48, .10);
+  font-size: 0.8125rem;
+  text-align: left;
+  line-height: 1.7;
+}
+.warn b { font-weight: 600; }
+.warn ul {
+  margin: 6px 0 0 16px;
+  max-height: 148px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* files that were never photographs: routine, so quiet and folded away */
+.skip {
+  width: 100%;
+  margin-top: 14px;
+  font-size: 0.8125rem;
+  color: var(--ink-dim);
+  text-align: left;
+}
+.skip summary { cursor: pointer; list-style: none; }
+.skip summary::-webkit-details-marker { display: none; }
+.skip summary::before { content: "+ "; }
+.skip[open] summary::before { content: "- "; }
+.skip ul {
+  margin: 6px 0 0 16px;
+  max-height: 120px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* --- moving between steps ----------------------------------------------- */
+
+/* The motion itself lives in app.js: the words rise 14px over 340ms, the pictures
+   only fade, and the step cross-fades. It is driven from JS because every one of
+   these has to re-fire when content changes *inside* a step (empty -> ready), which
+   a CSS animation tied to [hidden] cannot do. Only these two things stay here:
+   the URL switch, and the media query. */
+[data-motion="off"] * { animation: none !important; transition: none !important; }
+
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  /* opaque: the wall has its own header, and two headers bleeding through each
+     other is worse than losing the page behind a full-screen preview */
+  background: #0b0a08;
+}
+.modal[hidden] { display: none; }
+.modal-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  color: var(--ink);
+  font-size: 0.8125rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.modal-bar > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.modal-bar .btn { flex: 0 0 auto; white-space: nowrap; min-height: 44px; }
+.modal iframe {
+  flex: 1;
+  width: 100%;
+  border: 0;
+  background: #26231e;
+}
+
+.sr {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* --- a phone ----------------------------------------------------------- */
+
+@media (max-width: 560px) {
+  header { padding: 26px 14px 12px; }
+  main { padding: 6px 12px 24px; gap: 16px; }
+  .frame { padding: 14px; }
+  .photobox { padding: 22px 16px; min-height: 240px; }
+  .step .lead { font-size: 1.0625rem; }
+  .modal-bar { padding: 6px 10px; }
+  .modal-bar .dims { display: none; }
+  .wallmini { height: 132px; margin-bottom: 18px; }
+  .setup { margin-top: 18px; }
+  /* "More settings" says enough on a phone; the list of what is behind it does not fit */
+  .more summary .dim { display: none; }
+  /* a phone gets one button per row rather than three across */
+  .actions-row { flex-direction: column; align-items: stretch; }
+}
+
+/* the same switch the media query throws, reachable from the URL for a device we
+   cannot profile from here */
+[data-motion="off"] * { animation: none !important; transition: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

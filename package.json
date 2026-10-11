@@ -48,6 +48,9 @@
     "demo:check": "cd demo && node ../scripts/check-build.js dist",
     "demo:serve": "node scripts/serve.js demo/dist 3100",
     "banner": "node scripts/make-banner.js",
+    "web:build": "node web/build.mjs",
+    "web:check": "node web/build.mjs --check",
+    "web:serve": "node scripts/serve.js web 3287",
     "test": "node --test test/*.test.js"
   },
   "dependencies": {

@@ -192,6 +192,7 @@
   }
   #authorCard h2 { font-size:13px; letter-spacing:.02em; padding-right:22px; }
   #authorCard .author-role { color:var(--ink-dim); font-size:11px; margin-top:2px; }
+  #authorCard .author-desc { margin-top:9px; }
   #authorCard .author-bio { margin-top:9px; }
   #authorCard .author-facts {
     margin-top:10px; display:grid; gap:2px; font-size:11px;

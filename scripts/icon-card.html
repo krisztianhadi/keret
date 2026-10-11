@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>keret - touch icon</title>
+<style>
+  /* Same mark as the app's inline favicon (a red dot on the dark square), rendered
+     to web/apple-touch-icon.png by scripts/gen-og.mjs so iOS gets a real file. */
+  * { margin: 0; padding: 0; }
+  html, body { width: 180px; height: 180px; background: #26231e; }
+  .mark {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dot { width: 58px; height: 58px; border-radius: 50%; background: #e23c30; }
+</style>
+</head>
+<body>
+  <div class="mark"><span class="dot"></span></div>
+</body>
+</html>

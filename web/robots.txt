@@ -1,0 +1,6 @@
+# keret - build a photo wall in your browser.
+# The tool is one page; the walls it builds are yours and live wherever you put them.
+User-agent: *
+Allow: /
+
+Sitemap: https://keret.nomorenames.studio/sitemap.xml

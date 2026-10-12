@@ -1,0 +1,18 @@
+# The app's files have fixed names, so they cannot be cached for hours: Pages
+# defaults to max-age=14400 for anything that is not HTML, which means a returning
+# visitor gets today's index.html with last deploy's app.css and app.js - a hybrid
+# that broke the wordmark and the new-wall button on 2026-10-12. Revalidating costs
+# a 304 and removes the whole class of bug. Images keep the default: a stale social
+# card is harmless, a stale stylesheet is not.
+/app.css
+  Cache-Control: public, max-age=0, must-revalidate
+/app.js
+  Cache-Control: public, max-age=0, must-revalidate
+/keret-runtime.js
+  Cache-Control: public, max-age=0, must-revalidate
+/canvas-sharp.js
+  Cache-Control: public, max-age=0, must-revalidate
+/zip.js
+  Cache-Control: public, max-age=0, must-revalidate
+/vendor/keret-core.js
+  Cache-Control: public, max-age=0, must-revalidate

@@ -3,6 +3,26 @@
 Reverse-chronological. One dated section per work block, entries tagged
 `[Feature]`, `[Fix]` or `[Break]`.
 
+## 2026-10-12 - Assets revalidate, so a deploy cannot ship a hybrid
+
+The wordmark looked broken and "Build a new wall" did nothing on the live site,
+while both worked locally and in a fresh browser. The markup was new and the
+stylesheet and script were not: an inline `.mark` collapses to its 5px dot without
+the rule that makes it a flex item, and an `app.js` from before the button existed
+has no listener for its id.
+
+Cloudflare Pages caches HTML with `max-age=0, must-revalidate` and **everything else
+with `max-age=14400`**, so for four hours after any deploy a returning visitor gets
+today's `index.html` with last deploy's `app.css` and `app.js`. An earlier entry here
+recorded the `max-age=0` and called it right for fixed filenames — that was measured
+on `/` alone, and the generalisation was wrong.
+
+`[Fix]` **`web/_headers`**, shipped into the deploy root: the app's stylesheet,
+scripts and the vendor bundle revalidate on every load. A 304 is cheap; a stale
+stylesheet is not. Images keep the four-hour cache — a stale social card is
+harmless. Anyone holding a copy from before this fix needs one hard reload; the
+browser will not ask about a file it believes is fresh.
+
 ## 2026-10-12 - The finished wall gets a way out, the wordmark a way back
 
 `[Feature]` **"Build a new wall"**, under the download: it clears the photographs

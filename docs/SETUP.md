@@ -153,7 +153,7 @@ no local deploy step or secret to keep.
 | Setting | Value |
 | --- | --- |
 | Root directory | `web` |
-| Build command | `node build.mjs && mkdir -p dist && cp index.html hosting.html app.css app.js keret-runtime.js canvas-sharp.js zip.js 404.html robots.txt sitemap.xml og.png apple-touch-icon.png dist/ && cp -r vendor dist/` |
+| Build command | `node build.mjs && mkdir -p dist && cp index.html hosting.html _headers app.css app.js keret-runtime.js canvas-sharp.js zip.js 404.html robots.txt sitemap.xml og.png apple-touch-icon.png dist/ && cp -r vendor dist/` |
 | Output directory | `dist` |
 
 The studio's own deploy appends one more step to that command: if an

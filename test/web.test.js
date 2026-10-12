@@ -18,6 +18,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const vm = require('node:vm');
+const { execFileSync } = require('node:child_process');
+const os = require('node:os');
 
 const ROOT = path.join(__dirname, '..');
 const DEMO_PHOTOS = path.join(ROOT, 'demo', 'photos');
@@ -137,4 +139,45 @@ test('the browser app parses, and is wired to the page it ships with', () => {
   const ids = [...app.matchAll(/\$\('([\w-]+)'\)/g)].map((m) => m[1]);
   assert.deepEqual([...new Set(ids)].filter((id) => !html.includes('id="' + id + '"')), [],
     'web/app.js reaches for an id the page does not have');
+});
+
+test('the deploy step versions the assets, and what it writes can be loaded', () => {
+  const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'keret-version-'));
+  const copies = ['index.html', 'hosting.html', '404.html', 'app.css', 'app.js',
+    'keret-runtime.js', 'canvas-sharp.js', 'zip.js'];
+  for (const name of copies) fs.copyFileSync(path.join(ROOT, 'web', name), path.join(scratch, name));
+  fs.cpSync(path.join(ROOT, 'web', 'vendor'), path.join(scratch, 'vendor'), { recursive: true });
+
+  execFileSync(process.execPath, [path.join(ROOT, 'web', 'version-assets.mjs'), scratch, 'testsha'], { stdio: 'pipe' });
+
+  // the pages point at the versioned copies
+  const index = fs.readFileSync(path.join(scratch, 'index.html'), 'utf8');
+  assert.match(index, /src="vtestsha\/app\.js"/);
+  assert.match(index, /href="vtestsha\/app\.css"/);
+  for (const page of ['hosting.html', '404.html']) {
+    assert.match(fs.readFileSync(path.join(scratch, page), 'utf8'), /href="vtestsha\/app\.css"/);
+  }
+
+  // and every module the versioned scripts import relative to themselves is there,
+  // which is the failure a hand-maintained copy list invites
+  for (const name of ['app.js', 'keret-runtime.js', 'canvas-sharp.js', 'zip.js']) {
+    const file = path.join(scratch, 'vtestsha', name);
+    const source = fs.readFileSync(file, 'utf8');
+    assert.equal(source, fs.readFileSync(path.join(ROOT, 'web', name), 'utf8'),
+      name + ' must be copied through unchanged');
+    for (const match of source.matchAll(/from\s+['"](\.[^'"]+)['"]/g)) {
+      assert.ok(fs.existsSync(path.join(path.dirname(file), match[1])),
+        name + ' imports ' + match[1] + ', which the versioned directory does not have');
+    }
+  }
+
+  // no version (a local build) must change nothing at all
+  const plain = fs.mkdtempSync(path.join(os.tmpdir(), 'keret-plain-'));
+  fs.copyFileSync(path.join(ROOT, 'web', 'index.html'), path.join(plain, 'index.html'));
+  execFileSync(process.execPath, [path.join(ROOT, 'web', 'version-assets.mjs'), plain, ''], { stdio: 'pipe' });
+  assert.match(fs.readFileSync(path.join(plain, 'index.html'), 'utf8'), /href="app\.css"/);
+  assert.deepEqual(fs.readdirSync(plain), ['index.html']);
+
+  fs.rmSync(scratch, { recursive: true, force: true });
+  fs.rmSync(plain, { recursive: true, force: true });
 });

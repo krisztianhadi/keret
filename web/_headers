@@ -16,3 +16,8 @@
   Cache-Control: public, max-age=0, must-revalidate
 /vendor/keret-core.js
   Cache-Control: public, max-age=0, must-revalidate
+
+# The versioned directory is content-addressed by deploy, so it can be cached for
+# as long as browsers allow: a new deploy means a new URL, never a stale file.
+/v*
+  Cache-Control: public, max-age=31536000, immutable

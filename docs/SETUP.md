@@ -153,7 +153,7 @@ no local deploy step or secret to keep.
 | Setting | Value |
 | --- | --- |
 | Root directory | `web` |
-| Build command | `node build.mjs && mkdir -p dist && cp index.html hosting.html _headers app.css app.js keret-runtime.js canvas-sharp.js zip.js 404.html robots.txt sitemap.xml og.png apple-touch-icon.png dist/ && cp -r vendor dist/` |
+| Build command | `node build.mjs && mkdir -p dist && cp index.html hosting.html _headers app.css app.js keret-runtime.js canvas-sharp.js zip.js 404.html robots.txt sitemap.xml og.png apple-touch-icon.png dist/ && cp -r vendor dist/ && node version-assets.mjs dist "$CF_PAGES_COMMIT_SHA"` |
 | Output directory | `dist` |
 
 The studio's own deploy appends one more step to that command: if an
@@ -170,6 +170,14 @@ the CLI's `sharp` on every build for an app that has no dependencies at all. The
 build command runs `web/build.mjs --check`'s generator for real, so what ships is
 built from the commit rather than from a possibly stale committed bundle; `npm
 test` is what catches a stale bundle before it gets there.
+
+Every deploy also copies the app's assets into `dist/v<commit>/` and points the HTML
+at that directory (`web/version-assets.mjs`), so a browser that has been holding
+`app.css` since the last deploy fetches the new one instead of mixing it with new
+markup. That directory is served `immutable` for a year; the unversioned copies stay
+in place for anyone holding a cached page, and `web/_headers` keeps them
+revalidating. Locally, `node version-assets.mjs dist` with no version is a no-op, so
+a scratch build looks like the repository does.
 
 A deploy therefore needs a push. Verify one through the API rather than assuming:
 

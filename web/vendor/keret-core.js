@@ -4,7 +4,7 @@
  * `npm run web:build`; test/web.test.js fails when this file no longer
  * matches the sources below.
  *
- * version 0.1.0
+ * version 0.4.0
  * gen.js          bf22e14057aeb6ab
  * src/config.js   dd15cb58cc560683
  * src/images.js   99caaeded92169d7
@@ -14,7 +14,7 @@
  * src/stamp.js    fbe085706174ca20
  */
 export const META = {
-  "version": "0.1.0",
+  "version": "0.4.0",
   "sources": {
     "gen.js": "bf22e14057aeb6ab949009d4b737c4d918f866f86a97b6787c495c1bf003a71a",
     "src/config.js": "dd15cb58cc5606837a2b892d6b207c41e4d18c4a6e4bc7effd983e5b5ff24131",

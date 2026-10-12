@@ -1,9 +1,21 @@
 # Changelog
 
+## 2026-10-12 - 0.4.0
+
+`[Feature]` **The version is 0.4.0.** `package.json` had not moved since the
+extraction on 2026-10-05 and this repository carries no tags, so the number the
+project actually goes by lived only in conversation: 0.1 was the engine inside the
+personal site, 0.2 the command line, 0.3 the browser builder, and this is the
+performance work, the disc and the version footer, with the hosting walkthrough
+shipped beside them (`web/hosting.html`, logged above/below under its own entry).
+The builder's footer prints the number now, which is the whole reason it has to be
+true rather than vestigial: `web/build.mjs` stamps it into the generated bundle, and
+`test/web.test.js` fails when the stamp and `package.json` disagree.
+
 ## 2026-10-12 - The app says which version it is
 
 `[Feature]` **The builder's footer reports the version of the code it is running**:
-"Powered by Keret 0.1.0" on `web/index.html`, filled from `META.version` in the
+"Powered by Keret" plus the number, on `web/index.html`, filled from `META.version` in the
 generated bundle rather than from a hardcoded string or a fetch, so the page still
 knows its version when it is opened straight off a disk with no server behind it.
 `web/build.mjs` stamps the version from `package.json`; the bundle's per-file hashes

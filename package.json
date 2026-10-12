@@ -1,6 +1,6 @@
 {
   "name": "keret",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A self-hosted photo wall: build a pan-and-zoom wall of photographs from a folder of images into a static site.",
   "license": "MIT",
   "author": "Krisztian Hadi",

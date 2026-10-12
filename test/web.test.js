@@ -72,6 +72,34 @@ test('the browser bundle is built from the sources in this repository', async ()
     'the bundle carries the version in package.json - run `npm run web:build`');
 });
 
+test('the preview reaches the photos through the seam the engine offers', () => {
+  // The preview cannot fetch photos/<edge>/<file> - there is no server - so it
+  // sets window.__keretPhotoSrc and the engine reads every url from there. When
+  // the preview instead rewrote the generated script, it matched one literal and
+  // missed the tier urls the engine had learned to build: the preview showed a
+  // wall of placeholders with a 404 behind every frame, and said nothing.
+  const engine = fs.readFileSync(path.join(ROOT, 'src', 'assets', 'engine.js'), 'utf8');
+  const app = fs.readFileSync(path.join(ROOT, 'web', 'app.js'), 'utf8');
+
+  // the two forms of a photo path in this file are the seam's own (full copy and
+  // tier); a third one is a url that can bypass the preview
+  const paths = (engine.match(/'photos\/' \+/g) || []).length;
+  assert.equal(paths, 2, 'the only photo paths in the engine are inside the seam');
+  assert.ok(engine.includes('var PHOTO_SRC = window.__keretPhotoSrc ||'),
+    'the engine takes its photo urls from window.__keretPhotoSrc when the preview sets it');
+  assert.ok(engine.includes('img.src = PHOTO_SRC(d.file, FIRST_EDGE)'),
+    'the first paint goes through the seam');
+  assert.ok(engine.includes('return PHOTO_SRC(POS[i].file,'),
+    'and so does every rung the engine upgrades a frame to');
+
+  assert.ok(app.includes('window.__keretPhotoSrc=function'),
+    'the preview defines that seam');
+  assert.ok(app.includes('(edge?edge+"/":"")+file'),
+    'the preview maps the full copy and every tier under the keys the engine asks for');
+  assert.ok(app.includes('__keretMedia[k]'),
+    'the preview resolves a rung through the map it built');
+});
+
 test('the zip writer produces an archive a reader can walk', async () => {
   const { buildZip, crc32 } = await import('../web/zip.js');
 

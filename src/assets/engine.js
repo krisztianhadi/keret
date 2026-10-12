@@ -15,6 +15,32 @@ var zoomLbl = document.getElementById('zoomLbl');
 
 var MAT = {{MAT}};
 var CAP_H = {{CAP_H}};
+
+var TIERS = {{TIERS}};               // ascending edges; photos/<edge>/<file>
+var FULL_EDGE = {{FULL_EDGE}};       // images.maxEdge, the copy in photos/
+var LOD_BUDGET_MB = {{LOD_BUDGET}};  // decoded pixels allowed to stay in play
+var RUNGS = TIERS.slice();
+RUNGS.push(FULL_EDGE);
+var DPR = Math.min(window.devicePixelRatio || 1, 3);
+var LOD_QUIET_MS = 180;              // quiet time before upgrades run at full rate
+var LOD_RATE_MOVING = 3;             // tier upgrades per frame while the camera moves
+var LOD_RATE_QUIET = 12;             // ...and once it stops
+var tierNow = [];                    // rung each frame is served at
+var tierWant = [];                   // rung it should be on for the current view
+var needPx = [];                     // device pixels the frame covers now
+var lodPending = false;
+/* Every photo url in this file goes through PHOTO_SRC: the published wall reads
+   photos/<edge>/<file> off disk, and the browser builder's preview hands it a
+   lookup into object URLs instead (web/app.js sets window.__keretPhotoSrc before
+   this script runs). One seam, so the preview never rewrites this file - a
+   rewritten literal is what broke the preview the first time the engine learned
+   to build a second kind of url. */
+var PHOTO_SRC = window.__keretPhotoSrc || function (file, edge) {
+  return edge ? 'photos/' + edge + '/' + file : 'photos/' + file;
+};
+/* the rung a frame starts on: the cheapest tier, or the full copy without tiers */
+var FIRST_EDGE = TIERS.length ? TIERS[0] : 0;
+
 var items = [];
 for (var i = 0; i < POS.length; i++) {
   var d = POS[i];
@@ -28,7 +54,7 @@ for (var i = 0; i < POS.length; i++) {
   // height auto: image (d.ph) + caption strip (CAP_H)
 
   var img = document.createElement('img');
-  img.src = 'photos/' + d.file;
+  img.src = PHOTO_SRC(d.file, FIRST_EDGE);
   // the alt the build worked out (sidecar text, or the facts about the shot)
   img.alt = d.alt || d.base.replace(/-/g, ' ');
   img.width = d.pw;              // sane, layout-accurate numbers
@@ -69,6 +95,7 @@ for (var i = 0; i < POS.length; i++) {
 }
 
 /* ---------- level of detail ----------
+   (the ladder itself and PHOTO_SRC are declared above, before the item loop)
    Painting a frame needs its source bitmap, and every zoom repaints the wall at
    a new scale, so the resolution a frame is served at decides what a zoom costs.
    A frame is therefore pointed at the smallest rung that still covers the pixels
@@ -80,19 +107,7 @@ for (var i = 0; i < POS.length; i++) {
      - downgrades happen at once, because they are what frees memory;
      - upgrades are trickled, because a quick pinch out otherwise queues a decode
        for every frame that scrolls into view at the same time. */
-var TIERS = {{TIERS}};               // ascending edges; photos/<edge>/<file>
-var FULL_EDGE = {{FULL_EDGE}};       // images.maxEdge, the copy in photos/
-var LOD_BUDGET_MB = {{LOD_BUDGET}};  // decoded pixels allowed to stay in play
-var RUNGS = TIERS.slice();
-RUNGS.push(FULL_EDGE);
-var DPR = Math.min(window.devicePixelRatio || 1, 3);
-var LOD_QUIET_MS = 180;              // quiet time before upgrades run at full rate
-var LOD_RATE_MOVING = 3;             // tier upgrades per frame while the camera moves
-var LOD_RATE_QUIET = 12;             // ...and once it stops
-var tierNow = [];                    // rung each frame is served at
-var tierWant = [];                   // rung it should be on for the current view
-var needPx = [];                     // device pixels the frame covers now
-var lodPending = false;
+
 
 function rungEdge(ti) {
   return RUNGS[ti];
@@ -114,9 +129,7 @@ function rungFor(px) {
 
 /** Served url for one frame at one rung: the shape src/images.js writes. */
 function rungUrl(i, ti) {
-  return ti < TIERS.length
-    ? 'photos/' + TIERS[ti] + '/' + POS[i].file
-    : 'photos/' + POS[i].file;
+  return PHOTO_SRC(POS[i].file, ti < TIERS.length ? TIERS[ti] : 0);
 }
 
 function lodPlan() {

@@ -269,9 +269,18 @@ Pages would install the CLI's `sharp` on every build for a bundle that needs non
 - **The zip is deterministic.** Entries are stored, not deflated, and carry a fixed
   timestamp, so building the same folder twice downloads byte-identical files. That
   also means the archive is not compressed beyond what the photos already are.
-- **The preview is the real page.** It is `index.html` with `'photos/' + d.file`
-  pointed at object URLs (and the face inlined), so it renders in an iframe without
-  a service worker and without touching the page that goes into the zip.
+- **The preview is the real page.** It renders in an iframe without a service
+  worker and without touching the page that goes into the zip (the face is inlined
+  so the font needs no request either).
+- **The preview hooks a seam in the engine, it does not rewrite it.** A tab has no
+  server, so the photos it cannot fetch are pointed at object URLs: the engine reads
+  every photo url from `window.__keretPhotoSrc` when that is set
+  (`src/assets/engine.js`, one function, two forms of path) and `web/app.js` defines
+  it. Rewriting the generated script instead - the previous approach, replacing
+  `'photos/' + d.file` - matched one literal and silently missed the tier urls the
+  engine learned to build later, which is why the preview spent an afternoon showing
+  a wall of placeholders over a 404. If the seam ever goes missing the preview says so
+  on screen rather than rendering in silence.
 - **The settings ride in the zip.** `wall.config.json` and `author.json` are
   written beside `index.html` in the command line's own format, so a downloaded
   wall is rebuildable with `node gen.js` and the same settings. Drop the unzipped

@@ -1,5 +1,30 @@
 # Changelog
 
+## 2026-10-12 - The preview was asking for photos that were not there
+
+`[Fix]` **The in-app preview shows the wall again.** A tab has no server, so the
+preview points the page's photo requests at object URLs; it did that by replacing the
+engine's `'photos/' + d.file` with a lookup. When the engine learned to name a tier
+(`'photos/' + TIERS[ti] + '/' + file`, inside `rungUrl`), one literal stopped covering
+every photo request, and every frame kept its blurred placeholder with a 404 behind it.
+Reproduced before it was fixed: four photographs built, preview opened, `loaded 0/4`,
+and 404s on `/photos/512/...` and `/photos/128/...`.
+
+The engine now routes every photo url through one seam -
+`var PHOTO_SRC = window.__keretPhotoSrc || ...` - and the preview defines that seam
+instead of rewriting the script. `test/web.test.js` asserts that the only two photo
+paths in the engine are inside the seam, that both call sites use it, and that the
+preview maps the full copy and every tier, so a third url built outside the seam fails
+the suite rather than the preview. If a future engine drops the seam, the preview says
+so on screen instead of rendering placeholders in silence.
+
+`demo/dist` is rebuilt for it - its committed page carried the previous engine - and
+`web/vendor/keret-core.js` is regenerated because it embeds `src/`.
+
+`[Feature]` **The version is 0.4.1.** A patch, not a milestone: the footer prints the
+number now, so a fix that ships to the published app says which fix it is. The
+milestones stay where they were: 0.4 was the performance work and the disc.
+
 ## 2026-10-12 - 0.4.0
 
 `[Feature]` **The version is 0.4.0.** `package.json` had not moved since the

@@ -901,26 +901,45 @@ class BuildCancelled extends Error {}
 /**
  * The real page, with its photo requests pointed at the bytes in memory.
  *
- * The wall's engine asks for 'photos/<file>'; here that expression is replaced
- * with a lookup into object URLs for this preview only. The zip keeps the page
- * exactly as the CLI would have written it.
+ * The engine reads every photo url from `window.__keretPhotoSrc` when it is set
+ * (see the seam in src/assets/engine.js), so the preview defines that and maps
+ * both the full copy and every tier to an object URL. Nothing here rewrites the
+ * generated script: a literal rewrite is what silently stopped working when the
+ * engine learned to ask for a second kind of url, and the preview spent a while
+ * rendering a wall of placeholders with a 404 behind every frame.
+ *
+ * The zip keeps the page exactly as the CLI would have written it.
  */
 function previewHtml(result) {
   const urls = {};
+  const edges = [0].concat((result.cfg.images && result.cfg.images.tiers) || []);
   for (const row of result.rows) {
-    const bytes = keret.read('/out/photos/' + row.file);
-    const url = URL.createObjectURL(new Blob([bytes]));
-    state.objectUrls.push(url);
-    urls[row.file] = url;
+    for (const edge of edges) {
+      const prefix = edge ? edge + '/' : '';
+      const bytes = keret.read('/out/photos/' + prefix + row.file);
+      if (!bytes || !bytes.length) continue;
+      const url = URL.createObjectURL(new Blob([bytes]));
+      state.objectUrls.push(url);
+      urls[prefix + row.file] = url;
+    }
   }
   const media = JSON.stringify(urls).replace(/</g, '\\u003c');
   const injected = '<script>var __keretMedia=' + media
-    + ';function __keretSrc(f){return __keretMedia[f]||"photos/"+f}</script>';
+    + ';window.__keretPhotoSrc=function(file,edge){var k=(edge?edge+"/":"")+file;'
+    + 'var u=__keretMedia[k];if(!u){console.warn("preview: no bytes for "+k)}'
+    + 'return u||((edge?"photos/"+edge+"/":"photos/")+file)}</script>';
 
   const face = result.cfg.font === 'sans' ? 'GeistSansVF.woff2' : 'GeistMonoVF.woff2';
-  let html = result.html
-    .replace("'photos/' + d.file", '__keretSrc(d.file)')
+  const html = result.html
     .replace('url(fonts/' + face + ')', 'url(data:font/woff2;base64,' + FONTS[face] + ')');
+
+  // The seam is the whole contract between this preview and the wall's engine.
+  // If a future engine stops offering it, say so on screen: a preview that
+  // renders placeholders and says nothing is how this bug lived for a day.
+  if (!html.includes('__keretPhotoSrc')) {
+    console.error('preview: the wall engine does not read window.__keretPhotoSrc');
+    ui.previewNote.innerHTML += ' - <b>the preview could not point the photos at memory</b>';
+  }
 
   const at = html.lastIndexOf('<script>');
   return at < 0 ? injected + html : html.slice(0, at) + injected + html.slice(at);

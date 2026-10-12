@@ -77,7 +77,14 @@
     transform:scale(1.08);              /* hide the blurred edge rim */
     transition:opacity .4s ease;
   }
-  .pbox.loaded .pbg { opacity:0; }      /* fade out once the photo decodes */
+  /* Loaded: not merely faded out, taken out of rendering. A live filter makes
+     the browser keep its own render surface per frame, and a zoom repaints
+     every one of them at the new scale - measured on an iPhone 15 Pro Max, a
+     300-photo wall with the filter alive died at 0.15 zoom with only 18 MB of
+     images on screen, and survived the whole zoom range once the loaded
+     placeholders stopped rendering. The filter is only worth its cost while a
+     frame is still waiting for its photo. */
+  .pbox.loaded .pbg { opacity:0; display:none; }
   .pbox img {
     display:block;
     width:100%; height:100%;            /* box ratio == photo aspect, exact */

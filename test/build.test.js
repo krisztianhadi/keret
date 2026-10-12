@@ -44,10 +44,22 @@ test('a full build publishes the page and the furniture', async () => {
   const { html, pos } = readPage(fx.outDir);
   assert.equal(pos.length, 4);
 
+  // the page asks for a tier by on-screen size, so the build has to have written
+  // every rung it can ask for: a missing one is a hole in the wall, not a slow load
+  const asked = JSON.parse(/var TIERS = (\[[^\]]*\]);/.exec(html)[1]);
+  assert.ok(asked.length > 0, 'the page carries the ladder it can ask for');
+
   for (const row of pos) {
     const full = path.join(fx.outDir, 'photos', row.file);
     assert.ok(fs.existsSync(full), 'referenced file exists: ' + row.file);
     assert.ok(fs.statSync(full).size > 0);
+    for (const edge of asked) {
+      const tier = path.join(fx.outDir, 'photos', String(edge), row.file);
+      assert.ok(fs.existsSync(tier), edge + 'px tier exists: ' + row.file);
+      assert.ok(fs.statSync(tier).size > 0);
+      assert.ok(fs.statSync(tier).size < fs.statSync(full).size,
+        edge + 'px tier is smaller than the full copy: ' + row.file);
+    }
     for (const key of ['x', 'y', 'pw', 'ph', 'file', 'spec', 'cam', 'base', 'thumb']) {
       assert.ok(key in row, 'wall row carries the engine key "' + key + '"');
     }

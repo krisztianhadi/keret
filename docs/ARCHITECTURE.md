@@ -11,7 +11,7 @@ gen.js                     CLI: argv, config, guards, orchestration
   src/config.js            defaults, wall.config.json, WALL_* env, validation, outDir guards
   src/setup.js             the first-run wizard: the questions, and the files it writes
   src/images.js            header parsing (size + EXIF), sharp re-encoding, placeholders
-  src/layout.js            bricks, masonry columns, arch silhouette, canvas size
+  src/layout.js            bricks, masonry columns, silhouette, canvas size
   src/page.js              the HTML document from src/assets/* + the wall data
   src/stamp.js             the source hash stamped into the page
   src/assets/head.html     the page head template
@@ -69,15 +69,30 @@ the column rhythm.
    paired (`heroMinAspect`).
 3. Remaining portraits are paired in that same scrambled order; each pair is
    solved so both photos share one height and together fill the slot.
-4. Bricks flow into equal-width columns, shortest column first.
-5. Columns are reordered into an **arch**: tallest in the middle, shortest at the
-   outer edges.
-6. Every column is shifted so its vertical midpoint sits on one shared axis.
-7. Frames keep the photo's own aspect ratio; nothing is ever cropped. Caption
+4. Bricks flow into equal-width columns. How tall each column may get is the
+   **silhouette** (`layout.shape`):
+   - `circle` (default) caps each column by a circular arc - tallest in the
+     middle, nothing at the rim - so the wall reads as a disc;
+   - `oval` is the same arc in a phone-proportioned ellipse (`OVAL_ASPECT`,
+     0.46:1), which at fit fills a portrait screen instead of floating in it;
+   - `arch` equalizes the columns (always feed the shortest) and then sorts them
+     tallest-to-middle, the classic rectangle with a soft arch along the edges.
+5. Every column is shifted so its vertical midpoint sits on one shared axis. With
+   the arc from step 4 that is all a disc needs: the outline falls out of the caps
+   plus one shared axis.
+6. Frames keep the photo's own aspect ratio; nothing is ever cropped. Caption
    height is reserved per frame, so a caption never overlaps the photo below.
 
 Auto column count (`layout.cols: 0`) searches a few counts either side of the
-square root of the brick count and keeps the canvas closest to square.
+square root of the brick count for `arch` and keeps the canvas closest to square.
+For the shaped silhouettes it is arithmetic instead of a search: a disc of N
+columns is as tall as it is wide at *every* N, so what fixes N is how much brick
+the arc can hold - too few and it overflows, too many and the rim columns starve
+inside a bigger canvas.
+
+Whole bricks cannot tile an arc exactly, so a shaped canvas runs a couple of
+percent past its nominal aspect (measured: 22280x22708 for a 1000-photo circle,
+0.98:1) and the rim is a staircase rather than a smooth curve.
 
 **Determinism is a contract, not an accident.** Given the same photos and config,
 the output tree is byte-identical: ordering comes from a hash, the column search
@@ -98,18 +113,60 @@ photo may re-lay the whole wall, because pair and column decisions are global.
   previous view stay hidden.
 - Pan is a `translate` on one world element; pinch, wheel, `+`/`-`, double-tap and
   the fit button share one zoom path with a clamp.
+- The smallest zoom is the fit scale (`MIN_SCALE` is only a floor against a
+  degenerate transform). It used to be a fixed 0.03, which silently stopped
+  being the fit scale once a wall was big enough to fit at a smaller one: past a
+  few hundred photos the whole wall could no longer be seen at once. This is
+  coupled to `layout.maxCols`: the column cap decides how big the canvas gets,
+  and the canvas decides the fit scale, so raising one without the other trades a
+  tall strip for a wall that does not fit.
 - Each photo gets a 24px blurred placeholder inlined as a data URI, so a frame
   shows a soft preview while the real image decodes.
+- Every photo is published at more than one size: the full copy in `photos/`,
+  plus one file per rung of `images.tiers` in `photos/<edge>/`. A frame is
+  pointed at the smallest rung that covers the pixels it occupies *on screen*.
 
-Two constraints are load-bearing and are asserted by tests:
+Three constraints are load-bearing and are asserted by tests:
 
 - **No `will-change` and no 3D transforms.** Promoting a few hundred frames made
   iOS build one giant GPU layer and killed the tab (a `JetsamEvent` memory kill).
-- **One image tier.** Earlier experiments with `srcset` tiers made memory worse on
-  iOS below 200% zoom, so the wall ships a single served copy.
+- **The rung comes from the frame's on-screen size, never from the viewport.** A
+  `srcset`/`sizes` ladder was tried first and made memory worse on iOS below 200%
+  zoom, because `sizes` cannot see the world transform: the browser picks the
+  large candidate while the frame is small on screen. The engine computes
+  `world width x scale x devicePixelRatio` itself. Downgrades apply immediately
+  (they are what frees memory); upgrades are trickled (3 per frame while the
+  camera moves, 12 once it stops, after a 180 ms quiet window) because a fast
+  pinch would otherwise queue a decode for every frame entering the viewport.
+  `zoom.lodBudget` caps the decoded pixels on screen; over budget, the frames
+  covering the fewest device pixels are softened first.
+- **Nothing per frame may carry a `filter`.** A filtered element gets its own
+  render surface, and changing the scale repaints every one of them. The blurred
+  placeholder therefore stops rendering the moment its photo decodes
+  (`.pbox.loaded .pbg { display:none }`). The box shadow was measured and costs
+  nothing either way, so it stays.
 
-Changing anything in the rendering path needs a test on a real phone, one change
-at a time, with a measured improvement. That is why the assets are emitted
+The measurements behind that (2026-10-12, iPhone 15 Pro Max, 300 photos served at
+2048px, a page driving its own zoom-out ramp from 0.30 to fit, one tab at a time,
+and a `localStorage` flag that reports a killed tab as `prev=CRASH`):
+
+| build | result |
+| --- | --- |
+| stock, one 2048 copy per photo | died between 0.11 and 0.08, all 300 full copies requested (3.4 GB of decoded pixels) |
+| full copies, shadows and blur off | died in the same band: at that size the wall dies of memory, and the decorations change nothing |
+| tier ladder, stock CSS | **died at 0.15 with 18 MB of images on screen** - so not memory |
+| tier ladder, box shadow off (blur alive) | died: the shadow is not the cost |
+| tier ladder, blurred placeholder off | survived |
+| tier ladder, placeholder removed once its photo decoded | **survived all seven steps; 300/300 frames at fit, 13 MB** |
+
+The failure was never "too many photographs" or "too many pixels on screen": it
+was a live filter surface per frame. The shipped ladder is the x2 one measured
+above (128/256/512/1024); coarser ladders were simulated and peak at 79-124 MB
+resident instead of 40 MB, and a rung at or above `images.maxEdge` is dropped
+because it would only duplicate the full copy.
+
+Changing anything in the rendering path still needs a test on a real phone, one
+change at a time, with a measured improvement. That is why the assets are emitted
 verbatim and `test/page.test.js` fails if the build starts transforming them.
 
 ## Decisions that are not obvious from the code
@@ -195,6 +252,14 @@ Pages would install the CLI's `sharp` on every build for a bundle that needs non
 - **No stamp.** A browser build carries no source hash: the stamp exists so CI can
   tell a committed `dist/` from a stale one, and there is no commit here. It is the
   one line `scripts/check-build.js` reports on a downloaded zip.
+- **The app's version rides in the generated bundle.** The footer says which
+  version of the code the page is running, read from `META.version` in
+  `web/vendor/keret-core.js`, which `web/build.mjs` stamps from `package.json`.
+  Not a hardcoded string (it drifts) and not a fetch (the app has to work opened
+  straight off a disk). The bundle's per-file hashes cannot see the version, so
+  `test/web.test.js` asserts the stamped version against `package.json` as well:
+  a bump that nobody rebuilt fails the suite instead of shipping a footer that
+  announces the version before last.
 - **Publish before layout.** The CLI lays out first and aborts on the first photo
   it cannot publish; in a tab that would leave a hole where a photo failed. The
   browser publishes first and lays out what really made it, then reports the rest

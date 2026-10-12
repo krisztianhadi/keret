@@ -61,13 +61,16 @@ read, so the environment cannot inject arbitrary config.
 | `WALL_ANALYTICS_DOMAINS` | `analytics.domains` |
 | `WALL_MAX_EDGE` | `images.maxEdge` |
 | `WALL_QUALITY` | `images.quality` |
+| `WALL_TIERS` | `images.tiers` (a comma list: `128,512`) |
 | `WALL_COLS` | `layout.cols` |
+| `WALL_SHAPE` | `layout.shape` |
 | `WALL_HERO_RATE` | `layout.heroRate` |
 | `WALL_CAPTION_LINES` | `captions.maxLines` |
 | `WALL_SHOW_YEAR` | `captions.showYear` |
 | `WALL_SHOW_CAMERA` | `captions.showCamera` |
 | `WALL_SHOW_SPECS` | `captions.showSpecs` |
 | `WALL_ZOOM_MAX` | `zoom.max` |
+| `WALL_LOD_BUDGET` | `zoom.lodBudget` |
 | `WALL_NOSCRIPT_LIMIT` | `noscript.limit` |
 
 ## Configuration
@@ -194,12 +197,14 @@ where the text sits.
 
 The wall is masonry with portrait pairing: a column slot is either one full-width
 photo or two portraits side by side, sized to fill the same slot width. Bricks
-flow into equal-width columns (shortest column first), the columns are reordered
-into an arch (tallest in the middle) and shifted onto one shared midpoint axis.
+flow into equal-width columns, each capped by `layout.shape` and shifted onto one
+shared midpoint axis - a circular arc of caps plus that shared axis is what makes
+the disc.
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `layout.cols` | `0` | fixed column count; `0` picks the count closest to a square canvas |
+| `layout.shape` | `circle` | the silhouette: `circle` (a disc), `oval` (a phone-proportioned ellipse, 0.46:1, which fills a portrait screen at fit) or `arch` (equal columns, tallest in the middle: the classic rectangle) |
+| `layout.cols` | `0` | fixed column count; `0` picks the count the silhouette needs |
 | `layout.long` | `600` | display width of a full-width frame, in wall pixels |
 | `layout.gap` | `64` | one gutter for columns, stacked frames and pairs |
 | `layout.mat` | `20` | mat border around each photo |
@@ -208,13 +213,14 @@ into an arch (tallest in the middle) and shifted onto one shared midpoint axis.
 | `layout.heroRate` | `3` | out of 10 unmarked portraits, how many go full width (a stable hash decides which) |
 | `layout.heroMinAspect` | `0.6` | never blow up extreme 9:16-ish portraits; narrower than this stays paired |
 | `layout.markSuffix` | `"-x"` | filename suffix that forces a photo to full width, e.g. `tower-x.jpg` |
-| `layout.maxCols` | `14` | ceiling for the automatic column count |
+| `layout.maxCols` | `40` | ceiling for the automatic column count. `autoCols` aims at a square canvas, so a cap below what the set needs turns the wall into a tall strip instead of keeping it tidy; raise it for sets in the thousands |
 
 ### Images
 
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `images.maxEdge` | `2048` | longest edge of the served copy |
+| `images.tiers` | `[128, 256, 512, 1024]` | extra sizes of every photo, written to `photos/<edge>/` and picked by the frame's size on screen; ascending, whole pixels, at most six. `[]` serves the full copy only. A rung at or above `maxEdge` is ignored, because no copy is ever enlarged past its source |
 | `images.quality` | `82` | JPEG and WebP quality |
 | `images.thumbEdge` | `24` | edge of the inline blurred placeholder |
 | `images.thumbQuality` | `55` | quality of that placeholder |
@@ -227,6 +233,7 @@ into an arch (tallest in the middle) and shifted onto one shared midpoint axis.
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `zoom.max` | `4` | zoom ceiling the engine clamps to |
+| `zoom.lodBudget` | `96` | decoded megabytes the engine keeps in play; over budget it softens the frames covering the fewest device pixels first |
 | `noscript.limit` | `60` | how many photos the no-JavaScript list shows |
 
 ## The captions sidecar

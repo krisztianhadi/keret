@@ -93,13 +93,39 @@ const DEFAULTS = {
     capGap: 22,            // air between the photo and the caption text
     heroRate: 3,           // ~30% of unmarked portraits go full width (hash % 10 < rate)
     heroMinAspect: 0.6,    // never blow up extreme 9:16-ish portraits
+    // The silhouette the bricks are arranged into:
+    //   'circle' - a disc: columns are capped by a circle and centered on one
+    //              axis, so the wall reads as a plate rather than a slab
+    //   'oval'   - the same, in an ellipse as tall as a phone screen (0.46:1),
+    //              which at fit fills a phone instead of floating in it
+    //   'arch'   - the classic rectangle: columns equalized, then sorted
+    //              tallest-to-middle for a soft arch along the top and bottom
+    shape: 'circle',
     markSuffix: '-x',      // filename suffix that forces a photo to full width
-    maxCols: 14,
+    // Ceiling for the automatic column count. autoCols picks the column count
+    // closest to a square canvas, so a cap below what a big set needs does not
+    // "keep it tidy" - it turns the wall into a tall strip and breaks the arch
+    // silhouette. 40 keeps a 1000-photo wall square (it lands on 28 columns);
+    // raise it for sets in the thousands.
+    maxCols: 40,
   },
 
   images: {
     maxEdge: 2048,         // longest edge of the served full copy
     quality: 82,           // jpeg/webp quality
+    // Smaller copies of every photo, written to photos/<edge>/<file> and picked
+    // by the engine from the frame's size ON SCREEN. Ascending, each smaller
+    // than maxEdge; [] serves the full copy only.
+    //
+    // Why: painting a frame needs its source bitmap, and a repaint (every
+    // zoom changes the scale, so every zoom repaints) needs it again. One 2048
+    // copy per photo meant a zoomed-out wall had to hold ~10 MB per frame -
+    // measured on an iPhone 15 Pro Max, a 300-photo wall died at 0.08 zoom with
+    // 300 full copies queued. These rungs put a frame within 2x of the pixels it
+    // actually covers: the same wall now holds 13-57 MB across the whole zoom
+    // range. The x2 ladder is the one that was measured; trimming it trades
+    // build time for peak memory.
+    tiers: [128, 256, 512, 1024],
     thumbEdge: 24,         // inline blurred placeholder edge
     thumbQuality: 55,
     ogWidth: 1200,         // social preview image
@@ -111,6 +137,11 @@ const DEFAULTS = {
     // Ceiling the engine clamps to. 4 is what the wall has always shipped with;
     // raising it lets the served copy be upscaled past 1:1.
     max: 4,
+    // Decoded pixels the engine may keep in play, in megabytes. Frames outside
+    // the viewport already drop to the smallest tier; this caps the ones on
+    // screen, softening the smallest first when a wall is dense enough to
+    // exceed it.
+    lodBudget: 96,
   },
 
   noscript: { limit: 60 }, // photos listed in the no-JS fallback
@@ -134,15 +165,21 @@ const ENV_MAP = {
   WALL_ANALYTICS_DOMAINS: 'analytics.domains',
   WALL_MAX_EDGE: 'images.maxEdge',
   WALL_QUALITY: 'images.quality',
+  WALL_TIERS: 'images.tiers',
   WALL_COLS: 'layout.cols',
+  WALL_SHAPE: 'layout.shape',
   WALL_HERO_RATE: 'layout.heroRate',
   WALL_CAPTION_LINES: 'captions.maxLines',
   WALL_SHOW_YEAR: 'captions.showYear',
   WALL_SHOW_CAMERA: 'captions.showCamera',
   WALL_SHOW_SPECS: 'captions.showSpecs',
   WALL_ZOOM_MAX: 'zoom.max',
+  WALL_LOD_BUDGET: 'zoom.lodBudget',
   WALL_NOSCRIPT_LIMIT: 'noscript.limit',
 };
+
+/** The silhouettes layout() can arrange bricks into. */
+const SHAPES = new Set(['circle', 'oval', 'arch']);
 
 const BOOLEAN_KEYS = new Set([
   'captions.showYear', 'captions.showCamera', 'captions.showSpecs',
@@ -184,6 +221,13 @@ function loadConfig(opts = {}) {
       const n = Number(value);
       if (!Number.isFinite(n)) throw new Error(name + ' must be a number, got "' + env[name] + '"');
       value = n;
+    } else if (dotted === 'images.tiers') {
+      // a list of pixel edges, not a single number: WALL_TIERS=128,512,1024
+      const edges = String(value).split(',').map((part) => part.trim()).filter(Boolean);
+      if (!edges.length || edges.some((edge) => !Number.isFinite(Number(edge)))) {
+        throw new Error(name + ' must be a comma-separated list of pixel edges, got "' + env[name] + '"');
+      }
+      value = edges.map(Number);
     } else if (dotted === 'analytics.websiteId' || dotted === 'analytics.script') {
       // first analytics env value creates the block
       if (!config.analytics) config.analytics = { script: '', websiteId: '', domains: '', cache: true };
@@ -213,13 +257,38 @@ function validate(config, root) {
   num(config.layout.capGap, 'layout.capGap', 0, 200);
   num(config.layout.heroRate, 'layout.heroRate', 0, 10);
   num(config.layout.cols, 'layout.cols', 0, 40);
-  num(config.layout.maxCols, 'layout.maxCols', 1, 40);
+  num(config.layout.maxCols, 'layout.maxCols', 1, 120);
   num(config.layout.heroMinAspect, 'layout.heroMinAspect', 0.05, 1);
   num(config.images.maxEdge, 'images.maxEdge', 64, 20000);
   num(config.images.quality, 'images.quality', 1, 100);
   num(config.images.thumbEdge, 'images.thumbEdge', 4, 256);
   num(config.images.thumbQuality, 'images.thumbQuality', 1, 100);
   num(config.zoom.max, 'zoom.max', 0, 20);
+  num(config.zoom.lodBudget, 'zoom.lodBudget', 8, 4096);
+  if (!Array.isArray(config.images.tiers)) {
+    throw new Error('images.tiers must be an array of pixel edges, e.g. [128, 256, 512, 1024]');
+  }
+  if (config.images.tiers.length > 6) {
+    throw new Error('images.tiers takes at most 6 edges, got ' + config.images.tiers.length);
+  }
+  // A rung at or above the full copy would only ever duplicate it (no copy is
+  // enlarged past its source), so it is dropped rather than refused: a config
+  // that lowers images.maxEdge keeps working, and the build prints the ladder it
+  // really wrote.
+  const rungs = [];
+  let lastTier = 0;
+  for (const edge of config.images.tiers) {
+    num(edge, 'images.tiers entry', 32, 20000);
+    if (!Number.isInteger(edge)) {
+      throw new Error('images.tiers entries must be whole pixels, got ' + edge);
+    }
+    if (edge <= lastTier) {
+      throw new Error('images.tiers must be ascending and unique, got ' + JSON.stringify(config.images.tiers));
+    }
+    lastTier = edge;
+    if (edge < config.images.maxEdge) rungs.push(edge);
+  }
+  config.images.tiers = rungs;
   num(config.captions.maxLines, 'captions.maxLines', 0, 2);
   num(config.noscript.limit, 'noscript.limit', 0, 10000);
   for (const key of ['title', 'description', 'lang', 'siteUrl', 'photosDir', 'outDir']) {
@@ -253,6 +322,10 @@ function validate(config, root) {
     if (!config.analytics.script || !config.analytics.websiteId) {
       throw new Error('analytics needs both "script" and "websiteId" (or set analytics to null)');
     }
+  }
+  if (!SHAPES.has(config.layout.shape)) {
+    throw new Error('layout.shape must be one of ' + [...SHAPES].join(', ')
+      + ', got "' + config.layout.shape + '"');
   }
   if (config.layout.cols > 0 && config.layout.cols > config.layout.maxCols) {
     throw new Error('layout.cols cannot exceed layout.maxCols (' + config.layout.maxCols + ')');
@@ -358,4 +431,4 @@ function setPath(obj, dotted, value) {
 }
 
 
-module.exports = { DEFAULTS, ENV_MAP, FONTS, fontOf, loadConfig, checkPaths, isInside };
+module.exports = { DEFAULTS, ENV_MAP, SHAPES, FONTS, fontOf, loadConfig, checkPaths, isInside };

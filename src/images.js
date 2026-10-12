@@ -284,16 +284,29 @@ function pipeline(buf) {
 }
 
 /**
- * Write the served copy of one photo into <out>/photos/<file>, metadata
- * stripped and EXIF orientation baked in, plus a tiny inline placeholder.
+ * Served path for one photo copy: `photos/<file>` for the full copy and
+ * `photos/<edge>/<file>` for a tier. The engine builds the same path from the
+ * ladder it is given; scripts/check-build.js fails the build when the two ever
+ * disagree, so a wall can never reference a tier that was not written.
+ */
+function tierPath(file, edge) {
+  return edge ? 'photos/' + edge + '/' + file : 'photos/' + file;
+}
+
+/**
+ * Write the served copies of one photo into <out>/photos: the full copy, one
+ * file per configured tier, and a tiny inline placeholder.
  *
- * Returns { before, after, thumb }.
+ * Metadata is stripped and EXIF orientation baked in on every copy (that is the
+ * one rule a published photo must not break), and no tier is ever enlarged past
+ * its source.
+ *
+ * Returns { before, after, tierBytes, tiers, thumb }.
  */
 async function writeCopies(file, srcFull, outDir, cfg) {
   const s = requireSharp();
   const ext = path.extname(file).toLowerCase();
   const buf = fs.readFileSync(srcFull);
-  const destFull = path.join(outDir, 'photos', file);
   const resize = { width: cfg.images.maxEdge, height: cfg.images.maxEdge, fit: 'inside', withoutEnlargement: true };
 
   const encode = async (pipe, edge, quality) => {
@@ -306,9 +319,24 @@ async function writeCopies(file, srcFull, outDir, cfg) {
     return pipe.resize(opts).jpeg({ quality, mozjpeg: true }).toBuffer();
   };
 
+  const write = (rel, bytes) => {
+    const dest = path.join(outDir, rel);
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.writeFileSync(dest, bytes);
+  };
+
   const out = await encode(pipeline(buf), 0, cfg.images.quality);
-  fs.mkdirSync(path.dirname(destFull), { recursive: true });
-  fs.writeFileSync(destFull, out);
+  write(tierPath(file, 0), out);
+
+  // the ladder: one encode per rung, from the original bytes each time, so a
+  // photo never has to be held twice in memory
+  const tiers = (cfg.images && Array.isArray(cfg.images.tiers)) ? cfg.images.tiers : [];
+  let tierBytes = 0;
+  for (const edge of tiers) {
+    const bytes = await encode(pipeline(buf), edge, cfg.images.quality);
+    write(tierPath(file, edge), bytes);
+    tierBytes += bytes.length;
+  }
 
   // tiny placeholder (inline base64 JPEG) so a frame shows a soft preview
   // while the real image decodes - no extra requests
@@ -320,7 +348,7 @@ async function writeCopies(file, srcFull, outDir, cfg) {
     thumb = 'data:image/jpeg;base64,' + t.toString('base64');
   } catch (err) { /* placeholder is optional */ }
 
-  return { before: buf.length, after: out.length, thumb };
+  return { before: buf.length, after: out.length, tierBytes, tiers, thumb };
 }
 
 /* ---------------- social card ---------------- */
@@ -538,5 +566,5 @@ function scanPhotos(photosDir, cfg, captionsFile) {
 
 module.exports = {
   IMAGE_EXTS, SKIP_PREFIXES, requireSharp, detectImageSize, readExif, formatCaption,
-  scanPhotos, writeCopies, writeOgImage, writeTouchIcon, cardSvg, wrapText, ensureFontCache, useProjectFonts, pipeline, ICON,
+  scanPhotos, writeCopies, tierPath, writeOgImage, writeTouchIcon, cardSvg, wrapText, ensureFontCache, useProjectFonts, pipeline, ICON,
 };

@@ -135,6 +135,51 @@ test('the caption line count is capped at the two lines the engine draws', () =>
   assert.throws(() => loadConfig({ root: dir, env: {} }), /between 0 and 2/);
 });
 
+test('the tier ladder is validated, and a rung above the full copy is dropped', () => {
+  const dir = tempDir();
+  const file = path.join(dir, 'wall.config.json');
+  const withTiers = (tiers, maxEdge) => {
+    const images = tiers === undefined && maxEdge === undefined ? {}
+      : Object.assign({}, tiers === undefined ? {} : { tiers }, maxEdge === undefined ? {} : { maxEdge });
+    fs.writeFileSync(file, JSON.stringify({ images }));
+    return loadConfig({ root: dir, env: {} }).config.images.tiers;
+  };
+
+  assert.deepEqual(withTiers(), [128, 256, 512, 1024], 'the default ladder');
+  assert.deepEqual(withTiers([256]), [256]);
+  assert.deepEqual(withTiers([]), [], 'no ladder is a valid choice: one copy per photo');
+  assert.deepEqual(withTiers([128, 512, 1024], 800), [128, 512],
+    'lowering maxEdge drops the rungs it would only duplicate');
+  assert.deepEqual(withTiers([128, 512, 1024], 1200), [128, 512, 1024]);
+
+  assert.throws(() => withTiers([512, 128]), /ascending and unique/);
+  assert.throws(() => withTiers([128, 128]), /ascending and unique/);
+  assert.throws(() => withTiers([128.5]), /whole pixels/);
+  assert.throws(() => withTiers([8]), /between 32 and 20000/);
+  assert.throws(() => withTiers('128'), /must be an array/);
+
+  // the environment form is a comma list, parsed the same way
+  assert.deepEqual(loadConfig({ root: dir, env: { WALL_TIERS: '128, 512' } }).config.images.tiers, [128, 512]);
+  assert.throws(() => loadConfig({ root: dir, env: { WALL_TIERS: 'big' } }), /comma-separated list/);
+});
+
+test('the silhouette is one of the shapes the layout can draw', () => {
+  const dir = tempDir();
+  const file = path.join(dir, 'wall.config.json');
+  const shape = (value) => {
+    fs.writeFileSync(file, JSON.stringify({ layout: { shape: value } }));
+    return loadConfig({ root: dir, env: {} }).config.layout.shape;
+  };
+
+  assert.equal(loadConfig({ root: tempDir(), env: {} }).config.layout.shape, 'circle',
+    'a disc is what a wall is by default');
+  assert.equal(shape('oval'), 'oval');
+  assert.equal(shape('arch'), 'arch');
+  assert.equal(loadConfig({ root: dir, env: { WALL_SHAPE: 'oval' } }).config.layout.shape, 'oval',
+    'the environment sets it too');
+  assert.throws(() => shape('hexagon'), /layout\.shape must be one of circle, oval, arch/);
+});
+
 test('every config this repository ships is valid', () => {
   // a starting point that does not load is worse than none: it fails on the
   // first command a new user runs

@@ -123,7 +123,41 @@ test('writeCopies publishes the copy, strips metadata and keeps a placeholder', 
   assert.equal(/GPS/.test(full.toString('latin1')), false, 'no GPS strings in the served copy');
   assert.ok(result.before > 0 && result.after > 0);
   assert.match(result.thumb, /^data:image\/jpeg;base64,/);
-  assert.equal(result.tiers, undefined, 'the shipped engine serves a single copy');
+});
+
+test('writeCopies writes one file per tier, each within its edge', async () => {
+  const dir = tempDir();
+  const [src] = writeSamples(dir, 1);            // 1200x800
+  const out = path.join(dir, 'out');
+  const file = path.basename(src);
+  const edges = [128, 512];
+  const local = { ...cfg, images: { ...cfg.images, tiers: edges } };
+
+  const result = await images.writeCopies(file, src, out, local);
+  assert.deepEqual(result.tiers, edges, 'the ladder that was written is reported back');
+  assert.ok(result.tierBytes > 0);
+  assert.ok(result.tierBytes < result.after, 'the ladder weighs less than the full copy');
+
+  for (const edge of edges) {
+    const tier = path.join(out, 'photos', String(edge), file);
+    assert.ok(fs.existsSync(tier), 'tier file exists: ' + edge);
+    const meta = await sharp(tier).metadata();
+    assert.equal(Math.max(meta.width, meta.height), edge, edge + 'px tier is that edge, not a crop');
+    // rounding to whole pixels moves the ratio a hair; a crop or a stretch would not
+    assert.ok(Math.abs(meta.width / meta.height - 1200 / 800) < 0.02,
+      edge + 'px tier keeps the photo aspect ratio, got ' + meta.width + 'x' + meta.height);
+    assert.equal(fs.readFileSync(tier).includes(Buffer.from('eXIf', 'latin1')), false,
+      'a tier carries no metadata either');
+  }
+
+  // the documented escape hatch: no ladder means the full copy only, and the
+  // engine is handed an empty list so it never asks for a tier
+  const plain = path.join(dir, 'plain');
+  const off = { ...cfg, images: { ...cfg.images, tiers: [] } };
+  const bare = await images.writeCopies(file, src, plain, off);
+  assert.deepEqual(bare.tiers, []);
+  assert.equal(bare.tierBytes, 0);
+  assert.equal(fs.existsSync(path.join(plain, 'photos', '128')), false, 'no tier directory is left behind');
 });
 
 test('writeCopies re-encodes GIF to a still PNG', async () => {

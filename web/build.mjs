@@ -76,6 +76,11 @@ function build() {
   }
 
   const meta = {
+    // The app shows the version of the code it is running, so it has to be the
+    // version in package.json: stamped into the bundle here, which means a
+    // version bump that nobody rebuilt fails test/web.test.js instead of
+    // shipping a footer that lies.
+    version: JSON.parse(readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version,
     sources,
     assets: Object.fromEntries(Object.entries(assets).map(([k, v]) => [k, v.hash])),
     fonts: Object.fromEntries(Object.entries(fonts).map(([k, v]) => [k, v.hash])),
@@ -87,6 +92,7 @@ function build() {
     + ' * `npm run web:build`; test/web.test.js fails when this file no longer\n'
     + ' * matches the sources below.\n'
     + ' *\n'
+    + ' * version ' + meta.version + '\n'
     + Object.entries(meta.sources).map(([k, v]) => ' * ' + k.padEnd(16) + v.slice(0, 16)).join('\n')
     + '\n */\n';
 

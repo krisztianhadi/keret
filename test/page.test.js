@@ -73,7 +73,10 @@ test('the emitted engine is the verified engine, byte for byte', () => {
     .replace('var MAX_SCALE = 4;', 'var MAX_SCALE = {{MAX_SCALE}};')
     .replace('var MAT = ' + base.layout.mat + ';', 'var MAT = {{MAT}};')
     .replace('var CAP_H = ' + model().capH + ';', 'var CAP_H = {{CAP_H}};')
-    .replace('var wallW = ' + model().canvasW + ', wallH = ' + model().canvasH + ';', 'var wallW = {{CANVAS_W}}, wallH = {{CANVAS_H}};');
+    .replace('var wallW = ' + model().canvasW + ', wallH = ' + model().canvasH + ';', 'var wallW = {{CANVAS_W}}, wallH = {{CANVAS_H}};')
+    .replace('var TIERS = ' + escJson(base.images.tiers) + ';', 'var TIERS = {{TIERS}};')
+    .replace('var FULL_EDGE = ' + base.images.maxEdge + ';', 'var FULL_EDGE = {{FULL_EDGE}};')
+    .replace('var LOD_BUDGET_MB = ' + base.zoom.lodBudget + ';', 'var LOD_BUDGET_MB = {{LOD_BUDGET}};');
   assert.equal(js, asset('engine.js'));
 });
 
@@ -83,6 +86,22 @@ test('the engine keeps the fixes that made the wall work on a phone', () => {
   assert.equal(/translate3d|translateZ/.test(js), false, 'no 3D transforms either');
   assert.match(js, /var MAX_SCALE = \{\{MAX_SCALE\}\};/);
   assert.match(js, /img\.loading = 'lazy'/);
+  // the smallest zoom is the fit scale: a fixed floor above it means a wall big
+  // enough to fit at a smaller scale can never be seen whole
+  const floor = /var MIN_SCALE = ([0-9.]+);/.exec(js);
+  assert.ok(floor, 'the engine names its smallest scale');
+  assert.ok(Number(floor[1]) < 0.01,
+    'the floor stays below any real fit scale, got ' + floor[1]);
+});
+
+test('a loaded frame stops carrying its blur filter', () => {
+  // the measured crash: a live filter keeps a render surface per frame, and a
+  // zoom repaints all of them at the new scale - 300 frames with the filter
+  // alive died at 0.15 zoom with 18 MB of images on screen, and survived the
+  // whole zoom range once loaded placeholders stopped rendering
+  const loaded = /\.pbox\.loaded \.pbg \{([^}]*)\}/.exec(asset('page.css'));
+  assert.ok(loaded, 'the loaded placeholder is styled');
+  assert.match(loaded[1], /display:none/, 'a loaded placeholder is taken out of rendering');
 });
 
 test('the engine fits the wall the build produced, not a number baked into it', () => {

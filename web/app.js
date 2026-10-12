@@ -10,7 +10,7 @@
  * web/vendor/keret-core.js is generated from src/*.js by web/build.mjs.
  */
 
-import { FONTS } from './vendor/keret-core.js';
+import { FONTS, META } from './vendor/keret-core.js';
 import { createKeret } from './keret-runtime.js';
 import { buildZip } from './zip.js';
 
@@ -21,6 +21,12 @@ document.head.appendChild(Object.assign(document.createElement('style'), {
 }));
 
 const $ = (id) => document.getElementById(id);
+
+/* The footer reports the version of the code this page is running. It comes from
+   the generated bundle (stamped from package.json by web/build.mjs) rather than a
+   fetch, so the app still says which version it is when it is opened straight off
+   a disk with no server behind it. */
+$('appVersion').textContent = String(META.version || '');
 const HEIC_FILE = /\.(heic|heif)$/i;
 const CAPTIONS_FILE = 'captions.json';
 /* keret's own two settings files. JSON because the command line reads exactly
@@ -170,6 +176,8 @@ function applySidecars({ config, author, problem }) {
     }
     const edge = config.images && String(config.images.maxEdge);
     if (edge && [...$('fMaxEdge').options].some((option) => option.value === edge)) $('fMaxEdge').value = edge;
+    const shape = config.layout && config.layout.shape;
+    if (shape && [...$('fShape').options].some((option) => option.value === shape)) $('fShape').value = shape;
   }
   if (author) {
     set('fAuthor', author.name);
@@ -664,6 +672,7 @@ function readValues() {
     link: link && !/^(https?:|mailto:|tel:)/i.test(link) ? 'https://' + link : link,
     font: document.querySelector('input[name="font"]:checked').value,
     maxEdge: Number($('fMaxEdge').value) || 2048,
+    shape: $('fShape').value,
   };
 }
 
@@ -719,6 +728,7 @@ async function runBuild(files, values, hooks) {
       siteUrl: values.siteUrl,
       font: values.font,
       images: { ...(state.config && state.config.images), maxEdge: values.maxEdge },
+      layout: { ...(state.config && state.config.layout), shape: values.shape },
       photosDir: '/photos',
       outDir: '/out',
     },
@@ -775,7 +785,8 @@ async function runBuild(files, values, hooks) {
       if (!written || !written.length) throw new Error('nothing was written');
       photo.thumb = r.thumb;
       bytesBefore += r.before;
-      bytesAfter += r.after;
+      // the tier ladder is part of what the wall serves, so it counts as served
+      bytesAfter += r.after + (r.tierBytes || 0);
       published.push(photo);
       if (photo.file === ogFile) ogOriginal = keret.read('/photos/' + photo.file);
     } catch (err) {

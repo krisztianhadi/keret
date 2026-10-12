@@ -5,9 +5,17 @@
  * Masonry with portrait pairing: a column slot ("brick") is either one
  * full-width photo, or TWO portrait photos side by side sized to fill the same
  * slot width, so portrait pairs read like a landscape tile and never tower
- * over the column rhythm. Bricks flow into equal-width masonry columns
- * (shortest column first), the columns are re-ordered into an arch silhouette
- * (tallest in the middle) and shifted onto one shared midpoint axis.
+ * over the column rhythm. Bricks flow into equal-width masonry columns and every
+ * column is shifted onto one shared midpoint axis.
+ *
+ * The silhouette is `layout.shape`:
+ *   'circle' (default) - each column is capped by a circle, so the wall reads as
+ *       a disc. The disc is what the shared axis was always for: cap the columns
+ *       by an arc instead of equalizing them and the outline becomes a plate.
+ *   'oval' - the same arc in a phone-proportioned ellipse (OVAL_ASPECT), which
+ *       fills a portrait screen at fit instead of floating in the middle of it.
+ *   'arch' - the classic rectangle: columns equalized (shortest column first),
+ *       then sorted tallest-to-middle for a soft arch along the top and bottom.
  *
  * Determinism contract: for a given photo set and config the output is
  * byte-stable. It is NOT additive-stable - photos are ordered by a hash of
@@ -125,6 +133,38 @@ function countBricks(photos, cfg) {
   return buildBricks(photos, cfg).bricks.length;
 }
 
+/** How tall an ellipse matched to a phone screen is, as width / height. */
+const OVAL_ASPECT = 0.46;
+
+/**
+ * The fraction of the silhouette's height a column may use: 1 at the middle,
+ * 0 at the rim, following a circle. Bricks are whole, so the outline is a
+ * staircase - it reads as a mosaic edge, not a smooth curve.
+ */
+function shapeProfile(c, cols) {
+  const t = (2 * (c + 0.5)) / cols - 1;
+  return Math.sqrt(Math.max(0, 1 - t * t));
+}
+
+/**
+ * Height of the silhouette a photo set needs in `cols` columns of `slot` width,
+ * so the arc holds every brick. A shape's area is pi/4 of its bounding box, and
+ * an elliptical one of aspect `ratio` needs this many columns to fit the bricks
+ * into a box of that shape.
+ */
+function shapeCols(totalBrickHeight, slot, cols, ratio) {
+  return Math.max(3, Math.min(cols, Math.round(
+    Math.sqrt((4 * totalBrickHeight * ratio) / (Math.PI * slot)))));
+}
+
+/** Total height of every brick, gaps included: what the silhouette must hold. */
+function brickTotal(photos, cfg) {
+  const { capH, mat, gap } = layoutDims(cfg);
+  const { bricks } = buildBricks(photos, cfg);
+  return bricks.reduce((sum, brick) =>
+    sum + Math.max(...brick.list.map((p) => p.ph + capH + 2 * mat)) + gap, 0);
+}
+
 /**
  * Lay the wall out in `cols` columns.
  * Returns { photos, bricks, canvasW, canvasH, cols }.
@@ -135,20 +175,54 @@ function layout(photos, cfg, cols) {
   const nCols = Math.max(1, cols || cfg.layout.cols || autoCols(photos, cfg));
 
   const { bricks, photos: sized } = buildBricks(photos, cfg);
-
+  const shape = cfg.layout.shape || 'circle';
+  const slot = iw + gap;
+  const heights = bricks.map((brick) => Math.max(...brick.list.map((p) => p.ph + capH + 2 * mat)));
   const colH = new Array(nCols).fill(pad);
-  for (const brick of bricks) {
-    const ih = Math.max(...brick.list.map((p) => p.ph + capH + 2 * mat));
-    let c = 0;
-    for (let k = 1; k < nCols; k++) if (colH[k] < colH[c]) c = k;
-    let x = pad + c * (iw + gap);
+
+  const place = (i, c) => {
+    const brick = bricks[i];
+    let x = pad + c * slot;
     for (const p of brick.list) {
       p.x = x;
       p.y = colH[c];
       p.col = c;
       x += p.pw + 2 * mat + gap;
     }
-    colH[c] += ih + gap;
+    colH[c] += heights[i] + gap;
+  };
+
+  if (shape === 'arch') {
+    // equal columns: always feed the shortest, which is what fills a rectangle
+    for (let i = 0; i < bricks.length; i++) {
+      let c = 0;
+      for (let k = 1; k < nCols; k++) if (colH[k] < colH[c]) c = k;
+      place(i, c);
+    }
+  } else {
+    // a disc: cap each column by the arc, tallest in the middle
+    const arrW = nCols * iw + (nCols - 1) * gap;
+    const ideal = shape === 'oval' ? arrW / OVAL_ASPECT : arrW;
+    const profile = [];
+    for (let c = 0; c < nCols; c++) profile.push(shapeProfile(c, nCols));
+    const profileSum = profile.reduce((sum, r) => sum + r, 0);
+    const total = heights.reduce((sum, h) => sum + h + gap, 0);
+    // the arc's own height, stretched if the column count was capped and cannot
+    // hold every brick at the shape's aspect
+    const arcH = Math.max(ideal, profileSum ? total / profileSum : total);
+    const cap = profile.map((r) => arcH * r);
+    for (let i = 0; i < bricks.length; i++) {
+      let best = 0, bestScore = -Infinity;
+      for (let c = 0; c < nCols; c++) {
+        const free = cap[c] - (colH[c] - pad);
+        // most room left inside the arc; a brick that fits nowhere goes to the
+        // column least past its own cap, so leftovers spread across the middle
+        // instead of piling into one column and notching the outline
+        const score = free >= heights[i] ? free : -1e6 - (colH[c] - pad - cap[c]);
+        if (score > bestScore) { bestScore = score; best = c; }
+      }
+      place(i, best);
+    }
   }
 
   // salon center: shift every column so its vertical midpoint sits on one
@@ -165,11 +239,17 @@ function layout(photos, cfg, cols) {
   // arch silhouette: the tallest column lands in the middle, the shortest at
   // the outer edges. Only occupied columns take part, so a wall with fewer
   // photos than columns stays centered instead of drifting to one side.
-  const desc = used.map((c) => ({ h: colHeight(c), c })).sort((a, b) => b.h - a.h || a.c - b.c);
+  // A shape already places its heights symmetrically, so its columns keep their
+  // left-to-right order (mirrored about the middle); the arch instead brings the
+  // tallest column to the middle. Ordering a disc by height breaks it: the two
+  // centre columns tie, and the tie-break pushes one of them out to the rim.
+  const middle = (nCols - 1) / 2;
+  const order = used.slice();
+  if (shape === 'arch') order.sort((a, b) => colHeight(b) - colHeight(a) || a - b);
+  else order.sort((a, b) => Math.abs(a - middle) - Math.abs(b - middle) || a - b);
   const targets = archTargets(used.length);
-  const slot = iw + gap;
   const compact = new Map();                 // old column -> centered position
-  for (let j = 0; j < desc.length; j++) compact.set(desc[j].c, j);
+  for (let j = 0; j < order.length; j++) compact.set(order[j], j);
   const colCount = Math.max(1, used.length);
   const arrW = colCount * iw + (colCount - 1) * gap;
   const canvasW = pad * 2 + arrW;
@@ -207,9 +287,22 @@ function layoutDims(cfg) {
   return { ...cfg.layout, capH: captionHeight(cfg) };
 }
 
-/** Auto column count: the most square canvas for this photo set. */
+/**
+ * Auto column count. For a shape it is arithmetic rather than a search: a disc
+ * of `cols` columns has a height of its own width, so the wall is square at
+ * every column count - what fixes the count is how many bricks that arc can
+ * hold. (Too few and the arc overflows; too many and the rim columns starve,
+ * leaving a small disc inside a big canvas.)
+ */
 function autoCols(photos, cfg) {
   const max = cfg.layout.maxCols;
+  const shape = (cfg.layout && cfg.layout.shape) || 'circle';
+  if (shape !== 'arch') {
+    const { long, mat, gap } = layoutDims(cfg);
+    const slot = long + 2 * mat + gap;
+    const ratio = shape === 'oval' ? OVAL_ASPECT : 1;
+    return shapeCols(brickTotal(photos, cfg), slot, max, ratio);
+  }
   const bricks = countBricks(photos, cfg);
   const target = Math.max(1, Math.ceil(Math.sqrt(Math.max(1, bricks))));
   const lo = Math.max(1, Math.min(target - 2, max));
@@ -223,4 +316,7 @@ function autoCols(photos, cfg) {
   return best;
 }
 
-module.exports = { hashFile, naturalSort, layout, autoCols, countBricks, captionHeight, layoutDims, isMarked, archTargets };
+module.exports = {
+  hashFile, naturalSort, layout, autoCols, countBricks, brickTotal, captionHeight,
+  layoutDims, isMarked, archTargets, shapeProfile, shapeCols, OVAL_ASPECT,
+};

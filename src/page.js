@@ -111,7 +111,12 @@ function buildPage(model, cfg) {
     .replace(/\{\{MAT\}\}/g, String(cfg.layout.mat))
     .replace(/\{\{CAP_H\}\}/g, String(model.capH))
     .replace(/\{\{CANVAS_W\}\}/g, String(model.canvasW))
-    .replace(/\{\{CANVAS_H\}\}/g, String(model.canvasH));
+    .replace(/\{\{CANVAS_H\}\}/g, String(model.canvasH))
+    // the tier ladder the build wrote, plus the full copy's edge and the decoded
+    // budget the engine keeps itself inside
+    .replace('{{TIERS}}', escJson(cfg.images.tiers || []))
+    .replace(/\{\{FULL_EDGE\}\}/g, String(cfg.images.maxEdge))
+    .replace(/\{\{LOD_BUDGET\}\}/g, String(cfg.zoom.lodBudget));
 
   const extras = [];
   if (empty) {

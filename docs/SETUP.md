@@ -199,11 +199,12 @@ Playwright is not a dependency here; `scripts/gen-og.mjs` looks for an installed
 `playwright`, a `PLAYWRIGHT` environment variable, or this machine's sibling
 checkout that has one.
 
-Known gap, not yet measured: how many photographs the browser build handles before it
-stops being comfortable. What has been measured is 105 on a 6x-throttled desktop CPU;
-the ceiling on a phone is untested, and the working assumption is a few hundred. A
-stress test that finds the real number — and what fails first, memory or patience — is
-still to be written.
+A wall of 300 photographs now pans at 60 fps on an iPhone 15 Pro Max and survives
+zooming out to fit, where the same wall used to kill the tab (see the measurements in
+[ARCHITECTURE.md](ARCHITECTURE.md)). Two costs come with it: the build writes a tier
+per rung, so a browser build does five encodes per photo instead of one, and the
+downloaded zip grows by roughly 10% at the shipped ladder. `images.tiers: []` builds
+one copy per photo again.
 
 The app itself has no automated test: it needs a browser. The checks worth
 repeating by hand after changing `web/` are the flow at 390px and 1280px - pick a

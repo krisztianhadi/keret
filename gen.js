@@ -26,7 +26,7 @@
  *   2. reads intrinsic sizes + EXIF orientation from the file headers, so the
  *      layout matches how a browser renders each photo (never cropped)
  *   3. re-encodes every photo into outDir/photos (metadata stripped, EXIF
- *      orientation baked in) plus a low-res tier and an inline placeholder
+ *      orientation baked in) plus a tier ladder and an inline placeholder
  *   4. lays the wall out, then writes index.html, og.jpg, robots.txt,
  *      sitemap.xml, CNAME and .nojekyll
  *
@@ -288,7 +288,7 @@ async function main(argv) {
         wall, so index.html can never reference something that is not there */
   const published = [];
   const failed = [];
-  let origBytes = 0, servedBytes = 0;
+  let origBytes = 0, servedBytes = 0, tierBytes = 0;
   for (const p of laid.photos) {
     const src = path.join(photosDir, p.file);
     let r;
@@ -305,6 +305,7 @@ async function main(argv) {
     }
     origBytes += r.before;
     servedBytes += r.after;
+    tierBytes += r.tierBytes || 0;
     p.thumb = r.thumb;
     published.push(p);
   }
@@ -413,6 +414,10 @@ async function main(argv) {
   console.log('wall: ' + published.length + ' photos, ' + path.join(outDir, 'index.html'));
   console.log('images: ' + mb(origBytes) + ' MB original -> ' + mb(servedBytes) + ' MB served'
     + (origBytes > servedBytes ? ', saved ' + mb(origBytes - servedBytes) + ' MB' : ''));
+  if (config.images.tiers.length) {
+    console.log('tiers: ' + config.images.tiers.join('/') + ' -> ' + mb(tierBytes) + ' MB more,'
+      + ' picked by on-screen size (budget ' + config.zoom.lodBudget + ' MB decoded)');
+  }
   if (ogBytes) console.log('og.jpg: ' + mb(ogBytes) + ' MB - ' + ogFrom);
   if (config.analytics) console.log('analytics: ' + config.analytics.script);
   else console.log('analytics: off');

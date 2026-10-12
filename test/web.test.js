@@ -63,6 +63,13 @@ test('the browser bundle is built from the sources in this repository', async ()
   for (const [hash, bytes] of bundles) {
     assert.equal(sha(bytes), hash, 'web/vendor/keret-core.js is stale - run `npm run web:build`');
   }
+
+  // The version the app's footer shows is stamped here too, and the per-file
+  // hashes above cannot see it: bumping package.json without rebuilding used to
+  // leave the page announcing the version before last.
+  const want = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
+  assert.equal(META.version, want,
+    'the bundle carries the version in package.json - run `npm run web:build`');
 });
 
 test('the zip writer produces an archive a reader can walk', async () => {

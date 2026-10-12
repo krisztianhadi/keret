@@ -65,7 +65,109 @@ for (var i = 0; i < POS.length; i++) {
   frame.appendChild(cap);
   el.appendChild(frame);
   wall.appendChild(el);
-  items.push({ el: el, x: d.x, y: d.y, w: d.pw + 2 * MAT, h: d.ph + CAP_H + 2 * MAT });
+  items.push({ el: el, img: img, pbox: pbox, x: d.x, y: d.y, w: d.pw + 2 * MAT, h: d.ph + CAP_H + 2 * MAT });
+}
+
+/* ---------- level of detail ----------
+   Painting a frame needs its source bitmap, and every zoom repaints the wall at
+   a new scale, so the resolution a frame is served at decides what a zoom costs.
+   A frame is therefore pointed at the smallest rung that still covers the pixels
+   it occupies ON SCREEN, never at a rung chosen from the viewport (a `sizes`
+   attribute cannot see this transform, which is what made the earlier srcset
+   attempt worse than one copy).
+
+   Two rules keep it from becoming its own problem:
+     - downgrades happen at once, because they are what frees memory;
+     - upgrades are trickled, because a quick pinch out otherwise queues a decode
+       for every frame that scrolls into view at the same time. */
+var TIERS = {{TIERS}};               // ascending edges; photos/<edge>/<file>
+var FULL_EDGE = {{FULL_EDGE}};       // images.maxEdge, the copy in photos/
+var LOD_BUDGET_MB = {{LOD_BUDGET}};  // decoded pixels allowed to stay in play
+var RUNGS = TIERS.slice();
+RUNGS.push(FULL_EDGE);
+var DPR = Math.min(window.devicePixelRatio || 1, 3);
+var LOD_QUIET_MS = 180;              // quiet time before upgrades run at full rate
+var LOD_RATE_MOVING = 3;             // tier upgrades per frame while the camera moves
+var LOD_RATE_QUIET = 12;             // ...and once it stops
+var tierNow = [];                    // rung each frame is served at
+var tierWant = [];                   // rung it should be on for the current view
+var needPx = [];                     // device pixels the frame covers now
+var lodPending = false;
+
+function rungEdge(ti) {
+  return RUNGS[ti];
+}
+
+/** Decoded megabytes of one frame at one rung, from its own aspect ratio. */
+function rungMB(i, ti) {
+  var d = POS[i], ar = (d.pw && d.ph) ? d.pw / d.ph : 4 / 3, edge = rungEdge(ti);
+  var w = ar >= 1 ? edge : Math.round(edge * ar);
+  var h = ar >= 1 ? Math.round(edge / ar) : edge;
+  return w * h * 4 / 1048576;
+}
+
+/** Smallest rung that still covers `px` device pixels of width, else the full copy. */
+function rungFor(px) {
+  for (var i = 0; i < TIERS.length; i++) if (TIERS[i] >= px) return i;
+  return RUNGS.length - 1;
+}
+
+/** Served url for one frame at one rung: the shape src/images.js writes. */
+function rungUrl(i, ti) {
+  return ti < TIERS.length
+    ? 'photos/' + TIERS[ti] + '/' + POS[i].file
+    : 'photos/' + POS[i].file;
+}
+
+function lodPlan() {
+  var total = 0, onScreen = [], i;
+  for (i = 0; i < items.length; i++) {
+    var it = items[i];
+    if (it.el.classList.contains('off')) {
+      // off the wall: wait on the cheapest rung, so panning never pulls a
+      // bitmap the next frame is going to throw away
+      tierWant[i] = 0;
+      total += rungMB(i, 0);
+      continue;
+    }
+    needPx[i] = POS[i].pw * scale * DPR;
+    tierWant[i] = rungFor(needPx[i]);
+    total += rungMB(i, tierWant[i]);
+    onScreen.push(i);
+  }
+  if (total <= LOD_BUDGET_MB) return;
+  // over budget: give up sharpness on the frames that cover the fewest device
+  // pixels first - they are the ones a viewer cannot tell apart
+  onScreen.sort(function (a, b) { return needPx[a] - needPx[b]; });
+  for (i = 0; i < onScreen.length && total > LOD_BUDGET_MB; i++) {
+    var k = onScreen[i];
+    while (tierWant[k] > 0 && total > LOD_BUDGET_MB) {
+      total -= rungMB(k, tierWant[k]) - rungMB(k, tierWant[k] - 1);
+      tierWant[k]--;
+    }
+  }
+}
+
+function lodSet(i, ti) {
+  var it = items[i], im = it.img;
+  tierNow[i] = ti;                     // the img attribute stays the real record
+  if (!im) return;
+  var url = rungUrl(i, ti);
+  if (im.getAttribute('src') === url) return;
+  // let the blurred placeholder cover the swap; the load listener fades it out
+  if (it.pbox && !it.el.classList.contains('off')) it.pbox.classList.remove('loaded');
+  im.setAttribute('src', url);
+}
+
+function lodApply() {
+  var i, swaps = 0, cap = (performance.now() - lastTransform > LOD_QUIET_MS) ? LOD_RATE_QUIET : LOD_RATE_MOVING;
+  for (i = 0; i < items.length; i++) if (tierWant[i] < tierNow[i]) lodSet(i, tierWant[i]);
+  for (i = 0; i < items.length; i++) {
+    if (tierWant[i] <= tierNow[i]) continue;
+    if (swaps >= cap) { lodPending = true; return; }
+    swaps++;
+    lodSet(i, tierWant[i]);
+  }
 }
 
 // the wall the build actually produced, not a number baked into this file
@@ -82,8 +184,10 @@ document.addEventListener('load', function (e) {
 
 // view state: screen = world * scale + (tx, ty)
 var tx = 0, ty = 0, scale = 1;
+var lastTransform = 0;   // when the camera last moved (the LOD quiet window)
 
 function setTransform() {
+  lastTransform = performance.now();
   world.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
   if (zoomLbl) zoomLbl.textContent = Math.round(scale * 100) + '%';
 }
@@ -93,8 +197,13 @@ function fitScale() {
   return Math.min((vw - 32) / wallW, (vh - 32) / wallH);
 }
 
+/* Smallest zoom = the whole wall visible. The floor only keeps the transform out
+   of degenerate territory: an absolute one above the fit scale does the opposite
+   of what this function is for, and a wall past a few hundred photos (fit scale
+   under 0.03) could never be seen whole. */
+var MIN_SCALE = 0.004;
 function minScale() {
-  return Math.max(fitScale(), 0.03); // smallest zoom = whole wall visible
+  return Math.max(fitScale(), MIN_SCALE);
 }
 
 // pan stops at the wall edges: no empty-space roaming. When the wall is
@@ -147,13 +256,17 @@ function scheduleCull() {
       if (off && !it.el.classList.contains('off')) it.el.classList.add('off');
       else if (!off) {
         if (it.el.classList.contains('off')) it.el.classList.remove('off');
-        var pbi = it.el.querySelector('.pbox');
+        var pbi = it.pbox;
         if (pbi && !pbi.classList.contains('loaded')) {
-          var imi = it.el.querySelector('img');
+          var imi = it.img;
           if (imi.complete && imi.naturalWidth > 0) pbi.classList.add('loaded');
         }
       }
     }
+    // the tier pass rides the same frame as the cull: one layout read, one pass
+    lodPlan();
+    lodApply();
+    if (lodPending) { lodPending = false; scheduleCull(); }
   });
 }
 
@@ -357,6 +470,18 @@ fitBtn.addEventListener('click', function () { fit(); scheduleCull(); });
 window.addEventListener('resize', function () { clamp(); setTransform(); scheduleCull(); });
 
 /* ---------- go ---------- */
+/* every frame starts on the cheapest rung: the images above were handed the full
+   copies already, and this is the only moment replacing them is free (nothing has
+   painted, and the placeholder covers the upgrade) */
+for (var li = 0; li < items.length; li++) {
+  tierNow[li] = RUNGS.length - 1;
+  tierWant[li] = RUNGS.length - 1;
+  needPx[li] = 0;
+}
+if (TIERS.length && items.length) {
+  for (var pi = 0; pi < items.length; pi++) lodSet(pi, 0);
+}
+
 // open centered on the middle of the wall: 75% on desktop, 35% on
 // touch/phone viewports where the wall is huge relative to the screen
 var openScale = (matchMedia('(pointer: coarse)').matches || stage.clientWidth < 768) ? 0.35 : 0.75;

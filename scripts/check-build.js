@@ -47,13 +47,22 @@ if (!match) {
   const raw = match[1];
   if (raw.includes('</script')) fail('the wall data contains a raw </script sequence');
   const pos = JSON.parse(raw);
-  notes.push(pos.length + ' photos on the wall');
+  notes.push(pos.length + ' photos on the wall'
+    + (config.images.tiers.length ? ', ' + config.images.tiers.length + ' tiers each' : ', full copy only'));
 
   const boxes = [];
   let captioned = 0;
   for (const row of pos) {
     const full = path.join(dir, 'photos', row.file);
     if (!fs.existsSync(full) || fs.statSync(full).size === 0) fail('missing photo: ' + row.file);
+    // the engine picks a tier by on-screen size, so a rung it can ask for and
+    // not find is a hole in the wall, not a slow load
+    for (const edge of config.images.tiers) {
+      const tier = path.join(dir, 'photos', String(edge), row.file);
+      if (!fs.existsSync(tier) || fs.statSync(tier).size === 0) {
+        fail('missing ' + edge + 'px tier for ' + row.file);
+      }
+    }
     // caption *keys* must be there (the engine reads them); whether a photo has
     // any caption is the photographer's EXIF, not something to fail a build over
     if (!('spec' in row) || !('cam' in row)) fail('caption keys missing for ' + row.file);
@@ -103,6 +112,19 @@ if (config.siteUrl) {
    stray backslash escape silently changes the output (a regex became a comment
    once, and a newline landed inside a string literal). Compiling it here is the
    cheapest possible guard - the page does nothing at all if this fails. */
+/* The ladder is written twice on purpose - the build writes the files, the page
+   asks for them - so check the page asks for exactly what was built. */
+const tiersInPage = /var TIERS = (\[[^\]]*\]);/.exec(html);
+if (!tiersInPage) {
+  fail('the page does not carry the tier ladder');
+} else {
+  const asked = JSON.parse(tiersInPage[1]);
+  if (JSON.stringify(asked) !== JSON.stringify(config.images.tiers)) {
+    fail('the page asks for tiers ' + tiersInPage[1] + ', the config says '
+      + JSON.stringify(config.images.tiers));
+  }
+}
+
 const scriptMatch = /<script>\n"use strict";\n([\s\S]*?)<\/script>/.exec(html);
 if (!scriptMatch) {
   fail('no inline wall engine script in index.html');

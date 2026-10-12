@@ -1,7 +1,108 @@
 # Changelog
 
-Reverse-chronological. One dated section per work block, entries tagged
-`[Feature]`, `[Fix]` or `[Break]`.
+## 2026-10-12 - The app says which version it is
+
+`[Feature]` **The builder's footer reports the version of the code it is running**:
+"Powered by Keret 0.1.0" on `web/index.html`, filled from `META.version` in the
+generated bundle rather than from a hardcoded string or a fetch, so the page still
+knows its version when it is opened straight off a disk with no server behind it.
+`web/build.mjs` stamps the version from `package.json`; the bundle's per-file hashes
+cannot see it, so `test/web.test.js` now asserts the stamped version against
+`package.json` too - a bump that nobody rebuilt fails the suite instead of shipping
+a footer that announces the version before last. The wall pages are untouched.
+
+## 2026-10-12 - The wall is a disc
+
+A wall of 1000 photographs was a slab: past a few hundred photos the automatic
+column count hit its ceiling and the silhouette grew taller and thinner, drifting
+away from the arch the layout was designed around.
+
+`[Feature]` **`layout.shape` arranges the bricks into a silhouette**, `circle` by
+default: each column is capped by a circular arc, tallest in the middle and
+nothing at the rim, and the shared-axis centering the layout already did turns
+that into a disc. `oval` is the same arc in a phone-proportioned ellipse (0.46:1),
+which at fit fills a portrait screen - measured on the same 1000 photos, a disc
+covers 44% of a phone screen and shows 10px bricks, the oval covers 96% and shows
+15px. `arch` is the classic rectangle, unchanged. Both alternatives are in the
+app's advanced settings (*Wall shape*) and in the config; `WALL_SHAPE` sets it from
+the environment.
+
+`[Fix]` **Auto column count is arithmetic for a shaped wall, not a search.** A disc
+of N columns is as tall as it is wide at every N, so "the squarest canvas" cannot
+choose N - what fixes it is how much brick the arc holds. Too few and the arc
+overflows into a lumpy middle, too many and the rim columns starve inside a bigger
+canvas than the photos need. 1000 photos: 31 columns, 22280x22708 (0.98:1).
+
+`[Fix]` **A shaped wall keeps its symmetry where the arch sorted by height.** For
+`arch`, sorting the columns tallest-first is what puts the tallest in the middle;
+for a disc the two middle columns tie on height and the tie-break pushed one of
+them out to the rim, notching the outline. Shaped columns now keep their
+mirror-symmetric order instead.
+
+Whole bricks cannot tile an arc exactly, so a shaped canvas runs a couple of
+percent past its nominal aspect and the rim is a staircase - it reads as a mosaic
+edge, not a drawn circle. Smaller `layout.long`, or half-bricks at the rim, are the
+only levers if that ever needs to be smoother.
+
+`[Fix]` **`test/layout.test.js` covers the silhouettes**: the canvas aspect for
+each shape, the taper (rim under 45% of the middle for a disc, over 90% for the
+arch), no outward step of more than one brick, every photo placed, and a handful of
+photos still laying out. Verified red with the arcs ignored.
+
+
+
+A wall was comfortable to about 100-120 photographs on an iPhone 15 Pro Max and killed
+the tab past that. It was not the number of photographs: it was the blurred placeholder.
+
+`[Feature]` **Every photo is published at several sizes** (`images.tiers`, default
+`128/256/512/1024`, written to `photos/<edge>/`) and the engine points a frame at the
+smallest rung that covers the pixels it occupies on screen, computed as
+`world width x scale x devicePixelRatio`. It has to be computed: an earlier `srcset`
+attempt regressed because `sizes` cannot see the world transform, so the browser chose
+the large candidate while the frame was small. Downgrades apply at once, upgrades are
+trickled (3 per frame while the camera moves, 12 once it stops) so a fast pinch cannot
+queue a decode per frame, and `zoom.lodBudget` (96 MB of decoded pixels) softens the
+smallest frames first when a wall outgrows it. `WALL_TIERS` takes a comma list; `[]`
+builds one copy per photo as before.
+
+`[Fix]` **A loaded frame stops carrying its blur filter.** A filtered element gets its
+own render surface, and every zoom repaints all of them at the new scale. Measured on
+the phone with a page driving its own zoom-out ramp: with the ladder in place but the
+filter alive the wall still died at 0.15 zoom holding only 18 MB of images, and with
+the placeholder taken out of rendering (`display:none` once its photo decodes) it
+survived every step to fit with all 300 frames resident. The box shadow was measured
+too and costs nothing, so it stays.
+
+`[Break]` **The build writes more files.** A browser build now does five encodes per
+photo instead of one, and the zip grows by roughly 10% at the shipped ladder.
+
+`[Fix]` **A big wall stays square again.** `layout.maxCols` defaulted to 14, so past
+a few hundred photographs the automatic column search hit its ceiling and the wall grew
+tall instead of square: 1000 photos came out 10312x38884, 3.8:1, with the arch
+silhouette flattened into a strip. The default is now 40, which puts that same set at
+28 columns and 20168x19918 (1.01:1). The cap exists to bound the search, not to keep
+the wall tidy, and the validator's own ceiling moves to 120 for sets in the thousands.
+
+`[Fix]` **The smallest zoom is the fit scale again.** `minScale()` returned
+`Math.max(fitScale(), 0.03)`: once a wall was big enough to fit below 0.03 the fixed
+floor won, and the whole wall could no longer be seen at once - the comment on that line
+said the opposite of what it did. The floor is now `MIN_SCALE = 0.004`, there only to
+keep the transform out of degenerate territory. The two are coupled: a squarer canvas is
+also a smaller fit scale, so raising the column cap without this would have hidden even
+more of the wall.
+
+`[Fix]` **The tests that missed both.** `test/layout.test.js` stopped at 120 photos,
+below the size where the column cap binds, and now runs to 400 and 1000 and asserts the
+canvas stays roughly square; `test/page.test.js` asserts the zoom floor stays below any
+real fit scale. Both were verified red on the old values.
+
+`[Fix]` **`scripts/check-build.js` verifies the ladder end to end**: every rung the
+page can ask for exists and is not empty, and the page asks for exactly what the config
+built. The tests cover the new keys, the writer, and the stylesheet rule that carries
+the fix (verified red on the old CSS, green after).
+
+The measurements, the ramp harness and the reasoning are recorded in
+[ARCHITECTURE.md](ARCHITECTURE.md) under "The browser engine".
 
 ## 2026-10-12 - A wall with nothing to say about itself gets no card
 

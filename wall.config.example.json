@@ -32,6 +32,7 @@
     "showSpecs": true
   },
   "layout": {
+    "shape": "circle",
     "cols": 0,
     "long": 600,
     "gap": 64,
@@ -41,10 +42,11 @@
     "heroRate": 3,
     "heroMinAspect": 0.6,
     "markSuffix": "-x",
-    "maxCols": 14
+    "maxCols": 40
   },
   "images": {
     "maxEdge": 2048,
+    "tiers": [128, 256, 512, 1024],
     "quality": 82,
     "thumbEdge": 24,
     "thumbQuality": 55,
@@ -53,7 +55,8 @@
     "ogQuality": 82
   },
   "zoom": {
-    "max": 4
+    "max": 4,
+    "lodBudget": 96
   },
   "noscript": {
     "limit": 60

@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 
 const { clearWallEnv, tempDir } = require('./helpers');
 const { loadConfig } = require('../src/config');
-const { layout, autoCols, countBricks, captionHeight, hashFile } = require('../src/layout');
+const { layout, autoCols, countBricks, captionHeight, hashFile, OVAL_ASPECT } = require('../src/layout');
 
 clearWallEnv();
 const cfg = loadConfig({ root: tempDir(), env: {} }).config;
@@ -113,12 +113,85 @@ test('paired portraits share the slot width and the same height', () => {
 });
 
 test('column count stays near square and within the configured maximum', () => {
-  for (const n of [1, 3, 12, 40, 120]) {
-    const cols = autoCols(photos(n), cfg);
-    const bricks = countBricks(photos(n), cfg);
+  // the big sizes are the point: a cap that only binds past a few hundred photos
+  // is invisible to a fixture that stops at 120, and that is exactly how a
+  // 1000-photo wall ended up 3.8:1 tall
+  for (const n of [1, 3, 12, 40, 120, 400, 1000]) {
+    const list = photos(n);
+    const cols = autoCols(list, cfg);
+    const bricks = countBricks(list, cfg);
     const target = Math.max(1, Math.ceil(Math.sqrt(bricks)));
     assert.ok(cols >= 1 && cols <= cfg.layout.maxCols, 'within maxCols for n=' + n);
     assert.ok(Math.abs(cols - target) <= 3, 'near the squarest column count for n=' + n + ' (' + cols + ' vs ' + target + ')');
+    const laid = layout(list, cfg, cols);
+    const ratio = laid.canvasW / laid.canvasH;
+    assert.ok(ratio > 0.5 && ratio < 2,
+      'the canvas stays roughly square for n=' + n + ' (W:H ' + ratio.toFixed(2) + ')');
+  }
+});
+
+test('the silhouette follows the configured shape', () => {
+  // span per column, in the layout's own centre-out order (p.col), so the
+  // outline can be read without guessing at slots
+  const spans = (laid) => {
+    const top = new Array(laid.cols).fill(Infinity);
+    const bot = new Array(laid.cols).fill(-Infinity);
+    for (const p of laid.photos) {
+      top[p.col] = Math.min(top[p.col], p.y);
+      bot[p.col] = Math.max(bot[p.col], p.y + p.ph);
+    }
+    return [...Array(laid.cols).keys()].map((c) => bot[c] - top[c]);
+  };
+  const shaped = (shape, n) => {
+    const cfg2 = { ...cfg, layout: { ...cfg.layout, shape } };
+    const list = photos(n);
+    const laid = layout(list, cfg2, autoCols(list, cfg2));
+    return { laid, span: spans(laid) };
+  };
+
+  const circle = shaped('circle', 400);
+  const oval = shaped('oval', 400);
+  const arch = shaped('arch', 400);
+
+  for (const [name, s, target] of [['circle', circle, 1], ['oval', oval, OVAL_ASPECT], ['arch', arch, null]]) {
+    assert.equal(s.laid.photos.length, 400, name + ': every photo is placed exactly once');
+    const ratio = s.laid.canvasW / s.laid.canvasH;
+    if (target === null) {
+      assert.ok(Math.abs(Math.log(ratio)) < 0.2, 'arch keeps a squarish canvas, got ' + ratio.toFixed(2));
+    } else {
+      // whole bricks cannot tile an arc exactly, so the height runs a couple of
+      // percent over the arc it was sized for
+      assert.ok(Math.abs(ratio - target) / target < 0.05,
+        name + ' canvas is ' + target.toFixed(2) + ':1, got ' + ratio.toFixed(2));
+    }
+  }
+
+  // a disc tapers: the tallest column is the middle one, heights fall outward,
+  // and the rim is a fraction of the middle
+  const rimRatio = (s) => s.span[s.span.length - 1] / s.span[0];
+  assert.ok(rimRatio(circle) < 0.45, 'circle rim is much shorter than its middle, got ' + rimRatio(circle).toFixed(2));
+  assert.ok(rimRatio(oval) < 0.5, 'oval rim tapers too, got ' + rimRatio(oval).toFixed(2));
+  assert.ok(rimRatio(arch) > 0.9, 'the arch keeps near-equal columns, got ' + rimRatio(arch).toFixed(2));
+  for (const [name, s] of [['circle', circle], ['oval', oval]]) {
+    const bumps = s.span.slice(1).map((v, i) => v - s.span[i]).filter((d) => d > 700);
+    assert.equal(bumps.length, 0,
+      name + ': the outline never steps back outward by more than a brick (' + bumps.join(', ') + ')');
+  }
+});
+
+test('a shaped wall survives a handful of photos', () => {
+  for (const n of [1, 2, 5]) {
+    for (const shape of ['circle', 'oval']) {
+      const cfg2 = { ...cfg, layout: { ...cfg.layout, shape } };
+      const list = photos(n);
+      const laid = layout(list, cfg2, autoCols(list, cfg2));
+      assert.equal(laid.photos.length, n, shape + ' places all ' + n + ' photo(s)');
+      for (const p of laid.photos) {
+        assert.ok(Number.isFinite(p.x) && Number.isFinite(p.y) && p.pw > 0 && p.ph > 0,
+          shape + ' with ' + n + ' photos: finite geometry');
+      }
+      assert.ok(laid.canvasW > 0 && laid.canvasH > 0);
+    }
   }
 });
 

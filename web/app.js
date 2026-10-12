@@ -229,7 +229,10 @@ function selectUsable(files) {
 /* The caption line under the frame is standing help, one short line per step -
    never status, and never a place where a number can get clipped. Status lives
    in the photo box, which grows with whatever it has to say. */
-const HOSTING = 'https://github.com/krisztianhadi/keret/blob/main/docs/HOSTING.md';
+/* The manual ships with the app: the people who need it are holding a zip, not a
+   checkout, and a page in the app's own clothes can say "drag this folder onto
+   that box" without a repository in the way. docs/HOSTING.md stays for the CLI. */
+const HOSTING = 'hosting.html';
 const HELP = {
   // the caption line is the empty state's line: once there are photographs on the
   // desk it has said what it had to say, and it goes
@@ -434,7 +437,7 @@ async function showPicker(files) {
   // SVG elements have no `hidden` IDL property: set the attribute the CSS matches
   if (photos) ui.pickGlyph.setAttribute('hidden', ''); else ui.pickGlyph.removeAttribute('hidden');
   if (!photos) {
-    ui.pickLead.textContent = TOUCH_ONLY ? 'Pick photos for your wall' : 'Drop a folder of photos';
+    ui.pickLead.textContent = TOUCH_ONLY ? 'Pick photos for your wall' : 'Drop photos or a folder';
     ui.pickSub.textContent = TOUCH_ONLY ? 'from your library or from Files' : 'or use the button below';
     showAction('pick');
     hideDeck();
@@ -1020,7 +1023,7 @@ function download() {
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
-/* the picker: a folder when the browser allows it, files otherwise */
+/* the picker: files, always - a folder goes onto the frame by drag and drop */
 for (const button of [ui.pickBarBtn, ui.changeBtn]) {
   button.addEventListener('click', () => ui.fileInput.click());
 }
@@ -1037,12 +1040,18 @@ ui.previewBtn.addEventListener('click', openPreview);
 ui.closePreview.addEventListener('click', closePreview);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !ui.modal.hidden) closePreview(); });
 
-ui.fileInput.addEventListener('change', () => {
-  const files = [...ui.fileInput.files];
+/** Whichever picker was used, the files arrive the same way; a folder pick also
+    carries where each file sat, which is what the photos/ rule reads. */
+function pickedFrom(input) {
+  const files = [...input.files];
+  if (!files.length) return;
   state.paths.clear();
   rememberPaths(files.map((file) => [file, file.webkitRelativePath || file.name]));
+  input.value = '';
   showPicker(files);
-});
+}
+
+ui.fileInput.addEventListener('change', () => pickedFrom(ui.fileInput));
 
 for (const type of ['dragenter', 'dragover']) {
   document.addEventListener(type, (e) => {
@@ -1073,11 +1082,19 @@ document.addEventListener('drop', async (e) => {
  * still work. iOS strips GPS before we ever see the file, which suits keret. */
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
   || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-if ('webkitdirectory' in ui.fileInput && !isIOS) {
-  ui.fileInput.webkitdirectory = true;
-  ui.fileInput.setAttribute('webkitdirectory', '');
-  ui.pickBarBtn.title = 'Pick a folder — subfolders are read too';
-}
+
+/* The button picks files, and only files.
+ *
+ * A plain input is the one mode that can pick loose photographs, which is what the
+ * button is for. A folder goes the other way: dropping one on the frame walks it
+ * with `webkitGetAsEntry`, subfolders included, and dragging loose files lands in
+ * the same handler - so the drop target is the path that takes both, and the
+ * button does not have to choose. This is why the input carries no
+ * `webkitdirectory` on a desktop: with it, the folder chooser was the only dialog
+ * the button could open, and loose photographs became unreachable. */
+ui.pickBarBtn.title = TOUCH_ONLY
+  ? 'Pick photographs from your library or from Files'
+  : 'Pick photographs — or drop a folder on the frame';
 
 /* the first paint: no photos yet, so the slot offers the first step */
 showPicker([]);

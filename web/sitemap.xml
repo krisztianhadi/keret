@@ -4,4 +4,8 @@
     <loc>https://keret.nomorenames.studio/</loc>
     <changefreq>monthly</changefreq>
   </url>
+  <url>
+    <loc>https://keret.nomorenames.studio/hosting.html</loc>
+    <changefreq>monthly</changefreq>
+  </url>
 </urlset>

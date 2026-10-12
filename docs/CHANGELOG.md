@@ -3,6 +3,46 @@
 Reverse-chronological. One dated section per work block, entries tagged
 `[Feature]`, `[Fix]` or `[Break]`.
 
+## 2026-10-11 - The button picks loose photographs again
+
+The app's file input carried `webkitdirectory` on desktop, which meant the browser
+only ever offered a folder chooser: anyone whose photographs sit loose, or who
+wanted to add three pictures to a wall, had no way in.
+
+`[Fix]` **The button picks files; the frame takes folders.** A plain input is the
+only dialog that can select single photographs, so that is what the button opens
+now — on every device, falling back to Library / Take Photo / Files on iOS as
+before. Folders keep arriving the way they already did: dropped on the frame,
+where `webkitGetAsEntry` walks them recursively, with loose files landing in the
+same handler. The drop target is the only control that takes both, so the empty
+state says it: *"Drop photos or a folder"*.
+
+`[Fix]` **`--ink-dim` was 4.42:1 on the black box**, just under the 4.5:1 body
+text wants — the ink of every quiet control inside the frame (Change photos,
+Cancel build). It is 5.16:1 at 55%.
+
+
+
+Somebody who built their wall in the browser is holding a zip, not a checkout, and
+`docs/HOSTING.md` is written for someone with both. `web/hosting.html` is the same
+ground for the first audience, in the app's own clothes.
+
+`[Feature]` **`hosting.html`.** Four numbered ways in - Cloudflare Pages by drag
+and drop, Netlify Drop, GitHub Pages, your own server - each with the steps, the
+one thing that usually goes wrong, and a link to that host's own documentation.
+It opens with the two mistakes that cause most of the support questions (the
+`fonts` folder left behind, and `index.html` sitting one folder too deep), explains
+what a pending certificate looks like, and says which two things are baked in at
+build time - the share preview and the canonical link - so the address belongs in
+the app before the build, not after.
+
+`[Feature]` **The app's "hosting guide" link points at it**, in a new tab, so the
+finished wall stays where it is in the tab behind. `docs/HOSTING.md` keeps the
+command-line side and now opens with a pointer to the page.
+
+`[Fix]` **The page travels with the app**: in the deploy's file list, in
+`sitemap.xml`, and covered by the analytics tag like everything else.
+
 ## 2026-10-11 - A beacon, without putting it in the repo
 
 The hosted app reports pageviews and completed builds to the studio's own

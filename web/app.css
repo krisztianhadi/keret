@@ -21,7 +21,7 @@
   --wall: #cfc8ba;
   --chrome: rgba(25, 22, 18, .62);
   --ink: #f2eee4;
-  --ink-dim: rgba(242, 238, 228, .55);
+  --ink-dim: rgba(242, 238, 228, .55);  /* 5.53:1 on the box */
   --note: #4a443a;
   --mat: #fbfaf6;
   --cap: #776f63;
@@ -32,7 +32,7 @@
     --wall: #26231e;
     --chrome: rgba(12, 11, 9, .66);
     --ink: #e8e4d8;
-    --ink-dim: rgba(232, 228, 216, .5);
+    --ink-dim: rgba(232, 228, 216, .55); /* was .5 = 4.42:1: just under AA */
     --note: #d5cfc2;
     --mat: #c7bfab;
     --cap: #4c4637;

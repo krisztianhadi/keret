@@ -212,6 +212,14 @@ Pages would install the CLI's `sharp` on every build for a bundle that needs non
   wall is rebuildable with `node gen.js` and the same settings. Drop the unzipped
   folder back into the app and it reads them again: the whole config is applied,
   not only the five keys the form shows, and an unknown key still fails loudly.
+- **The button picks files; the frame takes folders.** One dialog cannot do both:
+  an input with `webkitdirectory` opens a folder chooser and can never select loose
+  photographs, and without it a folder is unreachable from the dialog at all. So the
+  button opens the file picker — which on iOS falls back to Library / Take Photo /
+  Files, the behaviour WebKit bug 271705 forced anyway — and folders arrive by being
+  dropped on the frame, where `webkitGetAsEntry` walks them recursively. The drop
+  target is the only control that takes both, which is why the empty state says
+  "Drop photos or a folder" rather than naming one.
 - **A `photos/` folder is the source.** Dropping an unzipped wall brings the site's
   own furniture with it; og.jpg and the touch icon would walk onto the wall as
   photographs. When the drop contains a `photos/` folder, that folder is the wall's

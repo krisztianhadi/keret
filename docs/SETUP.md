@@ -153,7 +153,7 @@ no local deploy step or secret to keep.
 | Setting | Value |
 | --- | --- |
 | Root directory | `web` |
-| Build command | `node build.mjs && mkdir -p dist && cp index.html app.css app.js keret-runtime.js canvas-sharp.js zip.js 404.html robots.txt sitemap.xml og.png apple-touch-icon.png dist/ && cp -r vendor dist/` |
+| Build command | `node build.mjs && mkdir -p dist && cp index.html hosting.html app.css app.js keret-runtime.js canvas-sharp.js zip.js 404.html robots.txt sitemap.xml og.png apple-touch-icon.png dist/ && cp -r vendor dist/` |
 | Output directory | `dist` |
 
 The studio's own deploy appends one more step to that command: if an
@@ -190,6 +190,12 @@ node scripts/gen-og.mjs           # writes web/og.png (1200x630) and web/apple-t
 Playwright is not a dependency here; `scripts/gen-og.mjs` looks for an installed
 `playwright`, a `PLAYWRIGHT` environment variable, or this machine's sibling
 checkout that has one.
+
+Known gap, not yet measured: how many photographs the browser build handles before it
+stops being comfortable. What has been measured is 105 on a 6x-throttled desktop CPU;
+the ceiling on a phone is untested, and the working assumption is a few hundred. A
+stress test that finds the real number — and what fails first, memory or patience — is
+still to be written.
 
 The app itself has no automated test: it needs a browser. The checks worth
 repeating by hand after changing `web/` are the flow at 390px and 1280px - pick a

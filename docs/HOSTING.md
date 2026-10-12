@@ -1,5 +1,10 @@
 # Hosting
 
+**Built it in the browser instead of the command line?** There is a friendlier
+walkthrough of this, written for someone holding a zip rather than a checkout, at
+<https://keret.nomorenames.studio/hosting.html>. What follows is the repository
+side of the same ground, including the workflow files and the `rsync` shapes.
+
 A build is a folder of static files: `dist/` holds `index.html`, `photos/`,
 `fonts/`, `og.jpg` and the crawler files. There is no database, no server-side
 runtime and no build step on the host, so anywhere that serves files will do.

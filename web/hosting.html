@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Put your wall online — keret.app</title>
+<meta name="description" content="The zip is a complete website. Drag it onto a free host and you have a link to share — step by step, no jargon.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#26231e">
+<link rel="canonical" href="https://keret.nomorenames.studio/hosting.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2326231e'/%3E%3Ccircle cx='32' cy='32' r='10' fill='%23e23c30'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="app.css">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="keret">
+<meta property="og:title" content="Put your keret wall online">
+<meta property="og:description" content="Drag the folder onto a free host, get a link. Four ways, with the steps and the things that go wrong.">
+<meta property="og:url" content="https://keret.nomorenames.studio/hosting.html">
+<meta property="og:image" content="https://keret.nomorenames.studio/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="keret.app on a dark wall: drop a folder, get a photo wall, with three framed photographs stacked beside it">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Put your keret wall online">
+<meta name="twitter:description" content="Drag the folder onto a free host, get a link. Four ways, with the steps and the things that go wrong.">
+<meta name="twitter:image" content="https://keret.nomorenames.studio/og.png">
+<style>
+  /* This page wears the app's clothes: app.css above carries the wall, the ink,
+     the mat and the type. Only what a manual needs that the builder does not is
+     here - a wider reading column, headed sections, numbered steps, chips for
+     anything you type, and cards for the four ways in. */
+  /* The accent, in a weight that reads as text: the pure #e23c30 measures 3.67:1
+     on the dark wall and 2.56:1 on the light one, under the 4.5:1 body text wants.
+     These two measure 6.15:1 and 4.82:1. */
+  :root { --link: #9c1f16; --quiet: #575147; }          /* --quiet: 4.72:1 on the light wall */
+  @media (prefers-color-scheme: dark) { :root { --link: #ff7a6b; --quiet: #a49f94; } }  /* 5.94:1 */
+
+  main { max-width: 40rem; gap: 0; }
+
+  /* body links carry the accent; the footer's stay quiet on purpose */
+  main a { color: var(--link); }
+  main a:hover { text-decoration-thickness: 2px; }
+
+  /* the wordmark, sized like the builder's, but not this page's heading */
+  header .wordmark { color: var(--note); font-size: 1.0625rem; font-weight: 600; letter-spacing: .02em; }
+  header .wordmark a { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+
+  .title { font-size: 1.5rem; font-weight: 600; letter-spacing: -.01em; color: var(--note); }
+  .lead { margin-top: 10px; color: var(--note); opacity: .82; }
+  .crumb { margin-bottom: 22px; font-size: 0.875rem; color: var(--quiet); }
+  .crumb a { color: var(--link); }
+
+  section { margin-top: 40px; }
+  h2 {
+    padding-top: 16px;
+    border-top: 1px solid rgba(127, 127, 127, .3);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--note);
+  }
+  h2 .n {
+    display: inline-block;
+    width: 1.35rem;
+    color: var(--link);
+  }
+  section p { margin-top: 12px; }
+  section p + p { margin-top: 10px; }
+
+  /* The four ways in: a red outline each, so they read as things you click rather
+     than as paragraphs. The outline is --link rather than --accent because a
+     boundary is a UI component and wants 3:1: the pure accent is 2.56:1 on the
+     light wall, this pair is 6.15:1 and 4.82:1. */
+  .picks { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+  .pick {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding: 14px 16px;
+    border: 1px solid var(--link);
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background .15s ease;
+  }
+  .pick:hover { background: rgba(127, 127, 127, .1); box-shadow: inset 0 0 0 1px var(--link); }
+  .pick .ico { display: block; padding-top: 2px; color: var(--link); }
+  .pick .ico svg { width: 20px; height: 20px; }
+  .pick b { display: block; font-size: 0.9375rem; font-weight: 600; color: var(--note); }
+  .pick .pitch { display: block; margin-top: 5px; font-size: 0.875rem; line-height: 1.55; color: var(--quiet); }
+  .pick em { display: block; margin-top: 7px; font-size: 0.75rem; font-style: normal; color: var(--quiet); }
+  .pick:hover b { color: var(--link); }
+
+  ol.steps { margin: 14px 0 0; padding: 0; list-style: none; counter-reset: step; }
+  ol.steps li {
+    position: relative;
+    padding: 0 0 0 30px;
+    margin-top: 11px;
+    counter-increment: step;
+  }
+  ol.steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 1px;
+    width: 20px;
+    text-align: right;
+    color: var(--link);
+    font-variant-numeric: tabular-nums;
+  }
+
+  code {
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(127, 127, 127, .18);
+    font-size: 0.875em;
+    overflow-wrap: anywhere;
+  }
+  .dim { color: var(--quiet); }
+  .small { font-size: 0.8125rem; line-height: 1.6; }
+  .docs { margin-top: 12px; font-size: 0.8125rem; color: var(--quiet); }
+  ul.plain { margin-top: 10px; padding-left: 18px; }
+  ul.plain li { margin-top: 9px; }
+  ul.plain b { font-weight: 600; }
+
+  .closing { margin-top: 44px; text-align: center; }
+  /* White on the app's #e23c30 is 4.26:1, under AA for 14px text; this shade is
+     4.75:1 and a hair deeper. It belongs in app.css's .btn.primary, where the app's
+     own CTA has the same problem - see docs/CHANGELOG.md. */
+  .closing .btn.primary { background: #d63629; }
+  .closing .btn.primary:hover { background: #c9332a; }
+  .foot { opacity: 1; }   /* app.css dims it to .8, which is 3.84:1 in the light theme */
+  .closing .btn { text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div id="stage"></div>
+
+<header>
+  <div class="wordmark"><a href="./"><span class="mark" aria-hidden="true"></span>keret.app</a></div>
+</header>
+
+<main>
+  <p class="crumb"><a href="./">← Back to the wall builder</a></p>
+
+  <h1 class="title">Put your wall online</h1>
+  <p class="lead">What you downloaded is a whole website in a zip. Put it somewhere that serves files and you have a link to send people — free, and about five minutes. No coding, no server to look after.</p>
+
+  <section>
+    <h2><span class="n">1</span>What you have</h2>
+    <p>The zip holds a whole website: <code>index.html</code>, a <code>photos</code> folder, a <code>fonts</code> folder and a few small files. <b>Two of the hosts below take that zip exactly as it is.</b> The other two want the folder inside it, so unzip it first — each one says which.</p>
+    <p>When a host asks for the folder, upload the <em>contents</em>, so <code>index.html</code> sits at the top level. Uploading the folder that <em>contains</em> it is the most common mistake of the lot: you get a 404 and the photographs look missing.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span>Pick a place to put it</h2>
+    <p>The first three are free. If you are not sure, take the first one.</p>
+    <div class="picks">
+      <a class="pick" href="#cloudflare">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 13v8"/><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="m8 17 4-4 4 4"/></svg></span>
+        <span class="pick-text">
+          <b>Cloudflare Pages</b>
+          <span class="pitch">Drag the zip — or the folder — into their dashboard and it is live. Free, fast, and easy to point your own domain at later.</span>
+          <em>Best all-round choice</em>
+        </span>
+      </a>
+      <a class="pick" href="#netlify">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4.1 12 6"/><path d="m5.1 8-2.9-.8"/><path d="m6 12-1.9 2"/><path d="M7.2 2.2 8 5.1"/><path d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"/></svg></span>
+        <span class="pick-text">
+          <b>Netlify Drop</b>
+          <span class="pitch">No account needed to start: open the page, drop the zip on, get a link in seconds.</span>
+          <em>Quickest way to see it online</em>
+        </span>
+      </a>
+      <a class="pick" href="#github">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6a9 9 0 0 0-9 9V3"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/></svg></span>
+        <span class="pick-text">
+          <b>GitHub Pages</b>
+          <span class="pitch">Free, and you keep the files in a repository you can edit in the browser later. Wants the unzipped folder.</span>
+          <em>If you already use GitHub</em>
+        </span>
+      </a>
+      <a class="pick" href="#server">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg></span>
+        <span class="pick-text">
+          <b>Your own server</b>
+          <span class="pitch">You have a web host or a box somewhere. Upload it the way you always do.</span>
+          <em>For people who run a server</em>
+        </span>
+      </a>
+    </div>
+  </section>
+
+  <section id="cloudflare">
+    <h2>Cloudflare Pages, by drag and drop</h2>
+    <ol class="steps">
+      <li>Make a free account at <a href="https://dash.cloudflare.com/sign-up">dash.cloudflare.com</a>. No card, no payment details.</li>
+      <li>In the sidebar choose <b>Workers &amp; Pages</b>, then <b>Create</b>, then <b>Pages</b>, then <b>Upload assets</b>.</li>
+      <li>Give the project a name. That name becomes your address: <code>my-wall.pages.dev</code>.</li>
+      <li>Drag the <b>zip</b> onto the upload box, or the unzipped folder — both work. Or click to select it.</li>
+      <li>Press <b>Deploy</b>. The next screen shows your link — that is the wall, live.</li>
+    </ol>
+    <p class="small dim">Updating it later: build the wall again in the app, then upload the new zip the same way. Each upload becomes a new version, and the previous one is kept until you delete it, so a mistake is easy to undo.</p>
+    <p class="docs">Their own guide: <a href="https://developers.cloudflare.com/pages/get-started/direct-upload/">Upload your static files</a>.</p>
+  </section>
+
+  <section id="netlify">
+    <h2>Netlify Drop, no account to start</h2>
+    <ol class="steps">
+      <li>Open <a href="https://app.netlify.com/drop">app.netlify.com/drop</a>.</li>
+      <li>Drag the <b>zip</b> onto the page. A folder works too — their own wording is "a folder, zip file, or single HTML file".</li>
+      <li>It uploads and hands you a link straight away, something like <code>sunny-cake-1a2b3c.netlify.app</code>.</li>
+      <li>Sign in — it is free — to <b>claim</b> the site and keep it. An unclaimed drop is temporary, and you can rename it once you are signed in.</li>
+    </ol>
+    <p class="small dim">The same drag-and-drop lives in their dashboard, so the second upload is just as quick.</p>
+    <p class="docs">Their own documentation: <a href="https://docs.netlify.com/deploy/deploy-overview/">Deploy overview</a>.</p>
+  </section>
+
+  <section id="github">
+    <h2>GitHub Pages</h2>
+    <ol class="steps">
+      <li>Make a free GitHub account, then create a new <b>public</b> repository. Its name becomes part of the address.</li>
+      <li>Unzip the download. On the empty repository page choose <b>uploading an existing file</b>, then drag in the <em>contents</em> of that folder — <code>index.html</code> must land at the top level, not inside a subfolder — and commit.</li>
+      <li>In the repository: <b>Settings</b> → <b>Pages</b> → Source: <b>Deploy from a branch</b>, branch <code>main</code>, folder <code>/ (root)</code>. Save.</li>
+      <li>Wait a minute or two. The wall appears at <code>https://your-username.github.io/your-repository/</code>.</li>
+    </ol>
+    <p class="small dim">Updating it later: upload the changed files the same way. Uploading adds and replaces by name, so a photograph you replaced keeps the same name and overwrites the old one.</p>
+    <p class="small dim">Uploading a few hundred photographs through a web form is slow, and GitHub has a soft limit per upload. For a big wall, use one of the drag-and-drop hosts above, or copy the folder with git.</p>
+    <p class="docs">Their own guide: <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site">Creating a GitHub Pages site</a>.</p>
+  </section>
+
+  <section id="server">
+    <h2>Your own server</h2>
+    <p>Put it in your web root using whatever you already use — FTP, SFTP, your host's file manager, rsync, or unzipping it there over SSH:</p>
+    <p><code>rsync -av --delete dist/ you@your-server:/var/www/your-wall/</code></p>
+    <p>Nothing else is needed: no PHP, no database, nothing to install. Every link in the wall is relative, so a subfolder is as good as a domain root — <code>https://example.com/photos/</code> is fine.</p>
+  </section>
+
+  <section id="domain">
+    <h2>Your own domain (optional)</h2>
+    <p>The three hosts above can serve the wall on a domain you already own — usually a field in their dashboard, plus one DNS record they tell you to add. Their certificates are automatic and take a few minutes.</p>
+    <p>If you already know the address, put it in the app <b>before</b> you build, under <b>More settings → Address</b>. Two things are written into the page at build time and cannot be fixed afterwards without rebuilding: the preview picture when someone shares the link, and the canonical link search engines read.</p>
+    <p class="small dim">Added the domain later anyway? Nothing breaks. Build again with the address filled in and upload the new folder if you want those two to point at the right place.</p>
+  </section>
+
+  <section>
+    <h2>If something goes wrong</h2>
+    <ul class="plain">
+      <li><b>The type looks like a plain system font.</b> The <code>fonts</code> folder did not make it. Upload the contents of the zip, not the folder that contains it.</li>
+      <li><b>A 404, or a page with no wall on it.</b> <code>index.html</code> has to sit at the top level of what you uploaded.</li>
+      <li><b>A 404 right after adding your own domain.</b> The certificate is still being issued. Give it a few minutes and reload.</li>
+      <li><b>No picture when the link is shared.</b> The address was not set before the build — see above.</li>
+      <li><b>Some photographs are missing.</b> The app told you which ones it skipped before you downloaded; an iPhone HEIC needs exporting as JPG first, and the other formats the app takes are JPG, PNG, WebP and GIF.</li>
+      <li><b>The wall feels heavy on a phone.</b> A few hundred photographs is the comfortable range for building in a browser — past that, the build itself gets slow, especially on a phone. Build again with a smaller gallery size under <b>More settings</b> and it will also load faster.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Nothing to maintain</h2>
+    <p>The wall is static: no updates, no plugins, nothing that can be hacked or needs patching. When you add photographs, build it again in the app and upload the new folder.</p>
+    <p>The zip carries your settings — title, description, address, the photographer card. Drop last build's folder in with the new pictures and everything comes back, so you are never filling the form in twice.</p>
+  </section>
+
+  <p class="small dim" style="margin-top:34px">Built the wall with the command line instead? The repository's own manual covers the Git workflow files, server shapes and the rest: <a href="https://github.com/krisztianhadi/keret/blob/main/docs/HOSTING.md">docs/HOSTING.md</a>.</p>
+
+  <p class="closing">
+    <a class="btn primary" href="./">Build another wall</a>
+  </p>
+
+  <p class="foot" style="margin-top:34px">
+    Powered by <a href="https://github.com/krisztianhadi/keret" target="_blank" rel="noopener noreferrer">Keret</a>
+    — self-host it, run the CLI, or point an AI agent at it.
+    <a class="gh" href="https://github.com/krisztianhadi/keret" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+  </p>
+</main>
+
+</body>
+</html>

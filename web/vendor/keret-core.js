@@ -8,7 +8,7 @@
  * src/config.js   bab30b5804515b2d
  * src/images.js   2337dff3a7622f5e
  * src/layout.js   74084bfda99cbc46
- * src/page.js     143543e7769df3aa
+ * src/page.js     88e481c565490704
  * src/setup.js    a2394292a53ac907
  * src/stamp.js    fbe085706174ca20
  */
@@ -18,7 +18,7 @@ export const META = {
     "src/config.js": "bab30b5804515b2dff73be7ffcf6d4c05f0f40e6aab61eba8f81d64b8283c274",
     "src/images.js": "2337dff3a7622f5eb2543c7308d0f2410052f22359dedfaad9c5ec5cf6448844",
     "src/layout.js": "74084bfda99cbc4615a1c2c24078f97391d20dcfce7380804e48f2df14228f2f",
-    "src/page.js": "143543e7769df3aa71f600833c9aed8341ec8767f0537ce725ea52ce1329f319",
+    "src/page.js": "88e481c565490704330618de11714de88ed608dc2d9edc85e174c73d0e2414ea",
     "src/setup.js": "a2394292a53ac907a5eae042feafb6419bf201958e30333dc9eac93b3f7166da",
     "src/stamp.js": "fbe085706174ca20288e736e8dfbbb93045b804eea8df14688d8f6ad4615ec73"
   },
@@ -1669,7 +1669,7 @@ MODULES["/src/page.js"] = function (module, exports, require, __dirname, __filen
 
 const fs = require('fs');
 const path = require('path');
-const { fontOf } = require('./config');
+const { DEFAULTS, fontOf } = require('./config');
 
 const ASSETS = path.join(__dirname, 'assets');
 const cache = new Map();
@@ -1796,7 +1796,13 @@ function buildPage(model, cfg) {
   // page chrome (the credit line, the photographer card) rides in the same
   // script block: one inline script, so the wall data and the chrome share one
   // escaping path and the page keeps a single script tag
-  const chrome = asset('ui.js').replace('{{CHROME}}', escJson(model.chrome || null));
+  /* The built-in sentence is a placeholder for the meta description, not something
+     a person wrote about this wall, so it does not earn a card in the corner. A wall
+     with no author and no description of its own therefore has no card at all -
+     which is what an empty settings form should produce. */
+  const chromeData = model.chrome ? Object.assign({}, model.chrome) : null;
+  if (chromeData && chromeData.description === DEFAULTS.description) chromeData.description = '';
+  const chrome = asset('ui.js').replace('{{CHROME}}', escJson(chromeData));
 
   return head
     + '<style>' + css + '</style>' + body + extras.join('') + '\n'

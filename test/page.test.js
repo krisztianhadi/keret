@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { clearWallEnv, tempDir } = require('./helpers');
-const { loadConfig, fontOf } = require('../src/config');
+const { DEFAULTS, loadConfig, fontOf } = require('../src/config');
 const { buildPage, escJson } = require('../src/page');
 
 clearWallEnv();
@@ -181,4 +181,25 @@ test('the no-JS fallback lists the photos, and an empty wall explains itself', (
 
 test('the built page never carries the em dash (house copy rule)', () => {
   assert.equal(buildPage(model(), base).includes('\u2014'), false);
+});
+
+test('a wall with nothing to say about itself gets no card', () => {
+  const chrome = (html) => JSON.parse(/var CHROME = ([\s\S]*?);\n/.exec(html)[1]);
+
+  // no author, and only the built-in sentence: the corner stays bare
+  const bare = model();
+  bare.chrome = { credit: base.credit, description: DEFAULTS.description };
+  assert.equal(chrome(buildPage(bare, base)).description, '');
+
+  // a description of its own is content, and prints
+  const said = model();
+  said.chrome = { credit: base.credit, description: 'Twelve days on the ring road' };
+  assert.equal(chrome(buildPage(said, base)).description, 'Twelve days on the ring road');
+
+  // and a photographer prints whatever the description is
+  const who = model();
+  who.chrome = { credit: base.credit, description: DEFAULTS.description, author: { name: 'K' } };
+  const printed = chrome(buildPage(who, base));
+  assert.equal(printed.description, '');
+  assert.equal(printed.author.name, 'K');
 });

@@ -16,7 +16,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { fontOf } = require('./config');
+const { DEFAULTS, fontOf } = require('./config');
 
 const ASSETS = path.join(__dirname, 'assets');
 const cache = new Map();
@@ -143,7 +143,13 @@ function buildPage(model, cfg) {
   // page chrome (the credit line, the photographer card) rides in the same
   // script block: one inline script, so the wall data and the chrome share one
   // escaping path and the page keeps a single script tag
-  const chrome = asset('ui.js').replace('{{CHROME}}', escJson(model.chrome || null));
+  /* The built-in sentence is a placeholder for the meta description, not something
+     a person wrote about this wall, so it does not earn a card in the corner. A wall
+     with no author and no description of its own therefore has no card at all -
+     which is what an empty settings form should produce. */
+  const chromeData = model.chrome ? Object.assign({}, model.chrome) : null;
+  if (chromeData && chromeData.description === DEFAULTS.description) chromeData.description = '';
+  const chrome = asset('ui.js').replace('{{CHROME}}', escJson(chromeData));
 
   return head
     + '<style>' + css + '</style>' + body + extras.join('') + '\n'

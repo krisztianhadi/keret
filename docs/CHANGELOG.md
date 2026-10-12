@@ -3,6 +3,56 @@
 Reverse-chronological. One dated section per work block, entries tagged
 `[Feature]`, `[Fix]` or `[Break]`.
 
+## 2026-10-12 - A wall with nothing to say about itself gets no card
+
+The corner card appeared whenever `chrome.description` was non-empty, and the
+sentence the config carries by default - "A wall of photographs." - filled that in for
+anyone who left the description field alone. So a wall built from an empty form still
+carried a card with placeholder text in it.
+
+`[Fix]` **`src/page.js` treats the built-in sentence as a placeholder**, not as
+something the wall says about itself: it still fills the meta description, but a
+`chrome.description` equal to `DEFAULTS.description` is emptied before it reaches the
+page's chrome, and `ui.js` already draws no card without an author or a description.
+Both front doors inherit this from the one place they share, so the command line and
+the browser builder agree.
+
+`[Fix]` **`test/page.test.js`** covers the three states the corner can be in: nothing
+to say (barer than bare - no card), a description of its own (it prints), a
+photographer with the default sentence (the name prints, the sentence does not). The
+demo wall is unaffected: it sets its description explicitly.
+
+## 2026-10-12 - The app's assets get a per-deploy URL
+
+`web/_headers` could not be enough on its own: the zone's Browser Cache TTL
+(`browser_cache_ttl = 14400` on nomorenames.studio) rewrites the `max-age` of
+cacheable assets on the way out, so the origin's `max-age=0` never reached a browser
+through the custom domain. Pages' own hostname honoured it; the real one did not, and
+a purge made that plain:
+
+```
+keret.pages.dev/app.css            public, max-age=0, must-revalidate
+keret.nomorenames.studio/app.css   public, max-age=14400, must-revalidate
+```
+
+`[Feature]` **`web/version-assets.mjs`**: a deploy copies the stylesheet, the scripts
+and the vendor bundle into `dist/v<commit>/` and points the three HTML pages there. A
+new URL cannot be stale, so a warm cache - a phone that has held `app.css` for hours -
+is fixed on its next page load, with no hard reload and nothing to clear. The
+originals stay where they were, so an `index.html` out of somebody's cache still
+resolves `/app.js`.
+
+`[Feature]` **`/v*` is served `immutable` for a year**, because the URL is
+content-addressed by the deploy; the unversioned fallbacks keep revalidating.
+
+`[Fix]` **`test/web.test.js` grew a guard**: the versioned copies must be
+byte-identical to their sources, and every relative import inside them must resolve
+within the versioned directory - the failure a hand-maintained copy list invites.
+
+The zone's Browser Cache TTL is still 14400. It no longer matters for this app; set
+it to "Respect Existing Headers" and the `_headers` rules start applying to everything
+on the domain.
+
 ## 2026-10-12 - Assets revalidate, so a deploy cannot ship a hybrid
 
 The wordmark looked broken and "Build a new wall" did nothing on the live site,

@@ -180,6 +180,33 @@ test('the silhouette is one of the shapes the layout can draw', () => {
   assert.throws(() => shape('hexagon'), /layout\.shape must be one of circle, oval, arch/);
 });
 
+test('hanging and fixture are the values the engine knows how to draw', () => {
+  const dir = tempDir();
+  const file = path.join(dir, 'wall.config.json');
+  const layout = (over) => {
+    fs.writeFileSync(file, JSON.stringify({ layout: over }));
+    return loadConfig({ root: dir, env: {} }).config.layout;
+  };
+
+  const defaults = loadConfig({ root: tempDir(), env: {} }).config.layout;
+  assert.equal(defaults.hang, 'organized', 'a wall is squared up unless asked otherwise');
+  assert.equal(defaults.fixture, 'none', 'and nothing holds the frames by default');
+
+  assert.equal(layout({ hang: 'wonky' }).hang, 'wonky');
+  assert.equal(layout({ fixture: 'pin' }).fixture, 'pin');
+  assert.equal(layout({ fixture: 'tape' }).fixture, 'tape');
+  assert.equal(layout({ wonk: 3 }).wonk, 3);
+
+  const env = loadConfig({ root: dir, env: { WALL_HANG: 'wonky', WALL_FIXTURE: 'tape', WALL_WONK: '2.5' } }).config.layout;
+  assert.equal(env.hang, 'wonky');
+  assert.equal(env.fixture, 'tape');
+  assert.equal(env.wonk, 2.5);
+
+  assert.throws(() => layout({ hang: 'straight' }), /layout\.hang must be one of organized, wonky/);
+  assert.throws(() => layout({ fixture: 'nail' }), /layout\.fixture must be one of none, pin, tape/);
+  assert.throws(() => layout({ wonk: 40 }), /between 0 and 12/);
+});
+
 test('every config this repository ships is valid', () => {
   // a starting point that does not load is worse than none: it fails on the
   // first command a new user runs

@@ -101,6 +101,16 @@ const DEFAULTS = {
     //   'arch'   - the classic rectangle: columns equalized, then sorted
     //              tallest-to-middle for a soft arch along the top and bottom
     shape: 'circle',
+    // How the frames sit on the wall:
+    //   'organized' - squared up, as a machine would hang them
+    //   'wonky'     - each frame rotated a little (and nudged), as a hand would
+    // Rotations come from a hash of the filename, so a wall is still byte-stable
+    // and a rebuild does not move anything.
+    hang: 'organized',
+    wonk: 1.6,             // most a frame may lean, in degrees (hang: 'wonky')
+    // What a frame is held up with: 'none', 'pin' (one pin, random color) or
+    // 'tape' (four pieces, one per corner).
+    fixture: 'none',
     markSuffix: '-x',      // filename suffix that forces a photo to full width
     // Ceiling for the automatic column count. autoCols picks the column count
     // closest to a square canvas, so a cap below what a big set needs does not
@@ -168,6 +178,9 @@ const ENV_MAP = {
   WALL_TIERS: 'images.tiers',
   WALL_COLS: 'layout.cols',
   WALL_SHAPE: 'layout.shape',
+  WALL_HANG: 'layout.hang',
+  WALL_WONK: 'layout.wonk',
+  WALL_FIXTURE: 'layout.fixture',
   WALL_HERO_RATE: 'layout.heroRate',
   WALL_CAPTION_LINES: 'captions.maxLines',
   WALL_SHOW_YEAR: 'captions.showYear',
@@ -180,6 +193,10 @@ const ENV_MAP = {
 
 /** The silhouettes layout() can arrange bricks into. */
 const SHAPES = new Set(['circle', 'oval', 'arch']);
+
+/** How squared-up the frames hang, and what holds them there. */
+const HANGS = new Set(['organized', 'wonky']);
+const FIXTURES = new Set(['none', 'pin', 'tape']);
 
 const BOOLEAN_KEYS = new Set([
   'captions.showYear', 'captions.showCamera', 'captions.showSpecs',
@@ -259,6 +276,7 @@ function validate(config, root) {
   num(config.layout.cols, 'layout.cols', 0, 40);
   num(config.layout.maxCols, 'layout.maxCols', 1, 120);
   num(config.layout.heroMinAspect, 'layout.heroMinAspect', 0.05, 1);
+  num(config.layout.wonk, 'layout.wonk', 0, 12);
   num(config.images.maxEdge, 'images.maxEdge', 64, 20000);
   num(config.images.quality, 'images.quality', 1, 100);
   num(config.images.thumbEdge, 'images.thumbEdge', 4, 256);
@@ -322,6 +340,14 @@ function validate(config, root) {
     if (!config.analytics.script || !config.analytics.websiteId) {
       throw new Error('analytics needs both "script" and "websiteId" (or set analytics to null)');
     }
+  }
+  if (!HANGS.has(config.layout.hang)) {
+    throw new Error('layout.hang must be one of ' + [...HANGS].join(', ')
+      + ', got "' + config.layout.hang + '"');
+  }
+  if (!FIXTURES.has(config.layout.fixture)) {
+    throw new Error('layout.fixture must be one of ' + [...FIXTURES].join(', ')
+      + ', got "' + config.layout.fixture + '"');
   }
   if (!SHAPES.has(config.layout.shape)) {
     throw new Error('layout.shape must be one of ' + [...SHAPES].join(', ')
@@ -431,4 +457,4 @@ function setPath(obj, dotted, value) {
 }
 
 
-module.exports = { DEFAULTS, ENV_MAP, SHAPES, FONTS, fontOf, loadConfig, checkPaths, isInside };
+module.exports = { DEFAULTS, ENV_MAP, SHAPES, HANGS, FIXTURES, FONTS, fontOf, loadConfig, checkPaths, isInside };

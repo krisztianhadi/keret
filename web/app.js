@@ -178,6 +178,10 @@ function applySidecars({ config, author, problem }) {
     if (edge && [...$('fMaxEdge').options].some((option) => option.value === edge)) $('fMaxEdge').value = edge;
     const shape = config.layout && config.layout.shape;
     if (shape && [...$('fShape').options].some((option) => option.value === shape)) $('fShape').value = shape;
+    for (const [field, key] of [['fHang', 'hang'], ['fFixture', 'fixture']]) {
+      const value = config.layout && config.layout[key];
+      if (value && [...$(field).options].some((option) => option.value === value)) $(field).value = value;
+    }
   }
   if (author) {
     set('fAuthor', author.name);
@@ -673,6 +677,8 @@ function readValues() {
     font: document.querySelector('input[name="font"]:checked').value,
     maxEdge: Number($('fMaxEdge').value) || 2048,
     shape: $('fShape').value,
+    hang: $('fHang').value,
+    fixture: $('fFixture').value,
   };
 }
 
@@ -728,7 +734,12 @@ async function runBuild(files, values, hooks) {
       siteUrl: values.siteUrl,
       font: values.font,
       images: { ...(state.config && state.config.images), maxEdge: values.maxEdge },
-      layout: { ...(state.config && state.config.layout), shape: values.shape },
+      layout: {
+        ...(state.config && state.config.layout),
+        shape: values.shape,
+        hang: values.hang,
+        fixture: values.fixture,
+      },
       photosDir: '/photos',
       outDir: '/out',
     },

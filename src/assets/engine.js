@@ -15,6 +15,27 @@ var zoomLbl = document.getElementById('zoomLbl');
 
 var MAT = {{MAT}};
 var CAP_H = {{CAP_H}};
+var HANG = {{HANG}};                 // 'organized' | 'wonky'
+var WONK = {{WONK}};                 // most a frame may lean, degrees
+var FIXTURE = {{FIXTURE}};           // 'none' | 'pin' | 'tape'
+var PIN_COLORS = 5;                  // .fix.pin.c0..c4 in page.css
+var TAPE_CORNERS = ['tl', 'tr', 'bl', 'br'];   // .fix.tape.tl.. in page.css
+var TAPE_TILT = 2;                   // most a piece of tape may lean, degrees
+var TAPE_SHIFT = 3;                  // most it may sit off its corner, px
+var PIN_TILT = 3;                    // and the pin: smaller, so it leans a touch more
+var PIN_SHIFT = 2;                   // to read; never far enough to leave the mat
+
+/* FNV-1a of a filename - the same hash src/layout.js scrambles the wall order
+   with, used here only to give each photograph a stable "random" lean and pin
+   colour. Stable matters: a rebuild must not move a wall that is already hung. */
+function photoHash(name) {
+  var h = 2166136261 >>> 0;
+  for (var i = 0; i < name.length; i++) {
+    h ^= name.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
 
 var TIERS = {{TIERS}};               // ascending edges; photos/<edge>/<file>
 var FULL_EDGE = {{FULL_EDGE}};       // images.maxEdge, the copy in photos/
@@ -49,8 +70,20 @@ for (var i = 0; i < POS.length; i++) {
   el.style.transform = 'translate(' + d.x + 'px,' + d.y + 'px)';
 
   var frame = document.createElement('div');
-  frame.className = 'frame';
+  // the fixture's name goes on the frame too: what holds a frame up changes how it
+  // meets the wall, and the shadow says so (tape holds it flat, a pin does not)
+  frame.className = 'frame' + (FIXTURE !== 'none' ? ' fix-' + FIXTURE : '');
   frame.style.width = (d.pw + 2 * MAT) + 'px';
+
+  // hung by hand: a small lean and a nudge, both from the filename's hash
+  var hsh = photoHash(d.file);
+  if (HANG === 'wonky' && WONK > 0) {
+    var lean = ((hsh % 2001) / 1000 - 1) * WONK;
+    var nx = ((Math.floor(hsh / 2001) % 1001) / 500 - 1) * 3;
+    var ny = ((Math.floor(hsh / 2003001) % 1001) / 500 - 1) * 3;
+    frame.style.transform = 'translate(' + nx.toFixed(1) + 'px,' + ny.toFixed(1) + 'px)'
+      + ' rotate(' + lean.toFixed(2) + 'deg)';
+  }
   // height auto: image (d.ph) + caption strip (CAP_H)
 
   var img = document.createElement('img');
@@ -89,6 +122,36 @@ for (var i = 0; i < POS.length; i++) {
     cap.appendChild(cl);
   }
   frame.appendChild(cap);
+
+  // what holds it to the wall, if anything
+  if (FIXTURE === 'pin') {
+    // a pin pushed in by hand is never upright or dead centre either; the shift is
+    // kept small because the point has to stay in the mat, not on the photograph
+    var ph = photoHash(d.file + '#pin');
+    var ptilt = ((ph % 41) / 20 - 1) * PIN_TILT;
+    var ptx = ((Math.floor(ph / 41) % 41) / 20 - 1) * PIN_SHIFT;
+    var pty = ((Math.floor(ph / 1681) % 41) / 20 - 1) * PIN_SHIFT;
+    var fx = document.createElement('div');
+    fx.className = 'fix pin c' + (hsh % PIN_COLORS);
+    fx.style.transform = 'translate(' + ptx.toFixed(1) + 'px,' + pty.toFixed(1) + 'px)'
+      + ' rotate(' + ptilt.toFixed(2) + 'deg)';
+    frame.appendChild(fx);
+  } else if (FIXTURE === 'tape') {
+    // Each corner on its own, because tape put on by hand is never a matching set:
+    // the tilt and the nudge come from a hash of the filename plus the corner, so
+    // they differ per photograph and per corner, and still never move on a rebuild.
+    for (var c = 0; c < TAPE_CORNERS.length; c++) {
+      var th = photoHash(d.file + '#' + c);
+      var tilt = ((th % 41) / 20 - 1) * TAPE_TILT;
+      var tx = ((Math.floor(th / 41) % 41) / 20 - 1) * TAPE_SHIFT;
+      var ty = ((Math.floor(th / 1681) % 41) / 20 - 1) * TAPE_SHIFT;
+      var tp = document.createElement('div');
+      tp.className = 'fix tape ' + TAPE_CORNERS[c];
+      tp.style.transform = 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px)'
+        + ' rotate(' + tilt.toFixed(2) + 'deg)';
+      frame.appendChild(tp);
+    }
+  }
   el.appendChild(frame);
   wall.appendChild(el);
   items.push({ el: el, img: img, pbox: pbox, x: d.x, y: d.y, w: d.pw + 2 * MAT, h: d.ph + CAP_H + 2 * MAT });
@@ -202,6 +265,11 @@ var lastTransform = 0;   // when the camera last moved (the LOD quiet window)
 function setTransform() {
   lastTransform = performance.now();
   world.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
+  // the mat grain is a 120px raster tile, so its drawn size has to track the zoom: at
+  // 4x an uncompensated tile shows its own pixels instead of paper
+  if (world.style.setProperty) {
+    world.style.setProperty('--grain', (1 / Math.max(scale, 0.0005)).toFixed(4));
+  }
   if (zoomLbl) zoomLbl.textContent = Math.round(scale * 100) + '%';
 }
 

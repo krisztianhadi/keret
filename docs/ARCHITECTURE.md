@@ -90,6 +90,16 @@ columns is as tall as it is wide at *every* N, so what fixes N is how much brick
 the arc can hold - too few and it overflows, too many and the rim columns starve
 inside a bigger canvas.
 
+**A leaning frame is presentation, not geometry.** `layout.hang: 'wonky'` gives
+each frame a small rotation and nudge, and `layout.fixture` hangs a pin or four
+bits of tape on it - but neither moves a frame in the wall data, so the overlap and
+margin checks in `scripts/check-build.js` still describe what is on screen (the
+lean is a couple of degrees into a gutter that is tens of pixels wide). Both come
+from a hash of the filename, computed in the engine: a `Math.random()` would make a
+rebuild move a wall that is already hung, and the determinism contract is that the
+same photos and config produce the same wall. The fixtures are background images,
+never masks or filters - a filter per frame is what killed the tab in 0.4.
+
 Whole bricks cannot tile an arc exactly, so a shaped canvas runs a couple of
 percent past its nominal aspect (measured: 22280x22708 for a 1000-photo circle,
 0.98:1) and the rim is a staircase rather than a smooth curve.

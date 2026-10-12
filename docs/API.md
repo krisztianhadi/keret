@@ -64,6 +64,9 @@ read, so the environment cannot inject arbitrary config.
 | `WALL_TIERS` | `images.tiers` (a comma list: `128,512`) |
 | `WALL_COLS` | `layout.cols` |
 | `WALL_SHAPE` | `layout.shape` |
+| `WALL_HANG` | `layout.hang` |
+| `WALL_WONK` | `layout.wonk` |
+| `WALL_FIXTURE` | `layout.fixture` |
 | `WALL_HERO_RATE` | `layout.heroRate` |
 | `WALL_CAPTION_LINES` | `captions.maxLines` |
 | `WALL_SHOW_YEAR` | `captions.showYear` |
@@ -213,6 +216,9 @@ the disc.
 | `layout.heroRate` | `3` | out of 10 unmarked portraits, how many go full width (a stable hash decides which) |
 | `layout.heroMinAspect` | `0.6` | never blow up extreme 9:16-ish portraits; narrower than this stays paired |
 | `layout.markSuffix` | `"-x"` | filename suffix that forces a photo to full width, e.g. `tower-x.jpg` |
+| `layout.hang` | `organized` | how the frames sit: `organized` (squared up) or `wonky` (each frame leans and shifts a little, as a hand would hang it). Angles come from a hash of the filename, so a rebuild never moves a wall |
+| `layout.wonk` | `1.6` | most a frame may lean in degrees when `hang` is `wonky` |
+| `layout.fixture` | `none` | what holds a frame up: `none`, `pin` (one pin, top middle, one of five colors from the filename's hash) or `tape` (a piece across each corner, ends torn rather than cut square, each piece with a small tilt and shift of its own so no two frames carry the same tape) |
 | `layout.maxCols` | `40` | ceiling for the automatic column count. `autoCols` aims at a square canvas, so a cap below what the set needs turns the wall into a tall strip instead of keeping it tidy; raise it for sets in the thousands |
 
 ### Images

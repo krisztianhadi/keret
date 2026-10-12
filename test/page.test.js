@@ -76,7 +76,10 @@ test('the emitted engine is the verified engine, byte for byte', () => {
     .replace('var wallW = ' + model().canvasW + ', wallH = ' + model().canvasH + ';', 'var wallW = {{CANVAS_W}}, wallH = {{CANVAS_H}};')
     .replace('var TIERS = ' + escJson(base.images.tiers) + ';', 'var TIERS = {{TIERS}};')
     .replace('var FULL_EDGE = ' + base.images.maxEdge + ';', 'var FULL_EDGE = {{FULL_EDGE}};')
-    .replace('var LOD_BUDGET_MB = ' + base.zoom.lodBudget + ';', 'var LOD_BUDGET_MB = {{LOD_BUDGET}};');
+    .replace('var LOD_BUDGET_MB = ' + base.zoom.lodBudget + ';', 'var LOD_BUDGET_MB = {{LOD_BUDGET}};')
+    .replace('var HANG = ' + escJson(base.layout.hang) + ';', 'var HANG = {{HANG}};')
+    .replace('var WONK = ' + base.layout.wonk + ';', 'var WONK = {{WONK}};')
+    .replace('var FIXTURE = ' + escJson(base.layout.fixture) + ';', 'var FIXTURE = {{FIXTURE}};');
   assert.equal(js, asset('engine.js'));
 });
 
@@ -102,6 +105,92 @@ test('a loaded frame stops carrying its blur filter', () => {
   const loaded = /\.pbox\.loaded \.pbg \{([^}]*)\}/.exec(asset('page.css'));
   assert.ok(loaded, 'the loaded placeholder is styled');
   assert.match(loaded[1], /display:none/, 'a loaded placeholder is taken out of rendering');
+});
+
+test('every pin colour the engine can pick is in the stylesheet', () => {
+  // the engine picks .fix.pin.c<N>; a class the stylesheet does not carry is a
+  // pin with no background image, which reads as no pin at all
+  const js = asset('engine.js');
+  const css = asset('page.css');
+  const palette = /var PIN_COLORS = (\d+);/.exec(js);
+  assert.ok(palette, 'the engine names its pin palette size');
+  for (let i = 0; i < Number(palette[1]); i++) {
+    assert.ok(css.includes('.fix.pin.c' + i + ' '), 'page.css styles pin colour c' + i);
+  }
+  for (const kind of ['pin', 'tape']) {
+    assert.ok(css.includes('.fix.' + kind + ' {'),
+      'page.css styles the ' + kind + ' fixture');
+  }
+
+  // One piece of tape per corner, each its own element, hung so that it straddles
+  // the corner. A background cannot be rotated on its own, so placing all four with
+  // one rule is what made every frame's tape a printed pattern; and an element that
+  // does not reach past the frame loses the half that belongs on the wall, which is
+  // how the tape first shipped as stubs at the photos' corners.
+  const corners = /var TAPE_CORNERS = \[([^\]]*)\]/.exec(js);
+  assert.ok(corners, 'the engine names its corners');
+  const names = corners[1].split(',').map((name) => name.trim().replace(/['"]/g, ''));
+  assert.equal(names.length, 4, 'four corners');
+  const sprite = /\.fix\.tape \{([^}]*)\}/.exec(css)[1];
+  const halfW = Number(/width:([\d.]+)px/.exec(sprite)[1]) / 2;
+  const halfH = Number(/height:([\d.]+)px/.exec(sprite)[1]) / 2;
+  for (const name of names) {
+    const rule = new RegExp('\\.fix\\.tape\\.' + name + ' \\{([^}]*)\\}').exec(css);
+    assert.ok(rule, 'page.css places the piece called ' + name);
+    const side = /(left|right):\s*(-[\d.]+)px/.exec(rule[1]);
+    assert.ok(side, 'the ' + name + ' piece reaches sideways past the frame');
+    const axis = /(top|bottom):\s*(-[\d.]+)px/.exec(rule[1]);
+    assert.ok(axis, 'the ' + name + ' piece reaches past the frame on the other axis too');
+    // It sits IN from the corner on both axes, so the frame's corner shows past the
+    // strip's outer edge. An element hung dead on the corner covers it instead.
+    assert.ok(Math.abs(Number(side[2])) < halfW && Math.abs(Number(axis[2])) < halfH,
+      name + ' is inset from its corner, so the corner peeks out (offsets '
+        + side[2] + '/' + axis[2] + ' against half a sprite of ' + halfW + '/' + halfH + ')');
+  }
+  // and the wobble is bounded: a piece that leans more than a couple of degrees, or
+  // slides further than a few pixels, stops reading as tape.
+  const tilt = Number(/var TAPE_TILT = ([\d.]+);/.exec(js)[1]);
+  const shift = Number(/var TAPE_SHIFT = ([\d.]+);/.exec(js)[1]);
+  assert.ok(tilt > 0 && tilt <= 2.5, 'tape leans a little, got ' + tilt + ' degrees');
+  assert.ok(shift > 0 && shift <= 5, 'tape shifts a little, got ' + shift + 'px');
+  // the pin is placed by hand too, and its shift stays small: the point has to stay
+  // in the mat rather than land on the photograph
+  assert.ok(js.includes('PIN_TILT') && js.includes('PIN_SHIFT'), 'the pin has its own wobble');
+  const pinShift = Number(/var PIN_SHIFT = ([\d.]+);/.exec(js)[1]);
+  assert.ok(pinShift > 0 && pinShift <= 2, 'the pin never shifts far, got ' + pinShift + 'px');
+  // and it casts: the sprite carries a blurred copy of the head, rather than a filter
+  // on the element, which would give every frame a render surface of its own
+  const pinSprite = /\.fix\.pin\.c0 \{ background-image:url\("data:image\/svg\+xml;base64,([^"]+)"\)/.exec(css);
+  assert.ok(pinSprite, 'the pin sprite is in the stylesheet');
+  const svg = Buffer.from(pinSprite[1], 'base64').toString('utf8');
+  assert.ok(svg.includes('feGaussianBlur'), 'the pin casts a soft shadow');
+  for (const rule of css.match(/\.fix\.pin[^{]*\{[^}]*\}/g) || []) {
+    assert.ok(!rule.includes('filter:'), 'the pin is not filtered: ' + rule.slice(0, 40));
+  }
+
+  // A taped frame lies flat, so it must not keep the shadow of one standing off the
+  // wall - in BOTH colour schemes, or the dark theme silently keeps the old one. The
+  // engine names the fixture on the frame, which is the hook this relies on.
+  assert.ok(js.includes("'frame' + (FIXTURE !== 'none' ? ' fix-' + FIXTURE : '')"),
+    'the frame carries the name of what holds it up');
+  const taped = (css.match(/\.frame\.fix-tape \{/g) || []).length;
+  assert.equal(taped, 2, 'the taped frame has its own shadow in both colour schemes');
+  // and a pinned frame, held at its top edge only, must not keep a halo all round it:
+  // a tight contact shadow, plus a gradient band below that stands in for the taper a
+  // box-shadow cannot draw. Both, in both colour schemes.
+  assert.equal((css.match(/\.frame\.fix-pin \{/g) || []).length, 2,
+    'the pinned frame has its own shadow in both colour schemes');
+  assert.equal((css.match(/\.frame\.fix-pin::after \{/g) || []).length, 2,
+    'and the stand-off shadow under it, in both colour schemes');
+  const pinned = /\.frame\.fix-pin \{([^}]*)\}/.exec(css)[1];
+  const blurs = [...pinned.matchAll(/\d+px\s+(\d+)px/g)].map((m) => Number(m[1]));
+  assert.ok(blurs.length && Math.max(...blurs) <= 2,
+    'the pinned frame touches the wall at its top, so its contact shadow stays tight (blurs ' + blurs.join(',') + ')');
+  assert.match(css, /\.frame\.fix-pin::after \{[^}]*linear-gradient\(to bottom/,
+    'the stand-off shadow fades downward');
+
+  assert.match(js, /var FIXTURE = \{\{FIXTURE\}\};/);
+  assert.match(js, /var HANG = \{\{HANG\}\};/);
 });
 
 test('the engine fits the wall the build produced, not a number baked into it', () => {

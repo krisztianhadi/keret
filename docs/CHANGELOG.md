@@ -1,5 +1,101 @@
 # Changelog
 
+## 2026-10-12 - Hung by hand, if you want it
+
+`[Feature]` **`layout.hang` and `layout.fixture`.** `hang: 'wonky'` leans every frame
+a little (`layout.wonk`, default 1.6 degrees) and nudges it a couple of pixels, so the
+wall reads as hung by hand rather than laid out by a machine; `fixture: 'pin'` puts one
+pin at the top middle of every frame, in one of five colors, and `fixture: 'tape'` puts a
+piece of tape across each corner. Both are in the app's advanced settings as *Hanging*
+and *Fixture*, both ride into the exported `wall.config.json`, and both default to the
+old wall: `organized` and `none`. `WALL_HANG`, `WALL_WONK` and `WALL_FIXTURE` set them
+from the environment.
+
+Angles, nudges and pin colors come from the same FNV-1a hash of the filename that
+scrambles the wall order, computed in the engine rather than baked into the layout, so
+nothing about the geometry moves: the overlap and margin checks in
+`scripts/check-build.js` still describe what is on screen, and a rebuild never shifts a
+wall that is already hung. `Math.random()` would have done both wrong.
+
+The fixtures are background images on one extra element per frame - five pin sprites and
+two tape sprites, about 9.6 KB of base64 in `page.css` - and deliberately not CSS masks or
+`filter:` effects: a filter per frame keeps a render surface alive per frame, which is
+what killed the phone tab in 0.4.
+
+Each piece sits in from its corner rather than on it, so the frame's corner shows past
+the strip's outer edge: hand-placed tape stops short of the corner. The strip's ends still
+cross onto the wall at both ends, so it still reads as holding the frame up.
+
+The grain lives in the world, which is scaled, so a fixed tile would be magnified with it - at
+4x the mat showed the tile's own pixels rather than paper. The engine therefore sets `--grain`
+to 1 / the world scale on every transform, and the tile is drawn at `120px * var(--grain)`, so
+it always covers 120 screen px: the bitmap is never stretched. Measured on a mat patch of the
+same screen size: neighbouring pixels that are byte-identical fall from 39.5% (uncompensated,
+the pixelation) to 15.2% (compensated), against 23.9% at 1x - no plateau, so no visible tile.
+Verified end to end through the engine: the tile draws at 160px of world at 0.75 scale and 40px
+at 3x, which is 120 screen px both times.
+
+The mats carry paper now: a tiled data-URI of `feTurbulence`, neutral and barely there, on
+the frame's own background rather than a filter on it - a background is one paint, a filter
+would give every frame a render surface of its own. Measured on the light mat: standard
+deviation 3.25 levels over a range of 225-249, against 0.00 for the flat fill it replaces.
+Visible up close, effectively gone at the zoom a phone views a wall at. Cost: one extra
+background layer per frame, tiled from a 120px sprite; no filter, no mask, no blend mode.
+
+A taped frame also stops casting like one standing off the wall: it keeps a contact
+shadow and nothing more, measured on the real wall colour as a reach of 5px below the frame
+against 25px with nothing holding it. Deliberately not applied to the pin - a pinned frame
+still bows out at the bottom, where the pin is the only thing touching - and set in both
+colour schemes, since the dark theme carries a deeper shadow of its own.
+
+A pinned frame is held at its top edge, so it leans away from the wall as it goes down: it
+used to keep a halo all round, which is wrong above an edge that touches the wall there. It
+keeps a tight contact shadow now and gets a gradient band below that fades out over about
+16px - a box-shadow cannot taper, and a blurred pseudo-element would put a render surface on
+every frame, which is what killed the phone tab in 0.4. Measured against the wall colour, in
+levels of darkening: above the top edge 8 with nothing holding the frame, 1 taped, 0 pinned;
+below the bottom edge it reaches about 18px pinned against 7px taped.
+
+The pin is the "driven in" shape with a short shaft: a 6px shaft, which is about 2.7px on
+screen at the zoom a phone views a wall at - the smallest that reads as pushed in rather
+than as a smudge, where 3px (1.4px on screen) reads as a dirty edge. The point is inside the
+wall, so it is not drawn: the shaft ends square with a touch of shading where it enters.
+Measured on the real mat and photograph: the entry lands 10px below the frame's top edge and
+10px clear of the photograph, so even the worst 2px of downward jitter leaves 8px of mat.
+
+The pin itself was redrawn, because a flat two-tone circle with a white dot on it reads as
+a sticker: the head is a smaller sphere now, shaded with a radial gradient, with grain over
+it and a blurred highlight instead of a hard dot; the needle is steel grey with a highlight
+down its length and a point, rather than a darker line of the head's own colour. All of it
+is still baked into the sprite - the grain is an `feTurbulence` in the same SVG, so it is
+rasterised once - which is why the entry point, the lean, the shift and the cast shadow are all
+stated as measured rather than assumed.
+
+The pin is placed by hand too: it leans up to 3 degrees and shifts up to 2px, from a hash
+of the filename, and never further - the point has to stay in the mat rather than land on
+the photograph; it measures 10px clear. Its head stands off the surface, so it casts: a
+soft shadow is baked into the sprite, because a `filter:` on the element would give every
+frame a render surface of its own, which is what killed the phone tab in 0.4. Measured on
+the wall colour: 18 levels of darkening on the wall and 43 on the mat directly beside the
+head, fading within about 4px. The sprite's box grew to hold the shadow, so the frame hangs
+it by the pin's own axis, not by half the box.
+
+No two frames carry the same tape. Each corner is its own element with its own small
+tilt and shift - up to two degrees and three pixels off the corner, from a hash of the
+filename plus the corner's number - so the four pieces on one frame are not a matching
+set and the same corner differs from photograph to photograph. A background cannot be
+rotated on its own, which is why one element per corner rather than one element with four
+backgrounds. The ends of each strip are a shallow uneven zigzag rather than a straight
+cut, because tape comes off a dispenser torn.
+
+Two interactions worth knowing. `hang: 'wonky'` spends gutter: at `layout.gap: 0` the mats
+touch and a leaning frame crosses its neighbour's corner, where every default gutter (64)
+has room for the 1.6 degrees and then some. And the pin is drawn for the default
+`layout.mat` of 20: its point lands in the mat, a couple of pixels above the photograph,
+which is what makes it read as holding the frame rather than the picture. A mat thinner
+than the needle (about 12px) would put the point on the photo. `test/page.test.js` fails if the engine can pick a pin
+color the stylesheet does not carry, and if either fixture class goes missing.
+
 ## 2026-10-12 - The preview was asking for photos that were not there
 
 `[Fix]` **The in-app preview shows the wall again.** A tab has no server, so the

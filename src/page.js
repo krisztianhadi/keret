@@ -115,6 +115,10 @@ function buildPage(model, cfg) {
     // the tier ladder the build wrote, plus the full copy's edge and the decoded
     // budget the engine keeps itself inside
     .replace('{{TIERS}}', escJson(cfg.images.tiers || []))
+    // how the frames hang and what holds them up
+    .replace('{{HANG}}', escJson(cfg.layout.hang))
+    .replace(/\{\{WONK\}\}/g, String(cfg.layout.wonk))
+    .replace('{{FIXTURE}}', escJson(cfg.layout.fixture))
     .replace(/\{\{FULL_EDGE\}\}/g, String(cfg.images.maxEdge))
     .replace(/\{\{LOD_BUDGET\}\}/g, String(cfg.zoom.lodBudget));
 

@@ -24,7 +24,7 @@
   --ink-dim: rgba(242, 238, 228, .55);  /* 5.53:1 on the box */
   --note: #4a443a;
   --mat: #fbfaf6;
-  --cap: #776f63;
+  --cap: #6f685c;   /* was #776f63: 4.26:1 on a tinted button, not the 4.5 AA wants */
   --accent: #e23c30;
 }
 @media (prefers-color-scheme: dark) {
@@ -68,6 +68,9 @@ header {
   justify-content: center;
   padding: 30px 18px 14px;
 }
+/* the wordmark is a link back to the start, and looks like the wordmark */
+header h1 a { display: flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; }
+header h1 a:hover { color: var(--ink); }
 header h1 {
   display: flex;
   align-items: center;

@@ -3,6 +3,33 @@
 Reverse-chronological. One dated section per work block, entries tagged
 `[Feature]`, `[Fix]` or `[Break]`.
 
+## 2026-10-12 - The finished wall gets a way out, the wordmark a way back
+
+`[Feature]` **"Build a new wall"**, under the download: it clears the photographs
+and the built zip and returns to the empty state. The form keeps what was typed -
+those fields come back the moment new photographs are picked - while a
+`wall.config.json` that arrived with a dropped folder goes with it, so a new wall
+cannot quietly inherit the last one's settings.
+
+`[Fix]` **"Build again" is "Edit and rebuild"** now, which is what it does: the same
+photographs stay picked, and the details are there to change before building again.
+
+`[Feature]` **The wordmark links back to the start** (`./`, titled "Start over"), so
+anywhere in the app is one click from the empty state. The manual's copy names the
+button the same way.
+
+`[Fix]` **The manual sits on the mat in light mode.** Its page background was the
+cappuccino wall, which left the ink looking washed out; it is the frames' own cream
+now (`#fbfaf6`), flat — the wall's vignette darkens the corners and reads as grime on
+a light surface. Page-scoped: the app keeps its wall in both themes.
+
+`[Fix]` **Light-theme buttons on the mat were 4.26:1.** `--cap` goes from `#776f63`
+to `#6f685c`: 4.74:1 on a tinted button, 5.28:1 on the plain mat. Worth recording
+what was *not* broken, because an earlier entry here implied it was: `--cap` on the
+mat is 4.86:1 in the dark theme and always was fine. The 2.81:1 measured then was a
+mid-animation blend, and the one real misuse was `--cap` as text on the *wall*
+(1.77:1), which only the manual was doing and no longer does.
+
 ## 2026-10-11 - The button picks loose photographs again
 
 The app's file input carried `webkitdirectory` on desktop, which meant the browser

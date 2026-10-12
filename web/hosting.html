@@ -32,6 +32,15 @@
   /* The accent, in a weight that reads as text: the pure #e23c30 measures 3.67:1
      on the dark wall and 2.56:1 on the light one, under the 4.5:1 body text wants.
      These two measure 6.15:1 and 4.82:1. */
+  /* In light mode this page reads on the mat, not on the cappuccino wall: the
+     same cream the frames are made of, flat, so the ink has room. Dark mode keeps
+     the wall and its vignette. Page-scoped on purpose - the app itself is happy as
+     it is. */
+  @media (prefers-color-scheme: light) {
+    :root { --wall: #fbfaf6; }
+    #stage { background-image: none; }
+  }
+
   :root { --link: #9c1f16; --quiet: #575147; }          /* --quiet: 4.72:1 on the light wall */
   @media (prefers-color-scheme: dark) { :root { --link: #ff7a6b; --quiet: #a49f94; } }  /* 5.94:1 */
 
@@ -240,7 +249,7 @@
     <h2>Your own domain (optional)</h2>
     <p>The three hosts above can serve the wall on a domain you already own — usually a field in their dashboard, plus one DNS record they tell you to add. Their certificates are automatic and take a few minutes.</p>
     <p>If you already know the address, put it in the app <b>before</b> you build, under <b>More settings → Address</b>. Two things are written into the page at build time and cannot be fixed afterwards without rebuilding: the preview picture when someone shares the link, and the canonical link search engines read.</p>
-    <p class="small dim">Added the domain later anyway? Nothing breaks. Build again with the address filled in and upload the new folder if you want those two to point at the right place.</p>
+    <p class="small dim">Added the domain later anyway? Nothing breaks. Edit and rebuild with the address filled in, then upload the new folder, if you want those two to point at the right place.</p>
   </section>
 
   <section>
@@ -251,7 +260,7 @@
       <li><b>A 404 right after adding your own domain.</b> The certificate is still being issued. Give it a few minutes and reload.</li>
       <li><b>No picture when the link is shared.</b> The address was not set before the build — see above.</li>
       <li><b>Some photographs are missing.</b> The app told you which ones it skipped before you downloaded; an iPhone HEIC needs exporting as JPG first, and the other formats the app takes are JPG, PNG, WebP and GIF.</li>
-      <li><b>The wall feels heavy on a phone.</b> A few hundred photographs is the comfortable range for building in a browser — past that, the build itself gets slow, especially on a phone. Build again with a smaller gallery size under <b>More settings</b> and it will also load faster.</li>
+      <li><b>The wall feels heavy on a phone.</b> A few hundred photographs is the comfortable range for building in a browser — past that, the build itself gets slow, especially on a phone. Edit and rebuild with a smaller gallery size under <b>More settings</b> and it will also load faster.</li>
     </ul>
   </section>
 

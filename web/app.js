@@ -78,6 +78,7 @@ const ui = {
   downloadBtn: $('downloadBtn'),
   previewBtn: $('previewBtn'),
   againBtn: $('againBtn'),
+  newWallBtn: $('newWallBtn'),
   skipBox: $('skipBox'),
   warnBox: $('warnBox'),
   fileInput: $('fileInput'),
@@ -1000,7 +1001,7 @@ async function finish(result) {
   ui.buildFile.textContent = '';
   setHint('');
   ui.doneHost.innerHTML = HELP.done;
-  showForm(false);               // the wall is built: settings come back with "Build again"
+  showForm(false);               // the wall is built: settings come back with "Edit and rebuild"
   showAction('download');
   if (result.ignored.length) showSkipped(result.ignored); else hideSkipped();
   if (result.failed.length) showFailed(result.failed); else hideFailed();
@@ -1033,6 +1034,21 @@ ui.againBtn.addEventListener('click', () => {
   state.result = null;
   showPicker(state.files); // the same photos stay picked: adjust the details and build again
   ui.fileInput.value = '';
+});
+ui.newWallBtn.addEventListener('click', () => {
+  // a different wall: the photographs and the built zip go, the form stays as it
+  // is - the settings are visible again the moment new photographs are picked
+  closePreview();
+  for (const url of state.objectUrls) URL.revokeObjectURL(url);
+  state.objectUrls = [];
+  state.result = null;
+  state.files = [];
+  state.config = null;
+  state.paths.clear();
+  state.cancelled = false;
+  ui.cancelBtn.disabled = false;
+  ui.fileInput.value = '';
+  showPicker([]);
 });
 ui.cancelBtn.addEventListener('click', () => { state.cancelled = true; ui.cancelBtn.disabled = true; });
 ui.downloadBtn.addEventListener('click', download);

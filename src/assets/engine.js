@@ -260,15 +260,24 @@ document.addEventListener('load', function (e) {
 
 // view state: screen = world * scale + (tx, ty)
 var tx = 0, ty = 0, scale = 1;
-var lastTransform = 0;   // when the camera last moved (the LOD quiet window)
+var lastTransform = 0;                 // when the camera last moved (the LOD quiet window)
+var lastGrainStep = null;              // the quantised zoom the grain was last sized for
 
 function setTransform() {
   lastTransform = performance.now();
   world.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
-  // the mat grain is a 120px raster tile, so its drawn size has to track the zoom: at
-  // 4x an uncompensated tile shows its own pixels instead of paper
+  // The mat grain is a raster tile, so its drawn size has to track the zoom or a 4x wall
+  // shows the tile's own pixels. It is quantised to quarter octaves and only written when
+  // that changes: writing an inherited custom property on every transform - every pan
+  // step, where the scale has not moved at all - invalidates style for the whole wall for
+  // a value that is already right. A quarter octave is a 19% change in the tile, which
+  // nothing can see.
   if (world.style.setProperty) {
-    world.style.setProperty('--grain', (1 / Math.max(scale, 0.0005)).toFixed(4));
+    const step = Math.round(Math.log2(1 / Math.max(scale, 0.0005)) * 4) / 4;
+    if (step !== lastGrainStep) {
+      lastGrainStep = step;
+      world.style.setProperty('--grain', Math.pow(2, step).toFixed(4));   // step = log2(1/scale)
+    }
   }
   if (zoomLbl) zoomLbl.textContent = Math.round(scale * 100) + '%';
 }

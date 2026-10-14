@@ -1,5 +1,30 @@
 # Changelog
 
+##  - What the fixtures cost, and what could not be measured
+
+`[Fix]` **The mat grain no longer restyles the wall on every pan.** The engine wrote
+`--grain` on every transform - that is every pan step, at 60fps - for a value that only depends
+on the zoom, and it is a custom property the whole wall inherits and resolves. It is quantised
+to quarter octaves now and written only when that changes. Measured in the app's preview: 60
+pan frames write it **0** times (it was one per frame), 60 zoom frames write it **9**, and the
+tile still lands at 240 screen px at 4x - so the grain is still compensated rather than
+magnified. The sign of that exponent was wrong on the first attempt, and the probe caught it:
+it would have drawn the tile 16x too large at 4x, which is worse pixelation than the bug it
+replaced.
+
+`[Fix]` **The grain tile is 240px where it was 120**, with its frequency halved so the grain on
+screen stays the same size - measured, standard deviation 3.29 against 3.25. A mat needs about
+a quarter as many tiles drawn to cover it once a wall is zoomed in.
+
+**What this does not establish.** None of it is a measurement of the device reporting the
+slowdown. This machine's Chromium renders through SwiftShader, so its frame times say nothing
+about a phone's GPU, and iOS Safari - the browser in question - cannot run here at all.
+Ablating the grain write and the fixture elements changed frame times by nothing measurable
+here: 16.7ms, 60fps, throughout - which is evidence the benchmark is wrong, not that the
+features are free. The branch does add per-frame work: tape is four rotated elements per frame
+where there were none (12 nodes against 9), the pin is one, and the tape covers 5.7% more
+painted area per frame.
+
 ##  - A heart, where the oval was
 
 `[Feature]` **`layout.shape` gains a heart and loses the oval.** The heart is drawn the way

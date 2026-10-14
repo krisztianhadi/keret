@@ -7,7 +7,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const ref = process.env.GITHUB_REF_NAME || process.argv[2] || '';
+/* An explicit argument wins, the workflow's variable is the fallback. It was the other way
+   round, which meant CI (where GITHUB_REF_NAME is always set, to "main") overrode the tag the
+   test passed in - so the test could only ever pass on a machine without that variable. */
+const ref = process.argv[2] || process.env.GITHUB_REF_NAME || '';
 const tag = ref.replace(/^v/, '');
 const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
 

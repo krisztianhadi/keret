@@ -11,8 +11,13 @@ const { ROOT } = require('./helpers');
 const pkg = require(path.join(ROOT, 'package.json'));
 
 test('a tag that matches the version passes, and one that does not is refused', () => {
-  const runCheck = (tag) => {
-    const r = spawnSync(process.execPath, [path.join(ROOT, 'scripts', 'check-tag.js'), tag], { encoding: 'utf8' });
+  // CI always has GITHUB_REF_NAME set (to the branch, "main"), so every case below runs with it
+  // set too: the first version of this test only passed on a machine without that variable.
+  const runCheck = (tag, envTag) => {
+    const r = spawnSync(process.execPath, [path.join(ROOT, 'scripts', 'check-tag.js'), tag], {
+      encoding: 'utf8',
+      env: Object.assign({}, process.env, { GITHUB_REF_NAME: envTag }),
+    });
     return { code: r.status, stdout: r.stdout || '', stderr: r.stderr || '' };
   };
 
@@ -27,4 +32,12 @@ test('a tag that matches the version passes, and one that does not is refused', 
   const none = runCheck('');
   assert.equal(none.code, 1, 'a tag with no version is refused rather than passing quietly');
   assert.match(none.stderr, /nothing to check/);
+
+  // the workflow passes no argument and relies on the variable; a branch push must not pass
+  const fromEnv = runCheck('', 'v' + pkg.version);
+  assert.equal(fromEnv.code, 0, 'with no argument the workflow variable is used: ' + fromEnv.stderr);
+
+  const branch = runCheck('', 'main');
+  assert.equal(branch.code, 1, 'a branch push is not a release and must not pass as one');
+  assert.match(branch.stderr, /the tag says main but package\.json says /);
 });

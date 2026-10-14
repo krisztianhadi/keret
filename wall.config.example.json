@@ -36,6 +36,7 @@
     "hang": "organized",
     "wonk": 1.6,
     "fixture": "none",
+    "grain": true,
     "cols": 0,
     "long": 600,
     "gap": 64,

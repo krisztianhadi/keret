@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- built by gen.js source=24d6031f5f73 photos=105 -->
+<!-- built by gen.js source=55bd30f8ebeb photos=105 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -166,6 +166,9 @@
     .frame.fix-pin { box-shadow:0 1px 2px rgba(0,0,0,.42); }
     .frame.fix-pin::after { background:linear-gradient(to bottom, rgba(0,0,0,.4), rgba(0,0,0,0)); }
   }
+
+  /* layout.grain: false - a flat mat, no tile drawn at all */
+  .no-grain .frame { background-image:none; }
 
   .fix { position:absolute; pointer-events:none; }
 
@@ -619,6 +622,7 @@ var CAP_H = 56;
 var HANG = "organized";                 // 'organized' | 'wonky'
 var WONK = 1.6;                 // most a frame may lean, degrees
 var FIXTURE = "none";           // 'none' | 'pin' | 'tape'
+var GRAIN = true;               // paper grain over the mats
 var PIN_COLORS = 5;                  // .fix.pin.c0..c4 in page.css
 var TAPE_CORNERS = ['tl', 'tr', 'bl', 'br'];   // .fix.tape.tl.. in page.css
 var TAPE_TILT = 2;                   // most a piece of tape may lean, degrees
@@ -629,6 +633,9 @@ var PIN_SHIFT = 2;                   // to read; never far enough to leave the m
 /* FNV-1a of a filename - the same hash src/layout.js scrambles the wall order
    with, used here only to give each photograph a stable "random" lean and pin
    colour. Stable matters: a rebuild must not move a wall that is already hung. */
+// one class carries the choice: the stylesheet drops the mat texture for it
+if (!GRAIN) wall.classList.add('no-grain');
+
 function photoHash(name) {
   var h = 2166136261 >>> 0;
   for (var i = 0; i < name.length; i++) {

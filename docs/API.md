@@ -67,6 +67,7 @@ read, so the environment cannot inject arbitrary config.
 | `WALL_HANG` | `layout.hang` |
 | `WALL_WONK` | `layout.wonk` |
 | `WALL_FIXTURE` | `layout.fixture` |
+| `WALL_GRAIN` | `layout.grain` |
 | `WALL_HERO_RATE` | `layout.heroRate` |
 | `WALL_CAPTION_LINES` | `captions.maxLines` |
 | `WALL_SHOW_YEAR` | `captions.showYear` |
@@ -218,6 +219,7 @@ the disc.
 | `layout.markSuffix` | `"-x"` | filename suffix that forces a photo to full width, e.g. `tower-x.jpg` |
 | `layout.hang` | `organized` | how the frames sit: `organized` (squared up) or `wonky` (each frame leans and shifts a little, as a hand would hang it). Angles come from a hash of the filename, so a rebuild never moves a wall |
 | `layout.wonk` | `1.6` | most a frame may lean in degrees when `hang` is `wonky` |
+| `layout.grain` | `true` | a faint paper grain over the mats; `false` is a flat mat, and the switch to reach for on a very large wall |
 | `layout.fixture` | `none` | what holds a frame up: `none`, `pin` (one pin, top middle, one of five colors from the filename's hash) or `tape` (a piece across each corner, ends torn rather than cut square, each piece with a small tilt and shift of its own so no two frames carry the same tape) |
 | `layout.maxCols` | `40` | ceiling for the automatic column count. `autoCols` aims at a square canvas, so a cap below what the set needs turns the wall into a tall strip instead of keeping it tidy; raise it for sets in the thousands |
 

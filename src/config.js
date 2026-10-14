@@ -111,6 +111,9 @@ const DEFAULTS = {
     // What a frame is held up with: 'none', 'pin' (one pin, random color) or
     // 'tape' (four pieces, one per corner).
     fixture: 'none',
+    // A faint paper grain over the mats. Off is a flat mat: also the switch to
+    // reach for if a very large wall ever feels heavy.
+    grain: true,
     markSuffix: '-x',      // filename suffix that forces a photo to full width
     // Ceiling for the automatic column count. autoCols picks the column count
     // closest to a square canvas, so a cap below what a big set needs does not
@@ -181,6 +184,7 @@ const ENV_MAP = {
   WALL_HANG: 'layout.hang',
   WALL_WONK: 'layout.wonk',
   WALL_FIXTURE: 'layout.fixture',
+  WALL_GRAIN: 'layout.grain',
   WALL_HERO_RATE: 'layout.heroRate',
   WALL_CAPTION_LINES: 'captions.maxLines',
   WALL_SHOW_YEAR: 'captions.showYear',
@@ -199,6 +203,7 @@ const HANGS = new Set(['organized', 'wonky']);
 const FIXTURES = new Set(['none', 'pin', 'tape']);
 
 const BOOLEAN_KEYS = new Set([
+  'layout.grain',
   'captions.showYear', 'captions.showCamera', 'captions.showSpecs',
 ]);
 
@@ -344,6 +349,9 @@ function validate(config, root) {
   if (!HANGS.has(config.layout.hang)) {
     throw new Error('layout.hang must be one of ' + [...HANGS].join(', ')
       + ', got "' + config.layout.hang + '"');
+  }
+  if (typeof config.layout.grain !== 'boolean') {
+    throw new Error('layout.grain must be true or false, got ' + JSON.stringify(config.layout.grain));
   }
   if (!FIXTURES.has(config.layout.fixture)) {
     throw new Error('layout.fixture must be one of ' + [...FIXTURES].join(', ')

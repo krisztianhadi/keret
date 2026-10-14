@@ -18,6 +18,7 @@ var CAP_H = {{CAP_H}};
 var HANG = {{HANG}};                 // 'organized' | 'wonky'
 var WONK = {{WONK}};                 // most a frame may lean, degrees
 var FIXTURE = {{FIXTURE}};           // 'none' | 'pin' | 'tape'
+var GRAIN = {{GRAIN}};               // paper grain over the mats
 var PIN_COLORS = 5;                  // .fix.pin.c0..c4 in page.css
 var TAPE_CORNERS = ['tl', 'tr', 'bl', 'br'];   // .fix.tape.tl.. in page.css
 var TAPE_TILT = 2;                   // most a piece of tape may lean, degrees
@@ -28,6 +29,9 @@ var PIN_SHIFT = 2;                   // to read; never far enough to leave the m
 /* FNV-1a of a filename - the same hash src/layout.js scrambles the wall order
    with, used here only to give each photograph a stable "random" lean and pin
    colour. Stable matters: a rebuild must not move a wall that is already hung. */
+// one class carries the choice: the stylesheet drops the mat texture for it
+if (!GRAIN) wall.classList.add('no-grain');
+
 function photoHash(name) {
   var h = 2166136261 >>> 0;
   for (var i = 0; i < name.length; i++) {

@@ -196,6 +196,10 @@ test('hanging and fixture are the values the engine knows how to draw', () => {
   assert.equal(layout({ fixture: 'pin' }).fixture, 'pin');
   assert.equal(layout({ fixture: 'tape' }).fixture, 'tape');
   assert.equal(layout({ wonk: 3 }).wonk, 3);
+  assert.equal(defaults.grain, true, 'the mats carry their texture unless asked otherwise');
+  assert.equal(layout({ grain: false }).grain, false);
+  const grainEnv = loadConfig({ root: dir, env: { WALL_GRAIN: 'off' } }).config.layout;
+  assert.equal(grainEnv.grain, false, 'WALL_GRAIN=off turns it off');
 
   const env = loadConfig({ root: dir, env: { WALL_HANG: 'wonky', WALL_FIXTURE: 'tape', WALL_WONK: '2.5' } }).config.layout;
   assert.equal(env.hang, 'wonky');
@@ -205,6 +209,8 @@ test('hanging and fixture are the values the engine knows how to draw', () => {
   assert.throws(() => layout({ hang: 'straight' }), /layout\.hang must be one of organized, wonky/);
   assert.throws(() => layout({ fixture: 'nail' }), /layout\.fixture must be one of none, pin, tape/);
   assert.throws(() => layout({ wonk: 40 }), /between 0 and 12/);
+  // last, because it leaves a config file the loader refuses behind it
+  assert.throws(() => layout({ grain: 'yes please' }), /layout\.grain must be true or false/);
 });
 
 test('every config this repository ships is valid', () => {

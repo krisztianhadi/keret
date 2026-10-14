@@ -119,6 +119,7 @@ function buildPage(model, cfg) {
     .replace('{{HANG}}', escJson(cfg.layout.hang))
     .replace(/\{\{WONK\}\}/g, String(cfg.layout.wonk))
     .replace('{{FIXTURE}}', escJson(cfg.layout.fixture))
+    .replace('{{GRAIN}}', escJson(cfg.layout.grain))
     .replace(/\{\{FULL_EDGE\}\}/g, String(cfg.images.maxEdge))
     .replace(/\{\{LOD_BUDGET\}\}/g, String(cfg.zoom.lodBudget));
 

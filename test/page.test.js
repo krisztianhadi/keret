@@ -79,7 +79,8 @@ test('the emitted engine is the verified engine, byte for byte', () => {
     .replace('var LOD_BUDGET_MB = ' + base.zoom.lodBudget + ';', 'var LOD_BUDGET_MB = {{LOD_BUDGET}};')
     .replace('var HANG = ' + escJson(base.layout.hang) + ';', 'var HANG = {{HANG}};')
     .replace('var WONK = ' + base.layout.wonk + ';', 'var WONK = {{WONK}};')
-    .replace('var FIXTURE = ' + escJson(base.layout.fixture) + ';', 'var FIXTURE = {{FIXTURE}};');
+    .replace('var FIXTURE = ' + escJson(base.layout.fixture) + ';', 'var FIXTURE = {{FIXTURE}};')
+    .replace('var GRAIN = ' + escJson(base.layout.grain) + ';', 'var GRAIN = {{GRAIN}};');
   assert.equal(js, asset('engine.js'));
 });
 
@@ -188,6 +189,12 @@ test('every pin colour the engine can pick is in the stylesheet', () => {
     'the pinned frame touches the wall at its top, so its contact shadow stays tight (blurs ' + blurs.join(',') + ')');
   assert.match(css, /\.frame\.fix-pin::after \{[^}]*linear-gradient\(to bottom/,
     'the stand-off shadow fades downward');
+
+  // the mat texture is a switch: the engine names the choice on the wall and the
+  // stylesheet drops the tile for it, so no wall can carry a texture it did not ask for
+  assert.equal((css.match(/\.no-grain \.frame \{/g) || []).length, 1, 'the flat mat has a rule');
+  assert.ok(js.includes("wall.classList.add('no-grain')"), 'the engine names the choice on the wall');
+  assert.match(js, /var GRAIN = \{\{GRAIN\}\};/);
 
   assert.match(js, /var FIXTURE = \{\{FIXTURE\}\};/);
   assert.match(js, /var HANG = \{\{HANG\}\};/);

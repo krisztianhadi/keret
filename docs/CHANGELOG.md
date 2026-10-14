@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-14 - A switch for the mat texture
+
+`[Feature]` **`layout.grain`** - *Paper texture* in the app's advanced settings, `WALL_GRAIN` from
+the environment, default on. Off, the engine names the choice on the wall (`no-grain`) and the
+stylesheet drops the tile, so a flat-mat wall carries no grain background at all rather than a
+transparent one. Verified on built walls both ways: `GRAIN=true`, no class, mat image `tile`;
+`GRAIN=false`, class `no-grain`, mat image `none`.
+
+Added while chasing an unexplained slowdown on this branch, as the first thing to be able to
+switch off on the device that can feel it.
+
 ##  - What the fixtures cost, and what could not be measured
 
 `[Fix]` **The mat grain no longer restyles the wall on every pan.** The engine wrote

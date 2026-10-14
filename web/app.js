@@ -178,6 +178,7 @@ function applySidecars({ config, author, problem }) {
     if (edge && [...$('fMaxEdge').options].some((option) => option.value === edge)) $('fMaxEdge').value = edge;
     const shape = config.layout && config.layout.shape;
     if (shape && [...$('fShape').options].some((option) => option.value === shape)) $('fShape').value = shape;
+    if (config.layout) $('fGrain').value = config.layout.grain === false ? 'off' : 'on';
     for (const [field, key] of [['fHang', 'hang'], ['fFixture', 'fixture']]) {
       const value = config.layout && config.layout[key];
       if (value && [...$(field).options].some((option) => option.value === value)) $(field).value = value;
@@ -679,6 +680,7 @@ function readValues() {
     shape: $('fShape').value,
     hang: $('fHang').value,
     fixture: $('fFixture').value,
+    grain: $('fGrain').value !== 'off',
   };
 }
 
@@ -739,6 +741,7 @@ async function runBuild(files, values, hooks) {
         shape: values.shape,
         hang: values.hang,
         fixture: values.fixture,
+        grain: values.grain,
       },
       photosDir: '/photos',
       outDir: '/out',

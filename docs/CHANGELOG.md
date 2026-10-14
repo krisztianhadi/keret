@@ -1,5 +1,66 @@
 # Changelog
 
+## 2026-10-14 - Five typefaces, each previewed in itself
+
+`[Feature]` **The typeface picker sets every option in the font it names**, so choosing one is a
+look rather than a name. It had to stop being a `<select>`: a native dropdown cannot set per-option
+fonts on most browsers, iOS Safari least of all. It is a set of radios now, which is what the
+fieldset already looked like, and the app embeds all five faces so each specimen is the real thing -
+checked by drawing the specimen and comparing its pixels against the family it would fall back to.
+
+`[Feature]` **Three new faces.** Geist Pixel, Crimson Text (a book serif for captions) and Crafty
+Girls (handwritten) join Geist Mono and Geist Sans. All five are self-hosted: a wall carries the one
+face it uses and makes no third-party request. The latin subsets are 24 KB, 17 KB and 29 KB, so a
+page grows by one subset rather than by a font library.
+
+Licences ship with the fonts and they are not all the same: Geist, Geist Pixel and Crimson Text are
+OFL, Crafty Girls is Apache 2.0 - worth checking rather than assuming, which is how it was found.
+`src/assets/fonts/LICENSE.txt` carries all four notices and goes out in `dist/fonts/`.
+
+`[Fix]` **`fontOf` answered "mono" for anything that was not "sans".** With two faces that was
+invisible; with five it would have set a wall in the wrong type in silence. The dead `print:`
+field left the registry with it - nothing ever read it, and the new faces have no TTF to name.
+
+
+`[Fix]` **Geist Pixel rendered as Geist Mono on Safari.** Google serves that family as `woff`, not
+`woff2`, and it was saved under a `.woff2` name while the pages declare `format("woff2")` - so the
+browser rejected the file and used the next family in the stack. It is Vercel's own `woff2` build
+now, the Grid variant, which is the one that stays legible at caption size.
+
+Two things made that possible, both fixed. `document.fonts.check('16px "Geist Pixel"')` returns
+true for a family that does not exist - it answers "is anything needed for this text", not "is this
+face loaded" - so the verification passed while the specimen was a fallback. The check is now a
+canvas pixel comparison against the fallback family, and `[...document.fonts]` for load status.
+And nothing tied a face's declared format to its bytes: `test/config.test.js` now asserts every
+vendored face begins `wOF2`, which is exactly what was false.
+
+The previews are also 1.3x the label size, which is what a preview is for.
+
+`[Fix]` **The preview inlined the wrong font.** It picked the face to inline by name -
+`font === 'sans' ? 'GeistSansVF.woff2' : 'GeistMonoVF.woff2'` - so for Geist Pixel, Crimson Text or
+Crafty Girls the replacement matched nothing, the page kept a relative `url(fonts/...)`, and that
+404s inside the preview's iframe. The stack then rendered Geist Mono. That is why the picker
+previewed Geist Pixel correctly the whole time (it reads the registry) while the wall did not. The
+preview takes the face from the registry now and inlines the container that face declares, with a
+loud note if a face cannot be inlined. Verified over all five: each is inlined and each applies,
+compared by ink against the fallback.
+
+`[Fix]` **And the wall declared `font-weight: 100 900` for every face.** True of the two variable
+Geist faces and false of the three static ones. That was a real defect - a face whose weight
+descriptor its file cannot satisfy is at the browser's mercy - but it was *not* the cause of the
+Pixel report, which was the line above. Both are fixed; the descriptor also comes from the
+registry now, along with the container format, so the emitted `@font-face` cannot drift from the
+file again.
+
+The weights existed in two places: the picker had them right per face, and `src/page.js` hardcoded
+one range for all of them, which is why the picker looked correct while the wall did not. The
+registry owns the weight now, the bundle exports it (`FACES`), and both the app's faces and the
+wall's are built from it. `test/page.test.js` builds a page for every face and asserts the
+`@font-face` declares that face's own weight and file - the check that was missing, since the
+fixture's own face is a variable one and would have passed either way.
+
+A wall built before this keeps the old CSS: it has to be rebuilt.
+
 ## 2026-10-14 - The mat texture was the whole slowdown
 
 `[Fix]` **The grain is a PNG tile, not an `feTurbulence` SVG.** Confirmed on the phone: with the

@@ -102,6 +102,11 @@ test('the face in use travels with the build', async () => {
     'the OFL licence travels with it');
   const html = fs.readFileSync(path.join(fx.outDir, 'index.html'), 'utf8');
   assert.equal(html.includes('src:url(fonts/' + font.web + ')'), true, 'the page names the copied file');
+  // The @font-face must declare what the file actually covers. It used to say 100 900 for
+  // every face - true of the two variable Geist faces and false of everything static, which
+  // Safari rejects and then renders the next family in the stack.
+  assert.equal(html.includes('font-weight:' + font.weight + ';'), true,
+    'the page declares the weight of ' + font.web + ' (' + font.weight + ')');
 });
 
 test('the build is deterministic: a rebuild is byte-identical', async () => {

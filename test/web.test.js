@@ -100,6 +100,20 @@ test('the preview reaches the photos through the seam the engine offers', () => 
     'the preview resolves a rung through the map it built');
 });
 
+test('the preview inlines the face the wall was built with', () => {
+  // It used to inline Geist Sans or Geist Mono by name, so every other face kept a
+  // relative url(fonts/...) that 404s inside the preview iframe - and the browser then
+  // rendered the next family in the stack. Geist Pixel looked like Geist Mono for exactly
+  // that reason, while the picker (which reads the registry) previewed it correctly.
+  const app = fs.readFileSync(path.join(ROOT, 'web', 'app.js'), 'utf8');
+  assert.equal(app.includes("result.cfg.font === 'sans' ? 'GeistSansVF.woff2'"), false,
+    'the preview does not pick a face by name');
+  assert.ok(app.includes('const face = FACES[result.cfg.font] || FACES.mono'),
+    'the preview takes the face from the registry');
+  assert.ok(app.includes("url(data:font/' + mime + ';base64,"),
+    'and inlines the container that face declares');
+});
+
 test('the zip writer produces an archive a reader can walk', async () => {
   const { buildZip, crc32 } = await import('../web/zip.js');
 

@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { clearWallEnv, tempDir } = require('./helpers');
-const { DEFAULTS, loadConfig, fontOf } = require('../src/config');
+const { DEFAULTS, loadConfig, fontOf, FONTS: FACES } = require('../src/config');
 const { buildPage, escJson } = require('../src/page');
 
 clearWallEnv();
@@ -47,7 +47,7 @@ test('the emitted CSS is the verified stylesheet, byte for byte', () => {
   const font = fontOf(base);
   const css = styleOf(html)
     .replace('@font-face{font-family:"' + font.family + '";src:url(fonts/' + font.web
-      + ') format("woff2");font-weight:100 900;font-style:normal;font-display:swap}', '{{fontFace}}')
+      + ') format("woff2");font-weight:' + font.weight + ';font-style:normal;font-display:swap}', '{{fontFace}}')
     .replace('font-family: ' + font.stack + ';', 'font-family: {{fontStack}};')
     .replace('width:' + model().canvasW + 'px', 'width:{{canvasW}}px')
     .replace('height:' + model().canvasH + 'px', 'height:{{canvasH}}px');
@@ -55,14 +55,15 @@ test('the emitted CSS is the verified stylesheet, byte for byte', () => {
 });
 
 test('the font setting is the face the page is served in', () => {
-  for (const kind of ['mono', 'sans']) {
+  for (const kind of Object.keys(FACES)) {
     const cfg = Object.assign({}, base, { font: kind });
     const html = buildPage(model(), cfg);
     const font = fontOf(cfg);
     assert.equal(html.includes('font-family: ' + font.stack + ';'), true,
       kind + ': the stack the config names is the stack the page uses');
-    assert.equal(html.includes('@font-face{font-family:"' + font.family + '";src:url(fonts/' + font.web + ')'), true,
-      kind + ': the face is served from the site, not a third party');
+    assert.equal(html.includes('@font-face{font-family:"' + font.family + '";src:url(fonts/' + font.web
+      + ') format("woff2");font-weight:' + font.weight + ';'), true,
+      kind + ': the face is served from the site with the weight its file covers');
   }
 });
 

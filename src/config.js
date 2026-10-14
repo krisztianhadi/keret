@@ -18,20 +18,42 @@ const FONTS = {
     family: 'Geist Mono',
     stack: '"Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
     web: 'GeistMonoVF.woff2',
-    print: 'GeistMonoVF.ttf',
+    format: 'woff2',   // the container the file is in: the @font-face must say the same
+    weight: '100 900',   // what the file actually covers: a static face is 400
   },
   sans: {
     family: 'Geist',
     stack: '"Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
     web: 'GeistSansVF.woff2',
-    print: 'GeistSansVF.ttf',
+    format: 'woff2',   // the container the file is in: the @font-face must say the same
+    weight: '100 900',   // what the file actually covers: a static face is 400
+  },
+  pixel: {
+    family: 'Geist Pixel',
+    stack: '"Geist Pixel", "Geist Mono", ui-monospace, monospace',
+    web: 'GeistPixel.woff2',
+    format: 'woff2',   // the container the file is in: the @font-face must say the same
+    weight: '400',   // what the file actually covers: a static face is 400
+  },
+  serif: {
+    family: 'Crimson Text',
+    stack: '"Crimson Text", Georgia, "Times New Roman", serif',
+    web: 'CrimsonText.woff2',
+    format: 'woff2',   // the container the file is in: the @font-face must say the same
+    weight: '400',   // what the file actually covers: a static face is 400
+  },
+  script: {
+    family: 'Crafty Girls',
+    stack: '"Crafty Girls", "Bradley Hand", cursive',
+    web: 'CraftyGirls.woff2',
+    format: 'woff2',   // the container the file is in: the @font-face must say the same
+    weight: '400',   // what the file actually covers: a static face is 400
   },
 };
 
-/** The face in use. validate() has already rejected anything but mono and sans
-    by the time a build reads it. */
+/** The face in use. validate() has already rejected anything not in FONTS. */
 function fontOf(cfg) {
-  return FONTS[cfg && cfg.font === 'sans' ? 'sans' : 'mono'];
+  return (cfg && FONTS[cfg.font]) || FONTS.mono;
 }
 
 const DEFAULTS = {
@@ -318,7 +340,7 @@ function validate(config, root) {
     if (typeof config[key] !== 'string') throw new Error(key + ' must be a string');
   }
   if (!FONTS[config.font]) {
-    throw new Error('font must be "mono" or "sans", got "' + config.font + '"');
+    throw new Error('font must be one of ' + Object.keys(FONTS).join(', ') + ', got "' + config.font + '"');
   }
   if (typeof config.captions.file !== 'string') throw new Error('captions.file must be a string');
   for (const key of ['bg', 'dot']) {

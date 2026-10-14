@@ -97,7 +97,7 @@ hand; `--yes` turns the questions off.
 | `lang` | `"en"` | `<html lang>` |
 | `siteUrl` | `""` | absolute site URL, e.g. `https://photos.example.com/`. When empty there are no social tags, no canonical link and no sitemap. A `CNAME` file in the project root is used as a fallback |
 | `themeColor` | `"#26231e"` | browser chrome color |
-| `font` | `"mono"` | the face the whole wall is set in: `"mono"` is Geist Mono, `"sans"` is Geist Sans. The one in use is copied into `dist/fonts/` with its OFL licence, so the type is served from your own domain and the page makes no third-party request |
+| `font` | `"mono"` | the face the whole wall is set in: `mono` (Geist Mono), `sans` (Geist Sans), `pixel` (Geist Pixel), `serif` (Crimson Text) or `script` (Crafty Girls, handwritten). The one in use is copied into `dist/fonts/`, served from your own domain, so the page makes no third-party request. Geist and Crimson Text are OFL; Crafty Girls is Apache 2.0; every licence ships in `dist/fonts/LICENSE.txt` |
 | `favicon.bg` | `"#26231e"` | favicon background (hex only) |
 | `favicon.dot` | `"#e23c30"` | favicon dot (hex only); the same two colors make `apple-touch-icon.png` |
 | `credit` | `{"label":"Powered by","brand":"Keret","url":"https://github.com/krisztianhadi/keret"}` | the small box in the bottom left corner; `brand` is the link and `url` its target. `null` hides the box |

@@ -23,7 +23,8 @@ personal photo wall and is now a standalone tool anyone can run.
   cropped to fit a grid.
 - **Built to survive a phone.** Pan, pinch, double-tap, fit - this engine was
   debugged on real iOS hardware after a few hundred photos started killing the tab.
-- **Your typeface.** Geist Mono by default, Geist Sans with one key (`font` in
+- **Your typeface.** Geist Mono by default; Geist Sans, Geist Pixel, Crimson Text (serif)
+  or Crafty Girls (handwritten) with one key (`font` in
   `wall.config.json`); both are copied into the build and served from your domain.
 - **Yours, credited.** A "Powered by Keret" line you can rewrite or remove, and a
   photographer card in the corner for your own contact details.

@@ -41,7 +41,9 @@ const ASSETS = ['head.html', 'body.html', 'page.css', 'engine.js', 'ui.js'];
 
 /* The wall carries its own type: the zip needs these bytes, and the social card
    needs the face as a data URI to render text inside an SVG. */
-const FONTS = ['GeistMonoVF.woff2', 'GeistSansVF.woff2', 'LICENSE.txt'];
+import { FONTS as FACES } from '../src/config.js';
+
+const FONTS = ['GeistMonoVF.woff2', 'GeistSansVF.woff2', 'GeistPixel.woff2', 'CrimsonText.woff2', 'CraftyGirls.woff2', 'LICENSE.txt'];
 
 const sha = (buf) => createHash('sha256').update(buf).digest('hex');
 
@@ -101,6 +103,10 @@ function build() {
     'export const MODULES = Object.create(null);\n',
     'export const ASSETS = ' + JSON.stringify(
       Object.fromEntries(Object.entries(assets).map(([k, v]) => [k, v.text])), null, 0) + ';\n',
+    // the face registry travels too: the app previews each typeface, and a second copy of
+    // what weight each file covers is how the wall ended up declaring 100 900 for a static
+    // face - which Safari rejects, silently falling back to the next family in the stack.
+    'export const FACES = ' + JSON.stringify(FACES, null, 2) + ';\n',
     'export const FONTS = ' + JSON.stringify(
       Object.fromEntries(Object.entries(fonts).map(([k, v]) => [k, v.base64])), null, 0) + ';\n',
     ...factories,

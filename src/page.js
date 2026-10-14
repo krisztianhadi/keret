@@ -96,8 +96,8 @@ function buildPage(model, cfg) {
     // the face is served from the site's own folder: no third-party request, and
     // the wall still renders with the shipped type offline
     .replace('{{fontFace}}', '@font-face{font-family:"' + face.family + '";'
-      + 'src:url(fonts/' + face.web + ') format("woff2");'
-      + 'font-weight:100 900;font-style:normal;font-display:swap}')
+      + 'src:url(fonts/' + face.web + ') format("' + (face.format || 'woff2') + '");'
+      + 'font-weight:' + (face.weight || 400) + ';font-style:normal;font-display:swap}')
     .replace(/\{\{canvasW\}\}/g, String(model.canvasW))
     .replace(/\{\{canvasH\}\}/g, String(model.canvasH));
 

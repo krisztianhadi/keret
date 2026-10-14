@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { clearWallEnv, tempDir, ROOT } = require('./helpers');
-const { DEFAULTS, loadConfig, checkPaths } = require('../src/config');
+const { DEFAULTS, loadConfig, checkPaths, FONTS, fontOf } = require('../src/config');
 
 clearWallEnv();
 
@@ -62,15 +62,37 @@ test('favicon colors must be hex: they are interpolated into the page', () => {
   assert.throws(() => loadConfig({ root: dir, env: {} }), /favicon.dot must be a hex color/);
 });
 
-test('the font is mono or sans, and defaults to mono', () => {
+test('every typeface ships the file it names, and resolves to itself', () => {
+  const keys = Object.keys(FONTS);
+  assert.equal(keys.length, 5, 'five faces are offered: ' + keys.join(', '));
+  for (const key of keys) {
+    const face = FONTS[key];
+    assert.ok(face.family && face.stack, key + ' names a family and a fallback stack');
+    const file = path.join(ROOT, 'src', 'assets', 'fonts', face.web);
+    assert.equal(fs.existsSync(file), true, key + ' ships the file it names: ' + face.web);
+    // The pages declare format("woff2"). A face whose bytes are not woff2 is rejected by
+    // the browser and silently falls back to the stack's next family: Geist Pixel shipped
+    // as a .woff2-named woff and rendered as Geist Mono on Safari until this was added.
+    assert.equal(fs.readFileSync(file).subarray(0, 4).toString('latin1'), 'wOF2',
+      key + ' ships woff2 bytes: ' + face.web);
+    // the registry used to answer 'mono' for anything that was not 'sans', which with more
+    // than two faces means a wall silently set in the wrong type
+    assert.equal(fontOf({ font: key }).family, face.family, key + ' resolves to its own face');
+  }
+  assert.equal(fontOf({}).family, FONTS.mono.family, 'and unset means mono');
+});
+
+test('the font is one of the faces the wall carries, and defaults to mono', () => {
   assert.equal(loadConfig({ root: tempDir(), env: {} }).config.font, 'mono');
-  const dir = tempDir();
-  fs.writeFileSync(path.join(dir, 'wall.config.json'), JSON.stringify({ font: 'sans' }));
-  assert.equal(loadConfig({ root: dir, env: {} }).config.font, 'sans');
+  for (const key of Object.keys(FONTS)) {
+    const dir = tempDir();
+    fs.writeFileSync(path.join(dir, 'wall.config.json'), JSON.stringify({ font: key }));
+    assert.equal(loadConfig({ root: dir, env: {} }).config.font, key);
+  }
 
   const bad = tempDir();
   fs.writeFileSync(path.join(bad, 'wall.config.json'), JSON.stringify({ font: 'hans' }));
-  assert.throws(() => loadConfig({ root: bad, env: {} }), /font must be "mono" or "sans"/);
+  assert.throws(() => loadConfig({ root: bad, env: {} }), /font must be one of mono, sans, pixel, serif, script/);
 });
 
 test('analytics needs a script and an id when enabled', () => {

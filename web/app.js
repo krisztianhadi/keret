@@ -10,14 +10,16 @@
  * web/vendor/keret-core.js is generated from src/*.js by web/build.mjs.
  */
 
-import { FONTS, META } from './vendor/keret-core.js';
+import { FACES, FONTS, META } from './vendor/keret-core.js';
 import { createKeret } from './keret-runtime.js';
 import { buildZip } from './zip.js';
 
-/* The app wears the wall's own typeface, embedded like everything else. */
+/* The app wears the wall's own typeface, embedded like everything else - and it carries
+   every face it offers, because the typeface picker sets each option in the font it names. */
 document.head.appendChild(Object.assign(document.createElement('style'), {
-  textContent: '@font-face{font-family:"Geist Mono";src:url(data:font/woff2;base64,'
-    + FONTS['GeistMonoVF.woff2'] + ') format("woff2");font-weight:100 900;font-display:swap}',
+  textContent: Object.values(FACES).filter((face) => FONTS[face.web]).map((face) =>
+    '@font-face{font-family:"' + face.family + '";src:url(data:font/woff2;base64,' + FONTS[face.web]
+    + ') format("woff2");font-weight:' + (face.weight || 400) + ';font-display:swap}').join(''),
 }));
 
 const $ = (id) => document.getElementById(id);
@@ -943,14 +945,25 @@ function previewHtml(result) {
     + 'var u=__keretMedia[k];if(!u){console.warn("preview: no bytes for "+k)}'
     + 'return u||((edge?"photos/"+edge+"/":"photos/")+file)}</script>';
 
-  const face = result.cfg.font === 'sans' ? 'GeistSansVF.woff2' : 'GeistMonoVF.woff2';
+  // The face comes from the registry, not from a pair of names: this used to be
+  // `font === 'sans' ? GeistSansVF : GeistMonoVF`, so a wall set in Geist Pixel, Crimson
+  // Text or Crafty Girls kept a relative url(fonts/...) that 404s inside the preview's
+  // iframe - and the stack quietly rendered Geist Mono instead. The picker looked right
+  // the whole time, because it reads the registry.
+  const face = FACES[result.cfg.font] || FACES.mono;
+  const mime = face.format || 'woff2';
   const html = result.html
-    .replace('url(fonts/' + face + ')', 'url(data:font/woff2;base64,' + FONTS[face] + ')');
+    .replace('url(fonts/' + face.web + ') format("' + mime + '")',
+      'url(data:font/' + mime + ';base64,' + (FONTS[face.web] || '') + ') format("' + mime + '")');
 
   // The seam is the whole contract between this preview and the wall's engine.
   // If a future engine stops offering it, say so on screen: a preview that
   // renders placeholders and says nothing is how this bug lived for a day.
-  if (!html.includes('__keretPhotoSrc')) {
+  if (!html.includes('__keretPhotoSrc') || html.includes('url(fonts/' + face.web + ')')) {
+    if (html.includes('url(fonts/' + face.web + ')')) {
+      console.error('preview: the font for "' + result.cfg.font + '" was not inlined: ' + face.web);
+      if (ui.previewNote) ui.previewNote.textContent = 'The preview could not load the wall typeface.';
+    }
     console.error('preview: the wall engine does not read window.__keretPhotoSrc');
     ui.previewNote.innerHTML += ' - <b>the preview could not point the photos at memory</b>';
   }

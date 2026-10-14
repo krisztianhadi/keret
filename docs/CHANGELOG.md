@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-10-14 - The mat texture was the whole slowdown
+
+`[Fix]` **The grain is a PNG tile, not an `feTurbulence` SVG.** Confirmed on the phone: with the
+texture on, a large wall crawled; off, it was smooth. The tile was the filter - the browser
+evaluates fractal noise per pixel and re-rasterises it whenever the tile's drawn size changes,
+which a zoom does constantly - where a PNG is decoded once and afterwards only scaled. The new
+tile is 192px of smooth noise, about 6 KB as base64, and measured to match the old one on a real
+mat: mean darkening 240.4 against 240.7, standard deviation 3.32 against 3.29.
+
+Nothing in this entry measures the phone. This machine's Chromium cannot be made paint-bound by
+either tile - 300 draws of either cost about a millisecond, and a canvas caches the scaled image,
+so the measurement that would have shown the difference does not exist here. What is established
+is that the cost was the filter, that it is gone by construction, and that the phone said so.
+
+`scripts/make-fixtures.mjs` is now the committed generator for the sprites and the grain. The
+stylesheet it writes is committed, so without the generator in the repo those sprites had no
+source anyone could regenerate - learned by breaking the scratch copy of it, and recovering the
+sprites from the base64 in `page.css`.
+
 ## 2026-10-14 - A switch for the mat texture
 
 `[Feature]` **`layout.grain`** - *Paper texture* in the app's advanced settings, `WALL_GRAIN` from
@@ -101,8 +120,8 @@ the pixelation) to 15.2% (compensated), against 23.9% at 1x - no plateau, so no 
 Verified end to end through the engine: the tile draws at 160px of world at 0.75 scale and 40px
 at 3x, which is 120 screen px both times.
 
-The mats carry paper now: a tiled data-URI of `feTurbulence`, neutral and barely there, on
-the frame's own background rather than a filter on it - a background is one paint, a filter
+The mats carry paper now: a tiled grain, neutral and barely there, on the frame's own
+background rather than a filter on the element - a background is one paint, a filter
 would give every frame a render surface of its own. Measured on the light mat: standard
 deviation 3.25 levels over a range of 225-249, against 0.00 for the flat fill it replaces.
 Visible up close, effectively gone at the zoom a phone views a wall at. Cost: one extra

@@ -73,7 +73,14 @@ the column rhythm.
    **silhouette** (`layout.shape`):
    - `circle` (default) caps each column by a circular arc - tallest in the
      middle, nothing at the rim - so the wall reads as a disc;
-   - `oval` is the same arc in a phone-proportioned ellipse (`OVAL_ASPECT`,
+   - `heart` is not an arc at all: a column has a top *and* a bottom read from the
+     outline (`heartBands`, two circles for the lobes and a triangle for the point),
+     because the notch and the point make it asymmetric top to bottom. That is why
+     the heart's columns are not re-centred on the shared axis the symmetric shapes
+     use. Its area fraction is measured from the same outline rather than tabulated,
+     so the two cannot drift apart (`HEART_FILL`).
+   - the oval that 0.4 shipped is gone, replaced by the heart; it was the same arc
+     in a phone-proportioned ellipse (
      0.46:1), which at fit fills a portrait screen instead of floating in it;
    - `arch` equalizes the columns (always feed the shortest) and then sorts them
      tallest-to-middle, the classic rectangle with a soft arch along the edges.

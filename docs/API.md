@@ -206,7 +206,7 @@ the disc.
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `layout.shape` | `circle` | the silhouette: `circle` (a disc), `oval` (a phone-proportioned ellipse, 0.46:1, which fills a portrait screen at fit) or `arch` (equal columns, tallest in the middle: the classic rectangle) |
+| `layout.shape` | `circle` | the silhouette: `circle` (a disc), `heart` (two lobes with a notch between them and a point at the bottom) or `arch` (equal columns, tallest in the middle: the classic rectangle) |
 | `layout.cols` | `0` | fixed column count; `0` picks the count the silhouette needs |
 | `layout.long` | `600` | display width of a full-width frame, in wall pixels |
 | `layout.gap` | `64` | one gutter for columns, stacked frames and pairs |

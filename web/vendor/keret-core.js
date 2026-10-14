@@ -6,9 +6,9 @@
  *
  * version 0.4.1
  * gen.js          bf22e14057aeb6ab
- * src/config.js   e10d09a60738efde
+ * src/config.js   e12e96a6391d9649
  * src/images.js   99caaeded92169d7
- * src/layout.js   7373af3cdd8fa911
+ * src/layout.js   60bd77386a00df65
  * src/page.js     f88cd6ad0fadb9a7
  * src/setup.js    a2394292a53ac907
  * src/stamp.js    fbe085706174ca20
@@ -17,9 +17,9 @@ export const META = {
   "version": "0.4.1",
   "sources": {
     "gen.js": "bf22e14057aeb6ab949009d4b737c4d918f866f86a97b6787c495c1bf003a71a",
-    "src/config.js": "e10d09a60738efde728f4f94863304bb637e3c9a67595425d3f01ca7c0818a47",
+    "src/config.js": "e12e96a6391d964904213ee386a5b12823e55466201f42ac12ae882fee2f44f5",
     "src/images.js": "99caaeded92169d7ed4b2ff8c4cbcd415e3c714d60c63a61b83b1789ccae36ab",
-    "src/layout.js": "7373af3cdd8fa911f269aa3cda82c8ab680e94639e3564a50cfcb1f810682380",
+    "src/layout.js": "60bd77386a00df658a183b84114f52a6bea51d3908a56c14c3e7eea3fc2fe52e",
     "src/page.js": "f88cd6ad0fadb9a768fe3032e6770806df901af4c6e4d97c5b441dc3bae7186e",
     "src/setup.js": "a2394292a53ac907a5eae042feafb6419bf201958e30333dc9eac93b3f7166da",
     "src/stamp.js": "fbe085706174ca20288e736e8dfbbb93045b804eea8df14688d8f6ad4615ec73"
@@ -711,7 +711,7 @@ const ENV_MAP = {
 };
 
 /** The silhouettes layout() can arrange bricks into. */
-const SHAPES = new Set(['circle', 'oval', 'arch']);
+const SHAPES = new Set(['circle', 'heart', 'arch']);
 
 /** How squared-up the frames hang, and what holds them there. */
 const HANGS = new Set(['organized', 'wonky']);
@@ -1690,8 +1690,79 @@ function countBricks(photos, cfg) {
   return buildBricks(photos, cfg).bricks.length;
 }
 
-/** How tall an ellipse matched to a phone screen is, as width / height. */
-const OVAL_ASPECT = 0.46;
+/** A heart's width / height, and how much of its bounding box it fills. */
+const HEART_ASPECT = 2 / 1.6;
+
+/** The heart in units: two lobes of radius 1/2 whose centres are 1 apart, meeting at
+ *  the notch, with the point `HEART_APEX` below their tops. */
+const HEART_R = 0.5, HEART_CX = 0.5, HEART_CY = 0.5, HEART_APEX = 1.6;
+const HEART_STEPS = 240;                  // samples down a column when reading it
+
+/**
+ * Where the line from the point touches the right lobe. The sides of a heart are
+ * tangent to its lobes: drawn any steeper, the lobes bulge out below the line, and
+ * that is exactly what turns the point of a heart into a flat bottom.
+ */
+const HEART_TANGENT = (() => {
+  const dx = HEART_CX, dy = HEART_CY - HEART_APEX;          // lobe centre, seen from the point
+  const d2 = dx * dx + dy * dy;
+  const s = Math.sqrt(d2 - HEART_R * HEART_R);              // tangent length
+  const px = -dx, py = -dy;                                 // the point, seen from the centre
+  return {
+    u: HEART_CX + (HEART_R * HEART_R / d2) * px + (HEART_R * s / d2) * py,
+    v: HEART_CY + (HEART_R * HEART_R / d2) * py - (HEART_R * s / d2) * px,
+  };
+})();
+
+/**
+ * A heart, drawn the way one is drawn by hand: two circles for the lobes, and from
+ * the point two lines tangent to them. `u` runs -1 to 1 across it, `v` runs 0 (top)
+ * to HEART_APEX (the point).
+ */
+function heartInside(u, v) {
+  for (const side of [-1, 1]) {
+    const dx = u - side * HEART_CX, dy = v - HEART_CY;
+    if (dx * dx + dy * dy <= HEART_R * HEART_R) return true;
+  }
+  if (v >= HEART_TANGENT.v) {
+    const half = HEART_TANGENT.u * (HEART_APEX - v) / (HEART_APEX - HEART_TANGENT.v);
+    if (Math.abs(u) <= half) return true;
+  }
+  return false;
+}
+
+/** The heart's area as a fraction of its bounding box, measured from the same
+ *  outline the columns are read from, so the two can never drift apart. */
+const HEART_FILL = (() => {
+  let inside = 0, all = 0;
+  for (let i = 0; i < 120; i++) {
+    for (let j = 0; j < 120; j++) {
+      all++;
+      if (heartInside((2 * (i + 0.5)) / 120 - 1, (HEART_APEX * (j + 0.5)) / 120)) inside++;
+    }
+  }
+  return inside / all;
+})();
+
+/**
+ * The heart as a band per column - a top and a bottom, not one height - because
+ * it is not symmetric top to bottom: the notch between the lobes and the point
+ * at the bottom are the shape. Symmetric about the middle column.
+ */
+function heartBands(cols) {
+  const out = [];
+  for (let c = 0; c < cols; c++) {
+    const u = (2 * (c + 0.5)) / cols - 1;
+    let top = null, bottom = null;
+    for (let i = 0; i <= HEART_STEPS; i++) {
+      const v = (HEART_APEX * i) / HEART_STEPS;      // the shape is HEART_APEX tall, not 1
+      if (heartInside(u, v)) { if (top === null) top = v; bottom = v; }
+    }
+    // a column the outline misses entirely would strand a brick; keep a sliver
+    out.push(top === null ? { top: 0.5, bottom: 0.5 } : { top: top / HEART_APEX, bottom: bottom / HEART_APEX });
+  }
+  return out;
+}
 
 /**
  * The fraction of the silhouette's height a column may use: 1 at the middle,
@@ -1737,7 +1808,9 @@ function layout(photos, cfg, cols) {
   const heights = bricks.map((brick) => Math.max(...brick.list.map((p) => p.ph + capH + 2 * mat)));
   const colH = new Array(nCols).fill(pad);
 
+  const filled = new Array(nCols).fill(false);
   const place = (i, c) => {
+    filled[c] = true;
     const brick = bricks[i];
     let x = pad + c * slot;
     for (const p of brick.list) {
@@ -1749,7 +1822,44 @@ function layout(photos, cfg, cols) {
     colH[c] += heights[i] + gap;
   };
 
-  if (shape === 'arch') {
+  let heartTop = null, heartSpan = null, heartShift = null;
+  if (shape === 'heart') {
+    // A heart: every column has a top and a bottom from the outline, and a brick
+    // goes wherever there is room inside its band. The bands are absolute - the
+    // notch is up there and the point is down there - so columns are not re-centred
+    // on a shared axis the way the symmetric shapes are.
+    const arrW = nCols * iw + (nCols - 1) * gap;
+    const bands = heartBands(nCols);
+    const total = heights.reduce((sum, h) => sum + h + gap, 0);
+    const spanSum = bands.reduce((sum, b) => sum + (b.bottom - b.top), 0);
+    const shapeH = Math.max(arrW / HEART_ASPECT, spanSum ? total / spanSum : total);
+    heartTop = bands.map((b) => pad + b.top * shapeH);
+    heartSpan = bands.map((b) => (b.bottom - b.top) * shapeH);
+    heartShift = new Array(nCols).fill(0);
+    for (let c = 0; c < nCols; c++) colH[c] = heartTop[c];
+    for (let i = 0; i < bricks.length; i++) {
+      let best = 0, bestScore = -Infinity;
+      for (let c = 0; c < nCols; c++) {
+        const room = heartTop[c] + heartSpan[c] - colH[c];
+        const score = room >= heights[i] ? room : -1e6 - (heights[i] - room);
+        if (score > bestScore) { bestScore = score; best = c; }
+      }
+      place(i, best);
+    }
+    // Filling from each band's top leaves a sparse wall hanging off the shape's top
+    // edge - the lobes fill first, because they have the most room - and the point
+    // never gets reached. Centring every column inside its own band keeps the whole
+    // wall a smaller heart instead, and a full wall is unchanged by it.
+    for (let c = 0; c < nCols; c++) {
+      const content = colH[c] - heartTop[c] - gap;
+      const shift = Math.max(0, Math.round((heartSpan[c] - content) / 2));
+      heartShift[c] = shift;
+      colH[c] = heartTop[c] + shift + content + gap;
+    }
+    if (heartShift.some((v) => v)) {
+      for (const p of sized) p.y += heartShift[p.col];
+    }
+  } else if (shape === 'arch') {
     // equal columns: always feed the shortest, which is what fills a rectangle
     for (let i = 0; i < bricks.length; i++) {
       let c = 0;
@@ -1759,7 +1869,7 @@ function layout(photos, cfg, cols) {
   } else {
     // a disc: cap each column by the arc, tallest in the middle
     const arrW = nCols * iw + (nCols - 1) * gap;
-    const ideal = shape === 'oval' ? arrW / OVAL_ASPECT : arrW;
+      const ideal = arrW;
     const profile = [];
     for (let c = 0; c < nCols; c++) profile.push(shapeProfile(c, nCols));
     const profileSum = profile.reduce((sum, r) => sum + r, 0);
@@ -1786,11 +1896,17 @@ function layout(photos, cfg, cols) {
   // shared axis - shorter columns extend equally above and below it
   const colHeight = (c) => Math.max(0, colH[c] - gap - pad);
   const used = [];
-  for (let c = 0; c < nCols; c++) if (colH[c] > pad) used.push(c);
+  // A column is used if a brick landed in it. The height test this replaces said the
+  // same thing for the symmetric shapes, and lies for the heart: an empty column's
+  // band already starts below the top margin, so empties were counted, given slots,
+  // and left holes in the canvas.
+  for (let c = 0; c < nCols; c++) if (filled[c]) used.push(c);
   const maxH = used.length ? Math.max(...used.map(colHeight)) : 0;
   const midAxis = pad + maxH / 2;
-  for (const p of sized) {
-    p.y += Math.round(midAxis - (pad + colHeight(p.col) / 2));
+  if (shape !== 'heart') {
+    for (const p of sized) {
+      p.y += Math.round(midAxis - (pad + colHeight(p.col) / 2));
+    }
   }
 
   // arch silhouette: the tallest column lands in the middle, the shortest at
@@ -1857,8 +1973,12 @@ function autoCols(photos, cfg) {
   if (shape !== 'arch') {
     const { long, mat, gap } = layoutDims(cfg);
     const slot = long + 2 * mat + gap;
-    const ratio = shape === 'oval' ? OVAL_ASPECT : 1;
-    return shapeCols(brickTotal(photos, cfg), slot, max, ratio);
+    if (shape === 'heart') {
+      const total = brickTotal(photos, cfg);
+      return Math.max(3, Math.min(max, Math.round(
+        Math.sqrt((total * HEART_ASPECT) / (HEART_FILL * slot)))));
+    }
+    return shapeCols(brickTotal(photos, cfg), slot, max, 1);
   }
   const bricks = countBricks(photos, cfg);
   const target = Math.max(1, Math.ceil(Math.sqrt(Math.max(1, bricks))));
@@ -1875,7 +1995,8 @@ function autoCols(photos, cfg) {
 
 module.exports = {
   hashFile, naturalSort, layout, autoCols, countBricks, brickTotal, captionHeight,
-  layoutDims, isMarked, archTargets, shapeProfile, shapeCols, OVAL_ASPECT,
+  layoutDims, isMarked, archTargets, shapeProfile, shapeCols, heartBands, heartInside,
+  HEART_ASPECT, HEART_FILL,
 };
 
 };

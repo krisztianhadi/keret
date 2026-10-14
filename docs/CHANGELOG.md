@@ -1,5 +1,35 @@
 # Changelog
 
+##  - A heart, where the oval was
+
+`[Feature]` **`layout.shape` gains a heart and loses the oval.** The heart is drawn the way
+one is drawn by hand: two lobes of radius 1/2 whose centres are 1 apart, meeting at the notch,
+and from the point two lines tangent to them. Tangent matters - drawn any steeper the lobes
+bulge out below the line, which is what turns the point of a heart into a flat bottom.
+
+It is read down each column as a *band*, a top and a bottom, because the notch and the point
+make it asymmetric top to bottom. The arc shapes need one height per column; a heart needs
+two, and its columns are therefore not re-centred on the shared vertical axis the others use.
+Two further differences fell out of building it. Columns are centred inside their own bands,
+which is what keeps a sparse wall a *smaller heart* instead of a shape hanging off its top
+edge. And a column now counts as occupied if a brick landed in it rather than if it is taller
+than the top margin - the old test was true of the heart's empty columns, which were then
+given slots and left holes in the canvas.
+
+Measured on a built wall (105 photographs, 12 columns): a notch 1106px deep at the middle
+column, and the point 3358px below the outermost columns. The circle and the arch are
+untouched: every one of the demo's 105 positions is byte-identical after the change, and only
+the build stamp moved, because `src/layout.js` is one of its sources.
+
+`test/layout.test.js` reads the heart's outline by canvas slot through the module's own
+rank-to-slot mapping and asserts the notch is a brick deep with the highest column off-centre,
+the bottom tapering to the point at the middle, the outer columns stopping short of it, and
+the top edge mirroring left to right within a brick.
+
+One trade to know about: the heart is landscape-ish (1.25:1) where the oval was portrait
+(0.46:1), so a phone fits a heart to the width and leaves wall above and below. That is what
+replacing the oval means.
+
 ## 2026-10-12 - Hung by hand, if you want it
 
 `[Feature]` **`layout.hang` and `layout.fixture`.** `hang: 'wonky'` leans every frame

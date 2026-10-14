@@ -192,7 +192,7 @@ const ENV_MAP = {
 };
 
 /** The silhouettes layout() can arrange bricks into. */
-const SHAPES = new Set(['circle', 'oval', 'arch']);
+const SHAPES = new Set(['circle', 'heart', 'arch']);
 
 /** How squared-up the frames hang, and what holds them there. */
 const HANGS = new Set(['organized', 'wonky']);

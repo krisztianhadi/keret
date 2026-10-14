@@ -173,11 +173,11 @@ test('the silhouette is one of the shapes the layout can draw', () => {
 
   assert.equal(loadConfig({ root: tempDir(), env: {} }).config.layout.shape, 'circle',
     'a disc is what a wall is by default');
-  assert.equal(shape('oval'), 'oval');
+  assert.equal(shape('heart'), 'heart');
   assert.equal(shape('arch'), 'arch');
-  assert.equal(loadConfig({ root: dir, env: { WALL_SHAPE: 'oval' } }).config.layout.shape, 'oval',
+  assert.equal(loadConfig({ root: dir, env: { WALL_SHAPE: 'heart' } }).config.layout.shape, 'heart',
     'the environment sets it too');
-  assert.throws(() => shape('hexagon'), /layout\.shape must be one of circle, oval, arch/);
+  assert.throws(() => shape('hexagon'), /layout\.shape must be one of circle, heart, arch/);
 });
 
 test('hanging and fixture are the values the engine knows how to draw', () => {

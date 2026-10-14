@@ -1,6 +1,8 @@
 # Checks every push and pull request: the suite passes, the generator builds a
 # wall from seeded fixtures, the committed demo is in sync with the source that
-# produced it, and rebuilding it reproduces it byte for byte.
+# produced it, and rebuilding it reproduces it byte for byte. On a v* tag it also
+# checks that the tag is the version package.json declares, because the footer
+# prints that version and a tag that disagrees is a claim nobody can check out.
 #
 # Actions are pinned by commit SHA; the trailing comment is the human-readable
 # version (Dependabot keeps both up to date).
@@ -10,6 +12,7 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
 
 permissions:
@@ -29,6 +32,11 @@ jobs:
         with:
           node-version: 20
           cache: npm
+
+      # before the install: a tag that disagrees fails in seconds, not minutes
+      - name: A tag matches the version in package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: node scripts/check-tag.js
 
       - name: Install dependencies
         run: npm ci

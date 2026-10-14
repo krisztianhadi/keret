@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-10-14 - 0.5.0
+
+The number moves because a wall can be dressed now, not only arranged. Six commits, three of
+them features.
+
+- **Hung by hand, if you want it.** `layout.hang: 'wonky'` leans each frame a little, and
+  `layout.fixture` holds them with `pin` or `tape` - four corners, torn ends, every piece
+  tilted and shifted from a hash of the filename, so no two frames carry the same tape. The
+  frames' shadows answer to it: taped lies flat, pinned leans out at the bottom.
+- **A heart, where the oval was.** Two lobes, a notch and a point, read as a band per column
+  rather than one height per column, which is what an asymmetric shape needs.
+- **Five typefaces**, each option previewed in the face it names: Geist Mono, Geist Sans,
+  Geist Pixel, Crimson Text and Crafty Girls.
+- **The mat grain is a PNG**, not an feTurbulence filter - that filter is what made a large
+  wall crawl on a phone - and it has a switch, `layout.grain`.
+
+Everything a wall embeds still travels with it: fonts, their licences, the sprites. No
+third-party requests, and the CLI and the browser builder remain the same code.
+
 ## 2026-10-14 - Five typefaces, each previewed in itself
 
 `[Feature]` **The typeface picker sets every option in the font it names**, so choosing one is a

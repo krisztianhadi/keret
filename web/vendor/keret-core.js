@@ -6,7 +6,7 @@
  *
  * version 0.5.0
  * gen.js          bf22e14057aeb6ab
- * src/config.js   a2d022bac63d28ae
+ * src/config.js   156f10528a564494
  * src/images.js   99caaeded92169d7
  * src/layout.js   60bd77386a00df65
  * src/page.js     93a80fcc2a41e0f8
@@ -17,7 +17,7 @@ export const META = {
   "version": "0.5.0",
   "sources": {
     "gen.js": "bf22e14057aeb6ab949009d4b737c4d918f866f86a97b6787c495c1bf003a71a",
-    "src/config.js": "a2d022bac63d28aef17382e1c32fde519ddb7e2417bccd8e469cf932cceb2c2e",
+    "src/config.js": "156f10528a564494072373d3b976248febdce6a2669149584d3b07750761c5cc",
     "src/images.js": "99caaeded92169d7ed4b2ff8c4cbcd415e3c714d60c63a61b83b1789ccae36ab",
     "src/layout.js": "60bd77386a00df658a183b84114f52a6bea51d3908a56c14c3e7eea3fc2fe52e",
     "src/page.js": "93a80fcc2a41e0f88ecdeaf5a14af14dd04aa975b335997e2cd2f65a0cabb40b",
@@ -644,7 +644,7 @@ const DEFAULTS = {
   credit: {
     label: 'Powered by',
     brand: 'Keret',
-    url: 'https://github.com/krisztianhadi/keret',
+    url: 'https://github.com/nomorenamesstudio/keret',
   },
 
   // the photographer card behind the top right button. The file is read from the

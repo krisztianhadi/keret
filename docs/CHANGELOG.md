@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-10-15 - the account rename
+
+`[Fix]` The GitHub account moved from `krisztianhadi` to `nomorenamesstudio`, so every link the
+project names moves with it: the default credit URL, the clone and install lines in SETUP, the
+security-advisory link in the issue template, the demo's `siteUrl` - and through it the canonical,
+`og:image`, robots and sitemap URLs - and the hosting copy in the app. The git remote points at the
+new owner.
+
+`[Fix]` The README's window mock is regenerated as well: the URL is drawn into that image, which is
+the one place a rename leaves a stale link that no grep can find. GitHub redirects the old owner, so
+nothing breaks in the meantime, but a redirect is not a link.
+
 ## 2026-10-14 - 0.5.0
 
 The number moves because a wall can be dressed now, not only arranged. Six commits, three of

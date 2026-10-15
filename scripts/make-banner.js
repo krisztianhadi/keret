@@ -38,7 +38,7 @@ const BAR = '#1b1916';
 const INK = '#f2eee4';
 const DIM = 'rgba(242,238,228,.55)';
 const ACCENT = '#e23c30';
-const PAGE = 'krisztianhadi.github.io/keret';
+const PAGE = 'nomorenamesstudio.github.io/keret';
 
 /* the wall's own faces: Geist for the wordmark, Geist Mono for the page pill */
 const WORDMARK = 'Geist';

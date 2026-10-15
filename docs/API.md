@@ -100,7 +100,7 @@ hand; `--yes` turns the questions off.
 | `font` | `"mono"` | the face the whole wall is set in: `mono` (Geist Mono), `sans` (Geist Sans), `pixel` (Geist Pixel), `serif` (Crimson Text) or `script` (Crafty Girls, handwritten). The one in use is copied into `dist/fonts/`, served from your own domain, so the page makes no third-party request. Geist and Crimson Text are OFL; Crafty Girls is Apache 2.0; every licence ships in `dist/fonts/LICENSE.txt` |
 | `favicon.bg` | `"#26231e"` | favicon background (hex only) |
 | `favicon.dot` | `"#e23c30"` | favicon dot (hex only); the same two colors make `apple-touch-icon.png` |
-| `credit` | `{"label":"Powered by","brand":"Keret","url":"https://github.com/krisztianhadi/keret"}` | the small box in the bottom left corner; `brand` is the link and `url` its target. `null` hides the box |
+| `credit` | `{"label":"Powered by","brand":"Keret","url":"https://github.com/nomorenamesstudio/keret"}` | the small box in the bottom left corner; `brand` is the link and `url` its target. `null` hides the box |
 | `author.file` | `"author.json"` | the photographer card behind the top right button, resolved against the working directory. No file means no button |
 | `analytics` | `null` | `null` disables it. Otherwise `{ "script": "https://...", "websiteId": "...", "domains": "example.com", "cache": true }`; `script` and `websiteId` are required |
 

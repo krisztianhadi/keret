@@ -84,7 +84,7 @@ const DEFAULTS = {
   credit: {
     label: 'Powered by',
     brand: 'Keret',
-    url: 'https://github.com/krisztianhadi/keret',
+    url: 'https://github.com/nomorenamesstudio/keret',
   },
 
   // the photographer card behind the top right button. The file is read from the

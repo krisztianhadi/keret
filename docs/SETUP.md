@@ -10,7 +10,7 @@
 ## Install
 
 ```sh
-git clone https://github.com/krisztianhadi/keret.git
+git clone https://github.com/nomorenamesstudio/keret.git
 cd keret
 npm install
 ```
@@ -18,8 +18,8 @@ npm install
 Or use it as a CLI without cloning:
 
 ```sh
-npx --yes github:krisztianhadi/keret --help     # runs the generator from the repo
-npm install -g github:krisztianhadi/keret       # provides the `keret` command
+npx --yes github:nomorenamesstudio/keret --help     # runs the generator from the repo
+npm install -g github:nomorenamesstudio/keret       # provides the `keret` command
 ```
 
 ## First run

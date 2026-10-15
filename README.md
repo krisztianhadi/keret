@@ -1,6 +1,6 @@
 # Keret
 
-[![CI](https://github.com/krisztianhadi/keret/actions/workflows/ci.yml/badge.svg)](https://github.com/krisztianhadi/keret/actions/workflows/ci.yml)
+[![CI](https://github.com/nomorenamesstudio/keret/actions/workflows/ci.yml/badge.svg)](https://github.com/nomorenamesstudio/keret/actions/workflows/ci.yml)
 · MIT · Node 18.17+ · one dependency
 
 ![Keret: the wordmark inside a white frame outline, over the demo wall](docs/assets/readme-header.jpg)
@@ -9,7 +9,7 @@ A self-hosted photo wall. Point it at a folder of photographs and it builds a
 single static page: every photo in its own frame on one big wall you pan and
 zoom, laid out so nothing overlaps and nothing is cropped.
 
-**[Open the live demo](https://krisztianhadi.github.io/keret/)** — 105
+**[Open the live demo](https://nomorenamesstudio.github.io/keret/)** — 105
 photographs, every frame captioned with the camera data read out of the file.
 
 Named after the Hungarian word for *frame*. It began as the engine of a
@@ -37,7 +37,7 @@ personal photo wall and is now a standalone tool anyone can run.
 
 ```sh
 # 1. get the tool
-git clone https://github.com/krisztianhadi/keret.git
+git clone https://github.com/nomorenamesstudio/keret.git
 cd keret
 npm install                      # sharp, the only dependency
 
@@ -143,7 +143,7 @@ Unknown keys are a hard error: a typo fails the build instead of being ignored.
 
 `demo/` is a complete wall: 105 photographs, their captions and the built site,
 committed so the demo builds offline and can be served by GitHub Pages. It is
-live at <https://krisztianhadi.github.io/keret/>.
+live at <https://nomorenamesstudio.github.io/keret/>.
 
 Every photograph is a Wikimedia Commons original that still carries its camera
 EXIF, so every frame shows the date, exposure and camera the engine read straight

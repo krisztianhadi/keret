@@ -9,8 +9,13 @@ security-advisory link in the issue template, the demo's `siteUrl` - and through
 new owner.
 
 `[Fix]` The README's window mock is regenerated as well: the URL is drawn into that image, which is
-the one place a rename leaves a stale link that no grep can find. GitHub redirects the old owner, so
-nothing breaks in the meantime, but a redirect is not a link.
+the one place a rename leaves a stale link that no grep can find.
+
+One thing does not redirect, and it is worth knowing: `github.com/krisztianhadi/keret` answers 301,
+but the old Pages host `krisztianhadi.github.io/keret/` answers 404. GitHub redirects an account's
+repository URLs, not its Pages subdomain. Links to the demo written before the rename are dead; the
+page's own canonical and `og:url` name the new host now, so search engines have the right address
+even though old links do not.
 
 ## 2026-10-14 - 0.5.0
 
